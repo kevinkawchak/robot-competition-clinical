@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Clinical Injection Simulation Scene
+  G1 humanoid robots performing cancer medication injection procedure.
+  Based on Unitree G1 proportions (~1.27m height).
+  Attribution: Simulation framework inspired by mjlab (mujocolab/mjlab).
+-->
+<mujoco model="clinical_injection_sim">
+  <compiler angle="degree" coordinate="local"/>
+
+  <option gravity="0 0 -9.81" timestep="0.002">
+    <flag warmstart="enable"/>
+  </option>
+
+  <default>
+    <joint armature="0.01" damping="0.5" limited="true"/>
+    <geom condim="3" friction="1.0 0.5 0.5" margin="0.001"/>
+  </default>
+
+  <asset>
+    <!-- Environment Materials -->
+    <material name="floor_tile" rgba="0.92 0.92 0.95 1" specular="0.3"/>
+    <material name="wall" rgba="0.95 0.96 0.98 1"/>
+    <material name="ceiling" rgba="0.98 0.98 1.0 1"/>
+
+    <!-- Role-Based Robot Materials -->
+    <material name="doctor_shell" rgba="0.95 0.95 0.97 1" specular="0.4"/>
+    <material name="nurse_shell" rgba="0.35 0.55 0.82 1" specular="0.3"/>
+    <material name="patient_gown" rgba="0.55 0.78 0.55 1" specular="0.1"/>
+    <material name="robot_joint" rgba="0.25 0.25 0.28 1" specular="0.6"/>
+    <material name="robot_visor" rgba="0.1 0.3 0.6 0.8" specular="0.8"/>
+
+    <!-- Medical Equipment Materials -->
+    <material name="chair_frame" rgba="0.3 0.3 0.35 1" specular="0.5"/>
+    <material name="chair_cushion" rgba="0.2 0.35 0.55 1" specular="0.1"/>
+    <material name="syringe_body" rgba="0.85 0.87 0.9 1" specular="0.7"/>
+    <material name="syringe_plunger" rgba="0.4 0.4 0.45 1"/>
+    <material name="needle" rgba="0.75 0.77 0.8 1" specular="0.9"/>
+    <material name="tray_metal" rgba="0.72 0.74 0.78 1" specular="0.8"/>
+    <material name="iv_stand" rgba="0.65 0.65 0.7 1" specular="0.6"/>
+    <material name="iv_bag" rgba="0.8 0.85 0.9 0.7"/>
+    <material name="monitor_screen" rgba="0.05 0.15 0.05 1" specular="0.2"/>
+    <material name="monitor_body" rgba="0.35 0.35 0.4 1"/>
+  </asset>
+
+  <worldbody>
+    <!-- Ground Plane -->
+    <geom name="floor" type="plane" size="4 4 0.05" material="floor_tile"/>
+    <light name="overhead" pos="0 0 2.8" dir="0 0 -1" diffuse="0.9 0.9 0.95"
+           specular="0.3 0.3 0.3" castshadow="true"/>
+    <light name="fill_light" pos="2 -2 2.5" dir="-0.5 0.5 -0.7" diffuse="0.3 0.3 0.35"/>
+
+    <!-- Hospital Room Walls -->
+    <geom name="wall_back" type="box" size="4 0.05 1.5" pos="0 -3 1.5" material="wall"/>
+    <geom name="wall_left" type="box" size="0.05 3 1.5" pos="-3 0 1.5" material="wall"/>
+    <geom name="wall_right" type="box" size="0.05 3 1.5" pos="3 0 1.5" material="wall"/>
+
+    <!-- ============================================ -->
+    <!-- EXAMINATION CHAIR (Patient seating) -->
+    <!-- ============================================ -->
+    <body name="exam_chair" pos="0 0 0">
+      <!-- Chair legs -->
+      <geom name="chair_leg_fl" type="cylinder" size="0.025" fromto="-0.2 -0.2 0 -0.2 -0.2 0.45"
+            material="chair_frame"/>
+      <geom name="chair_leg_fr" type="cylinder" size="0.025" fromto="0.2 -0.2 0 0.2 -0.2 0.45"
+            material="chair_frame"/>
+      <geom name="chair_leg_bl" type="cylinder" size="0.025" fromto="-0.2 0.15 0 -0.2 0.15 0.45"
+            material="chair_frame"/>
+      <geom name="chair_leg_br" type="cylinder" size="0.025" fromto="0.2 0.15 0 0.2 0.15 0.45"
+            material="chair_frame"/>
+      <!-- Seat -->
+      <geom name="chair_seat" type="box" size="0.25 0.22 0.03" pos="0 0 0.47"
+            material="chair_cushion"/>
+      <!-- Backrest -->
+      <geom name="chair_back" type="box" size="0.25 0.03 0.3" pos="0 0.2 0.8"
+            material="chair_cushion"/>
+      <!-- Right armrest -->
+      <geom name="armrest_r" type="box" size="0.03 0.18 0.02" pos="0.27 0 0.62"
+            material="chair_frame"/>
+      <!-- Left armrest -->
+      <geom name="armrest_l" type="box" size="0.03 0.18 0.02" pos="-0.27 0 0.62"
+            material="chair_frame"/>
+    </body>
+
+    <!-- ============================================ -->
+    <!-- PATIENT (Seated G1 Humanoid) -->
+    <!-- ============================================ -->
+    <body name="patient_root" pos="0 0 0.5">
+      <!-- Pelvis / Hip -->
+      <geom name="patient_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0"
+            material="patient_gown"/>
+
+      <!-- Torso -->
+      <body name="patient_torso" pos="0 0 0.06">
+        <geom name="patient_torso_geom" type="box" size="0.15 0.09 0.18"
+              pos="0 0 0.18" material="patient_gown"/>
+
+        <!-- Head -->
+        <body name="patient_head" pos="0 0 0.42">
+          <geom name="patient_head_geom" type="sphere" size="0.1" material="robot_joint"/>
+          <geom name="patient_visor" type="box" size="0.07 0.001 0.03" pos="0 -0.09 0.02"
+                material="robot_visor"/>
+        </body>
+
+        <!-- Right Upper Arm (INJECTION SITE - deltoid region) -->
+        <body name="patient_r_shoulder" pos="0.2 0 0.3">
+          <joint name="patient_r_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-90 90" pos="0 0 0"/>
+          <geom name="patient_r_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 0.08 0 -0.2" material="patient_gown"/>
+
+          <!-- Deltoid injection target site -->
+          <site name="injection_target" pos="0.04 -0.04 -0.08" size="0.025"
+                rgba="1 0.2 0.2 0.5"/>
+
+          <!-- Right Forearm -->
+          <body name="patient_r_elbow" pos="0.08 0 -0.2">
+            <joint name="patient_r_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 130" pos="0 0 0"/>
+            <geom name="patient_r_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 0.03 0 -0.18" material="patient_gown"/>
+            <geom name="patient_r_hand" type="box" size="0.03 0.015 0.04"
+                  pos="0.03 0 -0.22" material="robot_joint"/>
+          </body>
+        </body>
+
+        <!-- Left Upper Arm -->
+        <body name="patient_l_shoulder" pos="-0.2 0 0.3">
+          <joint name="patient_l_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-90 90" pos="0 0 0"/>
+          <geom name="patient_l_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 -0.08 0 -0.2" material="patient_gown"/>
+          <body name="patient_l_elbow" pos="-0.08 0 -0.2">
+            <joint name="patient_l_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 130" pos="0 0 0"/>
+            <geom name="patient_l_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 -0.03 0 -0.18" material="patient_gown"/>
+            <geom name="patient_l_hand" type="box" size="0.03 0.015 0.04"
+                  pos="-0.03 0 -0.22" material="robot_joint"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- Right Thigh (seated, horizontal) -->
+      <body name="patient_r_hip" pos="0.1 0 0">
+        <joint name="patient_r_hip_flex" type="hinge" axis="1 0 0"
+               range="-120 30" pos="0 0 0"/>
+        <geom name="patient_r_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="patient_r_knee" pos="0 -0.25 0">
+          <joint name="patient_r_knee_flex" type="hinge" axis="1 0 0"
+                 range="-130 0" pos="0 0 0"/>
+          <geom name="patient_r_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="patient_gown"/>
+          <geom name="patient_r_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+
+      <!-- Left Thigh (seated, horizontal) -->
+      <body name="patient_l_hip" pos="-0.1 0 0">
+        <joint name="patient_l_hip_flex" type="hinge" axis="1 0 0"
+               range="-120 30" pos="0 0 0"/>
+        <geom name="patient_l_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="patient_l_knee" pos="0 -0.25 0">
+          <joint name="patient_l_knee_flex" type="hinge" axis="1 0 0"
+                 range="-130 0" pos="0 0 0"/>
+          <geom name="patient_l_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="patient_gown"/>
+          <geom name="patient_l_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- ============================================ -->
+    <!-- DOCTOR (Standing G1 Humanoid with Syringe) -->
+    <!-- ============================================ -->
+    <body name="doctor_root" pos="0.7 -0.3 0">
+      <!-- Pelvis -->
+      <geom name="doctor_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55"
+            material="doctor_shell"/>
+
+      <!-- Torso -->
+      <body name="doctor_torso" pos="0 0 0.61">
+        <geom name="doctor_torso_geom" type="box" size="0.15 0.09 0.2"
+              pos="0 0 0.2" material="doctor_shell"/>
+        <!-- Medical cross emblem -->
+        <geom name="doctor_cross_h" type="box" size="0.04 0.001 0.01"
+              pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <geom name="doctor_cross_v" type="box" size="0.01 0.001 0.04"
+              pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+
+        <!-- Head -->
+        <body name="doctor_head" pos="0 0 0.46">
+          <geom name="doctor_head_geom" type="sphere" size="0.1" material="robot_joint"/>
+          <geom name="doctor_visor" type="box" size="0.07 0.001 0.03" pos="0 -0.09 0.02"
+                material="robot_visor"/>
+        </body>
+
+        <!-- Right Arm (holds syringe) -->
+        <body name="doctor_r_shoulder" pos="0.2 0 0.34">
+          <joint name="doctor_r_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-180 90" pos="0 0 0"/>
+          <joint name="doctor_r_shoulder_yaw" type="hinge" axis="0 0 1"
+                 range="-90 90" pos="0 0 0"/>
+          <geom name="doctor_r_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 0.08 0 -0.2" material="doctor_shell"/>
+          <body name="doctor_r_elbow" pos="0.08 0 -0.2">
+            <joint name="doctor_r_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 140" pos="0 0 0"/>
+            <geom name="doctor_r_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 0.03 0 -0.18" material="doctor_shell"/>
+
+            <!-- Hand holding syringe -->
+            <body name="doctor_r_hand" pos="0.03 0 -0.2">
+              <joint name="doctor_r_wrist" type="hinge" axis="0 1 0"
+                     range="-45 45" pos="0 0 0"/>
+              <geom name="doctor_hand_geom" type="box" size="0.03 0.02 0.04"
+                    material="robot_joint"/>
+              <!-- Syringe -->
+              <geom name="syringe_barrel" type="cylinder" size="0.012 0.06"
+                    pos="0 0 -0.08" material="syringe_body"/>
+              <geom name="syringe_plunger" type="cylinder" size="0.008 0.03"
+                    pos="0 0 -0.02" material="syringe_plunger"/>
+              <geom name="syringe_needle" type="cylinder" size="0.002 0.025"
+                    pos="0 0 -0.155" material="needle"/>
+              <!-- Needle tip site for contact detection -->
+              <site name="needle_tip" pos="0 0 -0.18" size="0.003"
+                    rgba="0.8 0.8 0.85 1"/>
+            </body>
+          </body>
+        </body>
+
+        <!-- Left Arm -->
+        <body name="doctor_l_shoulder" pos="-0.2 0 0.34">
+          <joint name="doctor_l_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-180 90" pos="0 0 0"/>
+          <geom name="doctor_l_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 -0.08 0 -0.2" material="doctor_shell"/>
+          <body name="doctor_l_elbow" pos="-0.08 0 -0.2">
+            <joint name="doctor_l_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 140" pos="0 0 0"/>
+            <geom name="doctor_l_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 -0.03 0 -0.18" material="doctor_shell"/>
+            <geom name="doctor_l_hand" type="box" size="0.03 0.015 0.04"
+                  pos="-0.03 0 -0.22" material="robot_joint"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- Right Leg -->
+      <body name="doctor_r_hip" pos="0.1 0 0.5">
+        <joint name="doctor_r_hip_flex" type="hinge" axis="1 0 0"
+               range="-30 90" pos="0 0 0"/>
+        <geom name="doctor_r_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="doctor_r_knee" pos="0 0 -0.25">
+          <joint name="doctor_r_knee_flex" type="hinge" axis="1 0 0"
+                 range="0 130" pos="0 0 0"/>
+          <geom name="doctor_r_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+          <geom name="doctor_r_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+
+      <!-- Left Leg -->
+      <body name="doctor_l_hip" pos="-0.1 0 0.5">
+        <joint name="doctor_l_hip_flex" type="hinge" axis="1 0 0"
+               range="-30 90" pos="0 0 0"/>
+        <geom name="doctor_l_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="doctor_l_knee" pos="0 0 -0.25">
+          <joint name="doctor_l_knee_flex" type="hinge" axis="1 0 0"
+                 range="0 130" pos="0 0 0"/>
+          <geom name="doctor_l_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+          <geom name="doctor_l_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- ============================================ -->
+    <!-- NURSE (Standing G1 Humanoid) -->
+    <!-- ============================================ -->
+    <body name="nurse_root" pos="-0.6 -0.4 0">
+      <!-- Pelvis -->
+      <geom name="nurse_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55"
+            material="nurse_shell"/>
+
+      <!-- Torso -->
+      <body name="nurse_torso" pos="0 0 0.61">
+        <geom name="nurse_torso_geom" type="box" size="0.15 0.09 0.2"
+              pos="0 0 0.2" material="nurse_shell"/>
+        <!-- Medical plus badge -->
+        <geom name="nurse_badge_h" type="box" size="0.03 0.001 0.008"
+              pos="0.1 -0.091 0.3" rgba="1 1 1 1"/>
+        <geom name="nurse_badge_v" type="box" size="0.008 0.001 0.03"
+              pos="0.1 -0.091 0.3" rgba="1 1 1 1"/>
+
+        <!-- Head -->
+        <body name="nurse_head" pos="0 0 0.46">
+          <geom name="nurse_head_geom" type="sphere" size="0.1" material="robot_joint"/>
+          <geom name="nurse_visor" type="box" size="0.07 0.001 0.03" pos="0 -0.09 0.02"
+                material="robot_visor"/>
+        </body>
+
+        <!-- Right Arm (holding clipboard/tablet) -->
+        <body name="nurse_r_shoulder" pos="0.2 0 0.34">
+          <joint name="nurse_r_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-180 90" pos="0 0 0"/>
+          <geom name="nurse_r_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 0.08 0 -0.2" material="nurse_shell"/>
+          <body name="nurse_r_elbow" pos="0.08 0 -0.2">
+            <joint name="nurse_r_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 140" pos="0 0 0"/>
+            <geom name="nurse_r_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 0.03 0 -0.18" material="nurse_shell"/>
+            <body name="nurse_r_hand" pos="0.03 0 -0.2">
+              <geom name="nurse_hand_r" type="box" size="0.03 0.015 0.04"
+                    material="robot_joint"/>
+              <!-- Tablet/clipboard -->
+              <geom name="nurse_tablet" type="box" size="0.06 0.005 0.08"
+                    pos="0 -0.02 -0.06" material="monitor_body"/>
+              <geom name="nurse_tablet_screen" type="box" size="0.05 0.001 0.065"
+                    pos="0 -0.026 -0.06" material="monitor_screen"/>
+            </body>
+          </body>
+        </body>
+
+        <!-- Left Arm -->
+        <body name="nurse_l_shoulder" pos="-0.2 0 0.34">
+          <joint name="nurse_l_shoulder_pitch" type="hinge" axis="1 0 0"
+                 range="-180 90" pos="0 0 0"/>
+          <geom name="nurse_l_upper_arm" type="capsule" size="0.04"
+                fromto="0 0 0 -0.08 0 -0.2" material="nurse_shell"/>
+          <body name="nurse_l_elbow" pos="-0.08 0 -0.2">
+            <joint name="nurse_l_elbow_flex" type="hinge" axis="1 0 0"
+                   range="0 140" pos="0 0 0"/>
+            <geom name="nurse_l_forearm" type="capsule" size="0.035"
+                  fromto="0 0 0 -0.03 0 -0.18" material="nurse_shell"/>
+            <geom name="nurse_l_hand" type="box" size="0.03 0.015 0.04"
+                  pos="-0.03 0 -0.22" material="robot_joint"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- Right Leg -->
+      <body name="nurse_r_hip" pos="0.1 0 0.5">
+        <joint name="nurse_r_hip_flex" type="hinge" axis="1 0 0"
+               range="-30 90" pos="0 0 0"/>
+        <geom name="nurse_r_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="nurse_r_knee" pos="0 0 -0.25">
+          <joint name="nurse_r_knee_flex" type="hinge" axis="1 0 0"
+                 range="0 130" pos="0 0 0"/>
+          <geom name="nurse_r_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+          <geom name="nurse_r_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+
+      <!-- Left Leg -->
+      <body name="nurse_l_hip" pos="-0.1 0 0.5">
+        <joint name="nurse_l_hip_flex" type="hinge" axis="1 0 0"
+               range="-30 90" pos="0 0 0"/>
+        <geom name="nurse_l_thigh" type="capsule" size="0.05"
+              fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="nurse_l_knee" pos="0 0 -0.25">
+          <joint name="nurse_l_knee_flex" type="hinge" axis="1 0 0"
+                 range="0 130" pos="0 0 0"/>
+          <geom name="nurse_l_shin" type="capsule" size="0.04"
+                fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+          <geom name="nurse_l_foot" type="box" size="0.05 0.08 0.02"
+                pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- ============================================ -->
+    <!-- MEDICAL EQUIPMENT -->
+    <!-- ============================================ -->
+
+    <!-- IV Stand -->
+    <body name="iv_stand" pos="-0.5 0.3 0">
+      <geom name="iv_pole" type="cylinder" size="0.015 0.8" pos="0 0 0.8"
+            material="iv_stand"/>
+      <geom name="iv_base_1" type="cylinder" size="0.012 0.15" pos="0.1 0 0.015"
+            euler="0 90 0" material="iv_stand"/>
+      <geom name="iv_base_2" type="cylinder" size="0.012 0.15" pos="-0.1 0 0.015"
+            euler="0 90 0" material="iv_stand"/>
+      <geom name="iv_hook" type="cylinder" size="0.008 0.06" pos="0 0 1.65"
+            euler="0 45 0" material="iv_stand"/>
+      <!-- IV Bag -->
+      <geom name="iv_bag" type="box" size="0.04 0.02 0.07" pos="0 0 1.55"
+            material="iv_bag"/>
+      <!-- IV Tubing (simplified) -->
+      <geom name="iv_tube" type="cylinder" size="0.003 0.4" pos="0.02 0 1.1"
+            material="syringe_body"/>
+    </body>
+
+    <!-- Medical Instrument Tray -->
+    <body name="med_tray" pos="0.5 0.4 0">
+      <!-- Tray stand -->
+      <geom name="tray_leg" type="cylinder" size="0.02 0.4" pos="0 0 0.4"
+            material="tray_metal"/>
+      <!-- Tray surface -->
+      <geom name="tray_surface" type="box" size="0.2 0.12 0.005" pos="0 0 0.8"
+            material="tray_metal"/>
+      <!-- Tray rim -->
+      <geom name="tray_rim_f" type="box" size="0.2 0.005 0.015" pos="0 -0.12 0.815"
+            material="tray_metal"/>
+      <geom name="tray_rim_b" type="box" size="0.2 0.005 0.015" pos="0 0.12 0.815"
+            material="tray_metal"/>
+      <!-- Spare syringe on tray -->
+      <geom name="spare_syringe" type="cylinder" size="0.01 0.05" pos="0.05 0 0.815"
+            euler="0 90 0" material="syringe_body"/>
+      <!-- Alcohol swab (small box) -->
+      <geom name="swab_packet" type="box" size="0.025 0.025 0.003" pos="-0.08 0 0.81"
+            rgba="0.9 0.9 0.9 1"/>
+    </body>
+
+    <!-- Vital Signs Monitor -->
+    <body name="vitals_monitor" pos="-0.8 0.2 0">
+      <geom name="monitor_stand" type="cylinder" size="0.025 0.5" pos="0 0 0.5"
+            material="monitor_body"/>
+      <geom name="monitor_base" type="box" size="0.15 0.12 0.02" pos="0 0 0.02"
+            material="monitor_body"/>
+      <geom name="monitor_housing" type="box" size="0.18 0.04 0.14" pos="0 0 1.15"
+            material="monitor_body"/>
+      <geom name="monitor_display" type="box" size="0.16 0.001 0.12" pos="0 -0.041 1.15"
+            material="monitor_screen"/>
+    </body>
+  </worldbody>
+
+  <!-- Joint Actuators for Injection Procedure -->
+  <actuator>
+    <!-- Doctor arm actuators for injection motion -->
+    <position name="doc_r_shoulder_pitch" joint="doctor_r_shoulder_pitch" kp="50"/>
+    <position name="doc_r_shoulder_yaw" joint="doctor_r_shoulder_yaw" kp="50"/>
+    <position name="doc_r_elbow" joint="doctor_r_elbow_flex" kp="40"/>
+    <position name="doc_r_wrist" joint="doctor_r_wrist" kp="30"/>
+    <position name="doc_l_shoulder_pitch" joint="doctor_l_shoulder_pitch" kp="50"/>
+    <position name="doc_l_elbow" joint="doctor_l_elbow_flex" kp="40"/>
+
+    <!-- Nurse arm actuators -->
+    <position name="nurse_r_shoulder_pitch" joint="nurse_r_shoulder_pitch" kp="50"/>
+    <position name="nurse_r_elbow" joint="nurse_r_elbow_flex" kp="40"/>
+    <position name="nurse_l_shoulder_pitch" joint="nurse_l_shoulder_pitch" kp="50"/>
+    <position name="nurse_l_elbow" joint="nurse_l_elbow_flex" kp="40"/>
+
+    <!-- Patient arm (passive, slight resistance) -->
+    <position name="pat_r_shoulder" joint="patient_r_shoulder_pitch" kp="20"/>
+    <position name="pat_r_elbow" joint="patient_r_elbow_flex" kp="15"/>
+  </actuator>
+
+  <!-- Sensors for monitoring -->
+  <sensor>
+    <framepos name="needle_pos" objtype="site" objname="needle_tip"/>
+    <framepos name="target_pos" objtype="site" objname="injection_target"/>
+  </sensor>
+</mujoco>
