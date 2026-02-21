@@ -13,6 +13,14 @@ import json
 import math
 from pathlib import Path
 
+from simulation.constants import (
+    PHASE_TIMINGS,
+    TOTAL_DURATION,
+    AnimationData,
+    AnimationKeyframe,
+    validate_fps,
+)
+
 
 def smooth_step(t: float) -> float:
     """Hermite smoothstep interpolation."""
@@ -20,7 +28,7 @@ def smooth_step(t: float) -> float:
     return t * t * (3.0 - 2.0 * t)
 
 
-def generate_web_animation(fps: int = 30) -> dict:
+def generate_web_animation(fps: int = 30) -> AnimationData:
     """Generate animation keyframes for the web viewer.
 
     This creates pre-computed animation data that the Three.js viewer
@@ -32,22 +40,21 @@ def generate_web_animation(fps: int = 30) -> dict:
 
     Returns:
         Dictionary with animation keyframes and metadata.
+
+    Raises:
+        ValueError: If fps is less than 1.
     """
+    validate_fps(fps)
+
     phases = [
-        {"name": "prepare", "duration": 1.0, "label": "Preparing syringe"},
-        {"name": "approach", "duration": 2.0, "label": "Approaching patient"},
-        {"name": "position", "duration": 1.5, "label": "Positioning at deltoid"},
-        {"name": "inject", "duration": 2.0, "label": "Administering medication"},
-        {"name": "hold", "duration": 1.5, "label": "Holding steady"},
-        {"name": "withdraw", "duration": 1.5, "label": "Withdrawing syringe"},
-        {"name": "monitor", "duration": 2.0, "label": "Post-injection monitoring"},
+        {"name": name, "duration": duration, "label": label}
+        for name, duration, label in PHASE_TIMINGS
     ]
 
-    total_duration = sum(p["duration"] for p in phases)
-    total_frames = int(total_duration * fps)
+    total_frames = math.ceil(TOTAL_DURATION * fps)
     frame_dt = 1.0 / fps
 
-    keyframes = []
+    keyframes: list[AnimationKeyframe] = []
 
     for i in range(total_frames):
         time = i * frame_dt
@@ -110,7 +117,6 @@ def generate_web_animation(fps: int = 30) -> dict:
             doc_elbow = 90.0
             doc_wrist = 25.0
             doc_x_offset = -0.15
-            # Subtle breathing oscillation
             doc_shoulder_pitch += math.sin(time * 2.0) * 0.5
 
         elif phase_name == "withdraw":
@@ -128,7 +134,7 @@ def generate_web_animation(fps: int = 30) -> dict:
             nurse_shoulder = 20.0 + t * 15.0
             nurse_elbow = 70.0 - t * 20.0
 
-        keyframe = {
+        keyframe: AnimationKeyframe = {
             "t": round(time, 3),
             "phase": phase_name,
             "label": current_phase["label"],
@@ -154,9 +160,9 @@ def generate_web_animation(fps: int = 30) -> dict:
             "Cancer medication delivery to patient deltoid (upper arm)."
         ),
         "attribution": "Simulation framework inspired by mjlab (mujocolab/mjlab)",
-        "duration": total_duration,
+        "duration": TOTAL_DURATION,
         "fps": fps,
-        "total_frames": total_frames,
+        "total_frames": len(keyframes),
         "phases": phases,
         "keyframes": keyframes,
     }
@@ -181,12 +187,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    try:
+        validate_fps(args.fps)
+    except ValueError as e:
+        parser.error(str(e))
+
     animation = generate_web_animation(fps=args.fps)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(animation, f, separators=(",", ":"))
 
     size_kb = output_path.stat().st_size / 1024

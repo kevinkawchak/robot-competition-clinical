@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Clinical Robot Competition Scene — 4-Station 2x2 Grid
+  G1 humanoid robots: Doctor (left, white coat) reviews symptoms,
+  Nurse (right, blue coat) performs deltoid injection to patient's right arm.
+  PPO-trained policies with different seeds per station.
+  Attribution: Simulation framework inspired by mjlab (mujocolab/mjlab).
+-->
+<mujoco model="clinical_competition_sim">
+  <compiler angle="degree" coordinate="local"/>
+  <option gravity="0 0 -9.81" timestep="0.002">
+    <flag warmstart="enable"/>
+  </option>
+  <default>
+    <joint armature="0.01" damping="0.5" limited="true"/>
+    <geom condim="3" friction="1.0 0.5 0.5" margin="0.001"/>
+  </default>
+
+  <asset>
+    <material name="floor_tile" rgba="0.92 0.92 0.95 1" specular="0.3"/>
+    <material name="wall" rgba="0.95 0.96 0.98 1"/>
+    <material name="doctor_shell" rgba="0.95 0.95 0.97 1" specular="0.4"/>
+    <material name="nurse_shell" rgba="0.35 0.55 0.82 1" specular="0.3"/>
+    <material name="patient_gown" rgba="0.55 0.78 0.55 1" specular="0.1"/>
+    <material name="robot_joint" rgba="0.25 0.25 0.28 1" specular="0.6"/>
+    <material name="robot_visor" rgba="0.1 0.3 0.6 0.8" specular="0.8"/>
+    <material name="chair_frame" rgba="0.3 0.3 0.35 1" specular="0.5"/>
+    <material name="chair_cushion" rgba="0.2 0.35 0.55 1" specular="0.1"/>
+    <material name="syringe_body" rgba="0.85 0.87 0.9 1" specular="0.7"/>
+    <material name="syringe_plunger" rgba="0.4 0.4 0.45 1"/>
+    <material name="needle" rgba="0.75 0.77 0.8 1" specular="0.9"/>
+    <material name="tray_metal" rgba="0.72 0.74 0.78 1" specular="0.8"/>
+    <material name="iv_stand" rgba="0.65 0.65 0.7 1" specular="0.6"/>
+    <material name="iv_bag" rgba="0.8 0.85 0.9 0.7"/>
+    <material name="monitor_screen" rgba="0.05 0.15 0.05 1" specular="0.2"/>
+    <material name="monitor_body" rgba="0.35 0.35 0.4 1"/>
+  </asset>
+
+  <worldbody>
+    <!-- Ground and Lighting -->
+    <geom name="floor" type="plane" size="8 8 0.05" material="floor_tile"/>
+    <light name="overhead" pos="0 0 3.5" dir="0 0 -1" diffuse="0.9 0.9 0.95" specular="0.3 0.3 0.3" castshadow="true"/>
+    <light name="fill" pos="4 -4 3" dir="-0.5 0.5 -0.7" diffuse="0.3 0.3 0.35"/>
+    <geom name="wall_back" type="box" size="6 0.05 2" pos="0 -5 2" material="wall"/>
+    <geom name="wall_left" type="box" size="0.05 5 2" pos="-6 0 2" material="wall"/>
+    <geom name="wall_right" type="box" size="0.05 5 2" pos="6 0 2" material="wall"/>
+
+    <!-- ============================== -->
+    <!-- STATION A (front-left) at (-2.25, 0, -2.0) -->
+    <!-- ============================== -->
+    <body name="a_chair" pos="-2.25 0 -2.0">
+      <geom name="a_seat" type="box" size="0.25 0.22 0.03" pos="0 0 0.47" material="chair_cushion"/>
+      <geom name="a_back" type="box" size="0.25 0.03 0.3" pos="0 0.2 0.8" material="chair_cushion"/>
+      <geom name="a_arm_r" type="box" size="0.03 0.18 0.02" pos="0.27 0 0.62" material="chair_frame"/>
+      <geom name="a_arm_l" type="box" size="0.03 0.18 0.02" pos="-0.27 0 0.62" material="chair_frame"/>
+      <geom name="a_leg1" type="cylinder" size="0.025" fromto="-0.2 -0.2 0 -0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="a_leg2" type="cylinder" size="0.025" fromto="0.2 -0.2 0 0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="a_leg3" type="cylinder" size="0.025" fromto="-0.2 0.15 0 -0.2 0.15 0.45" material="chair_frame"/>
+      <geom name="a_leg4" type="cylinder" size="0.025" fromto="0.2 0.15 0 0.2 0.15 0.45" material="chair_frame"/>
+    </body>
+
+    <!-- Station A Patient -->
+    <body name="a_patient" pos="-2.25 0 -1.5">
+      <geom name="a_pat_pelvis" type="box" size="0.16 0.1 0.06" material="patient_gown"/>
+      <body name="a_pat_torso" pos="0 0 0.06">
+        <geom name="a_pat_torso_g" type="box" size="0.15 0.09 0.18" pos="0 0 0.18" material="patient_gown"/>
+        <body name="a_pat_head" pos="0 0 0.42">
+          <geom name="a_pat_head_g" type="sphere" size="0.1" material="robot_joint"/>
+          <geom name="a_pat_visor" type="box" size="0.07 0.001 0.03" pos="0 -0.09 0.02" material="robot_visor"/>
+        </body>
+        <!-- Right arm (injection target — closest to nurse on right) -->
+        <body name="a_pat_r_shoulder" pos="0.2 0 0.3">
+          <joint name="a_pat_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-90 90"/>
+          <geom name="a_pat_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="patient_gown"/>
+          <site name="a_injection_target" pos="0.04 -0.04 -0.08" size="0.025" rgba="1 0.2 0.2 0.5"/>
+          <body name="a_pat_r_elbow" pos="0.08 0 -0.2">
+            <joint name="a_pat_r_elbow_flex" type="hinge" axis="1 0 0" range="0 130"/>
+            <geom name="a_pat_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="patient_gown"/>
+          </body>
+        </body>
+        <body name="a_pat_l_shoulder" pos="-0.2 0 0.3">
+          <geom name="a_pat_l_upper" type="capsule" size="0.04" fromto="0 0 0 -0.08 0 -0.2" material="patient_gown"/>
+        </body>
+      </body>
+      <body name="a_pat_r_hip" pos="0.1 0 0">
+        <joint name="a_pat_r_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="a_pat_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="a_pat_r_knee" pos="0 -0.25 0">
+          <joint name="a_pat_r_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/>
+          <geom name="a_pat_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/>
+        </body>
+      </body>
+      <body name="a_pat_l_hip" pos="-0.1 0 0">
+        <joint name="a_pat_l_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="a_pat_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="a_pat_l_knee" pos="0 -0.25 0">
+          <joint name="a_pat_l_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/>
+          <geom name="a_pat_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- Station A Doctor (left of patient) -->
+    <body name="a_doctor" pos="-3.05 -0.3 -2.0">
+      <geom name="a_doc_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="doctor_shell"/>
+      <body name="a_doc_torso" pos="0 0 0.61">
+        <geom name="a_doc_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="doctor_shell"/>
+        <geom name="a_doc_cross_h" type="box" size="0.04 0.001 0.01" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <geom name="a_doc_cross_v" type="box" size="0.01 0.001 0.04" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <body name="a_doc_head" pos="0 0 0.46">
+          <geom name="a_doc_head_g" type="sphere" size="0.1" material="robot_joint"/>
+        </body>
+        <body name="a_doc_r_shoulder" pos="0.2 0 0.34">
+          <joint name="a_doc_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <geom name="a_doc_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="doctor_shell"/>
+          <body name="a_doc_r_elbow" pos="0.08 0 -0.2">
+            <joint name="a_doc_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="a_doc_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="doctor_shell"/>
+            <body name="a_doc_r_hand" pos="0.03 0 -0.2">
+              <geom name="a_doc_hand" type="box" size="0.03 0.02 0.04" material="robot_joint"/>
+              <!-- Tablet -->
+              <geom name="a_doc_tablet" type="box" size="0.06 0.005 0.08" pos="0 -0.02 -0.06" material="monitor_body"/>
+              <geom name="a_doc_tablet_scr" type="box" size="0.05 0.001 0.065" pos="0 -0.026 -0.06" material="monitor_screen"/>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="a_doc_r_hip" pos="0.1 0 0.5">
+        <geom name="a_doc_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="a_doc_r_knee" pos="0 0 -0.25">
+          <geom name="a_doc_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+          <geom name="a_doc_r_foot" type="box" size="0.05 0.08 0.02" pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+      <body name="a_doc_l_hip" pos="-0.1 0 0.5">
+        <geom name="a_doc_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="a_doc_l_knee" pos="0 0 -0.25">
+          <geom name="a_doc_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+          <geom name="a_doc_l_foot" type="box" size="0.05 0.08 0.02" pos="0 -0.03 -0.27" material="robot_joint"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- Station A Nurse (right of patient) with syringe -->
+    <body name="a_nurse" pos="-1.45 -0.3 -2.0">
+      <geom name="a_nrs_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="nurse_shell"/>
+      <body name="a_nrs_torso" pos="0 0 0.61">
+        <geom name="a_nrs_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="nurse_shell"/>
+        <geom name="a_nrs_badge_h" type="box" size="0.03 0.001 0.008" pos="0.1 -0.091 0.3" rgba="1 1 1 1"/>
+        <geom name="a_nrs_badge_v" type="box" size="0.008 0.001 0.03" pos="0.1 -0.091 0.3" rgba="1 1 1 1"/>
+        <body name="a_nrs_head" pos="0 0 0.46">
+          <geom name="a_nrs_head_g" type="sphere" size="0.1" material="robot_joint"/>
+        </body>
+        <body name="a_nrs_r_shoulder" pos="0.2 0 0.34">
+          <joint name="a_nrs_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <joint name="a_nrs_r_shoulder_yaw" type="hinge" axis="0 0 1" range="-90 90"/>
+          <geom name="a_nrs_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="nurse_shell"/>
+          <body name="a_nrs_r_elbow" pos="0.08 0 -0.2">
+            <joint name="a_nrs_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="a_nrs_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="nurse_shell"/>
+            <body name="a_nrs_r_hand" pos="0.03 0 -0.2">
+              <joint name="a_nrs_r_wrist" type="hinge" axis="0 1 0" range="-45 45"/>
+              <geom name="a_nrs_hand" type="box" size="0.03 0.02 0.04" material="robot_joint"/>
+              <geom name="a_nrs_syringe" type="cylinder" size="0.012 0.06" pos="0 0 -0.08" material="syringe_body"/>
+              <geom name="a_nrs_plunger" type="cylinder" size="0.008 0.03" pos="0 0 -0.02" material="syringe_plunger"/>
+              <geom name="a_nrs_needle" type="cylinder" size="0.002 0.025" pos="0 0 -0.155" material="needle"/>
+              <site name="a_needle_tip" pos="0 0 -0.18" size="0.003" rgba="0.8 0.8 0.85 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="a_nrs_r_hip" pos="0.1 0 0.5">
+        <geom name="a_nrs_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="a_nrs_r_knee" pos="0 0 -0.25">
+          <geom name="a_nrs_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        </body>
+      </body>
+      <body name="a_nrs_l_hip" pos="-0.1 0 0.5">
+        <geom name="a_nrs_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="a_nrs_l_knee" pos="0 0 -0.25">
+          <geom name="a_nrs_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        </body>
+      </body>
+    </body>
+
+    <!-- Station A Equipment -->
+    <body name="a_iv" pos="-2.75 0.3 -2.0">
+      <geom name="a_iv_pole" type="cylinder" size="0.015 0.8" pos="0 0 0.8" material="iv_stand"/>
+      <geom name="a_iv_bag" type="box" size="0.04 0.02 0.07" pos="0 0 1.55" material="iv_bag"/>
+    </body>
+    <body name="a_tray" pos="-1.75 0.4 -2.0">
+      <geom name="a_tray_leg" type="cylinder" size="0.02 0.4" pos="0 0 0.4" material="tray_metal"/>
+      <geom name="a_tray_surf" type="box" size="0.2 0.12 0.005" pos="0 0 0.8" material="tray_metal"/>
+    </body>
+    <body name="a_monitor" pos="-3.05 0.2 -2.0">
+      <geom name="a_mon_stand" type="cylinder" size="0.025 0.5" pos="0 0 0.5" material="monitor_body"/>
+      <geom name="a_mon_housing" type="box" size="0.18 0.04 0.14" pos="0 0 1.15" material="monitor_body"/>
+      <geom name="a_mon_display" type="box" size="0.16 0.001 0.12" pos="0 -0.041 1.15" material="monitor_screen"/>
+    </body>
+
+    <!-- ============================== -->
+    <!-- STATION B (front-right) at (2.25, 0, -2.0) -->
+    <!-- ============================== -->
+    <body name="b_chair" pos="2.25 0 -2.0">
+      <geom name="b_seat" type="box" size="0.25 0.22 0.03" pos="0 0 0.47" material="chair_cushion"/>
+      <geom name="b_back" type="box" size="0.25 0.03 0.3" pos="0 0.2 0.8" material="chair_cushion"/>
+      <geom name="b_arm_r" type="box" size="0.03 0.18 0.02" pos="0.27 0 0.62" material="chair_frame"/>
+      <geom name="b_arm_l" type="box" size="0.03 0.18 0.02" pos="-0.27 0 0.62" material="chair_frame"/>
+      <geom name="b_leg1" type="cylinder" size="0.025" fromto="-0.2 -0.2 0 -0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="b_leg2" type="cylinder" size="0.025" fromto="0.2 -0.2 0 0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="b_leg3" type="cylinder" size="0.025" fromto="-0.2 0.15 0 -0.2 0.15 0.45" material="chair_frame"/>
+      <geom name="b_leg4" type="cylinder" size="0.025" fromto="0.2 0.15 0 0.2 0.15 0.45" material="chair_frame"/>
+    </body>
+    <body name="b_patient" pos="2.25 0 -1.5">
+      <geom name="b_pat_pelvis" type="box" size="0.16 0.1 0.06" material="patient_gown"/>
+      <body name="b_pat_torso" pos="0 0 0.06">
+        <geom name="b_pat_torso_g" type="box" size="0.15 0.09 0.18" pos="0 0 0.18" material="patient_gown"/>
+        <body name="b_pat_head" pos="0 0 0.42">
+          <geom name="b_pat_head_g" type="sphere" size="0.1" material="robot_joint"/>
+        </body>
+        <body name="b_pat_r_shoulder" pos="0.2 0 0.3">
+          <joint name="b_pat_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-90 90"/>
+          <geom name="b_pat_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="patient_gown"/>
+          <site name="b_injection_target" pos="0.04 -0.04 -0.08" size="0.025" rgba="1 0.2 0.2 0.5"/>
+          <body name="b_pat_r_elbow" pos="0.08 0 -0.2">
+            <joint name="b_pat_r_elbow_flex" type="hinge" axis="1 0 0" range="0 130"/>
+            <geom name="b_pat_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="patient_gown"/>
+          </body>
+        </body>
+      </body>
+      <body name="b_pat_r_hip" pos="0.1 0 0"><joint name="b_pat_r_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="b_pat_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="b_pat_r_knee" pos="0 -0.25 0"><joint name="b_pat_r_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/>
+          <geom name="b_pat_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+      <body name="b_pat_l_hip" pos="-0.1 0 0"><joint name="b_pat_l_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="b_pat_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="b_pat_l_knee" pos="0 -0.25 0"><joint name="b_pat_l_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/>
+          <geom name="b_pat_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+    </body>
+    <body name="b_doctor" pos="1.45 -0.3 -2.0">
+      <geom name="b_doc_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="doctor_shell"/>
+      <body name="b_doc_torso" pos="0 0 0.61">
+        <geom name="b_doc_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="doctor_shell"/>
+        <geom name="b_doc_cross_h" type="box" size="0.04 0.001 0.01" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <geom name="b_doc_cross_v" type="box" size="0.01 0.001 0.04" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <body name="b_doc_r_shoulder" pos="0.2 0 0.34">
+          <joint name="b_doc_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <geom name="b_doc_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="doctor_shell"/>
+          <body name="b_doc_r_elbow" pos="0.08 0 -0.2">
+            <joint name="b_doc_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="b_doc_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="doctor_shell"/>
+          </body>
+        </body>
+      </body>
+      <body name="b_doc_r_hip" pos="0.1 0 0.5"><geom name="b_doc_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="b_doc_r_knee" pos="0 0 -0.25"><geom name="b_doc_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+      <body name="b_doc_l_hip" pos="-0.1 0 0.5"><geom name="b_doc_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/>
+        <body name="b_doc_l_knee" pos="0 0 -0.25"><geom name="b_doc_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+    </body>
+    <body name="b_nurse" pos="3.05 -0.3 -2.0">
+      <geom name="b_nrs_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="nurse_shell"/>
+      <body name="b_nrs_torso" pos="0 0 0.61">
+        <geom name="b_nrs_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="nurse_shell"/>
+        <body name="b_nrs_r_shoulder" pos="0.2 0 0.34">
+          <joint name="b_nrs_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <joint name="b_nrs_r_shoulder_yaw" type="hinge" axis="0 0 1" range="-90 90"/>
+          <geom name="b_nrs_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="nurse_shell"/>
+          <body name="b_nrs_r_elbow" pos="0.08 0 -0.2">
+            <joint name="b_nrs_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="b_nrs_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="nurse_shell"/>
+            <body name="b_nrs_r_hand" pos="0.03 0 -0.2">
+              <joint name="b_nrs_r_wrist" type="hinge" axis="0 1 0" range="-45 45"/>
+              <geom name="b_nrs_hand" type="box" size="0.03 0.02 0.04" material="robot_joint"/>
+              <geom name="b_nrs_syringe" type="cylinder" size="0.012 0.06" pos="0 0 -0.08" material="syringe_body"/>
+              <geom name="b_nrs_needle" type="cylinder" size="0.002 0.025" pos="0 0 -0.155" material="needle"/>
+              <site name="b_needle_tip" pos="0 0 -0.18" size="0.003" rgba="0.8 0.8 0.85 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="b_nrs_r_hip" pos="0.1 0 0.5"><geom name="b_nrs_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="b_nrs_r_knee" pos="0 0 -0.25"><geom name="b_nrs_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+      <body name="b_nrs_l_hip" pos="-0.1 0 0.5"><geom name="b_nrs_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/>
+        <body name="b_nrs_l_knee" pos="0 0 -0.25"><geom name="b_nrs_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+    </body>
+    <body name="b_iv" pos="1.75 0.3 -2.0"><geom name="b_iv_pole" type="cylinder" size="0.015 0.8" pos="0 0 0.8" material="iv_stand"/><geom name="b_iv_bag" type="box" size="0.04 0.02 0.07" pos="0 0 1.55" material="iv_bag"/></body>
+    <body name="b_tray" pos="2.75 0.4 -2.0"><geom name="b_tray_leg" type="cylinder" size="0.02 0.4" pos="0 0 0.4" material="tray_metal"/><geom name="b_tray_surf" type="box" size="0.2 0.12 0.005" pos="0 0 0.8" material="tray_metal"/></body>
+    <body name="b_monitor" pos="1.45 0.2 -2.0"><geom name="b_mon_stand" type="cylinder" size="0.025 0.5" pos="0 0 0.5" material="monitor_body"/><geom name="b_mon_housing" type="box" size="0.18 0.04 0.14" pos="0 0 1.15" material="monitor_body"/><geom name="b_mon_display" type="box" size="0.16 0.001 0.12" pos="0 -0.041 1.15" material="monitor_screen"/></body>
+
+    <!-- ============================== -->
+    <!-- STATION C (back-left) at (-2.25, 0, 2.0) -->
+    <!-- ============================== -->
+    <body name="c_chair" pos="-2.25 0 2.0">
+      <geom name="c_seat" type="box" size="0.25 0.22 0.03" pos="0 0 0.47" material="chair_cushion"/>
+      <geom name="c_back" type="box" size="0.25 0.03 0.3" pos="0 0.2 0.8" material="chair_cushion"/>
+      <geom name="c_arm_r" type="box" size="0.03 0.18 0.02" pos="0.27 0 0.62" material="chair_frame"/>
+      <geom name="c_arm_l" type="box" size="0.03 0.18 0.02" pos="-0.27 0 0.62" material="chair_frame"/>
+      <geom name="c_leg1" type="cylinder" size="0.025" fromto="-0.2 -0.2 0 -0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="c_leg2" type="cylinder" size="0.025" fromto="0.2 -0.2 0 0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="c_leg3" type="cylinder" size="0.025" fromto="-0.2 0.15 0 -0.2 0.15 0.45" material="chair_frame"/>
+      <geom name="c_leg4" type="cylinder" size="0.025" fromto="0.2 0.15 0 0.2 0.15 0.45" material="chair_frame"/>
+    </body>
+    <body name="c_patient" pos="-2.25 0 2.5">
+      <geom name="c_pat_pelvis" type="box" size="0.16 0.1 0.06" material="patient_gown"/>
+      <body name="c_pat_torso" pos="0 0 0.06">
+        <geom name="c_pat_torso_g" type="box" size="0.15 0.09 0.18" pos="0 0 0.18" material="patient_gown"/>
+        <body name="c_pat_head" pos="0 0 0.42"><geom name="c_pat_head_g" type="sphere" size="0.1" material="robot_joint"/></body>
+        <body name="c_pat_r_shoulder" pos="0.2 0 0.3">
+          <joint name="c_pat_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-90 90"/>
+          <geom name="c_pat_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="patient_gown"/>
+          <site name="c_injection_target" pos="0.04 -0.04 -0.08" size="0.025" rgba="1 0.2 0.2 0.5"/>
+          <body name="c_pat_r_elbow" pos="0.08 0 -0.2">
+            <joint name="c_pat_r_elbow_flex" type="hinge" axis="1 0 0" range="0 130"/>
+            <geom name="c_pat_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="patient_gown"/>
+          </body>
+        </body>
+      </body>
+      <body name="c_pat_r_hip" pos="0.1 0 0"><joint name="c_pat_r_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="c_pat_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="c_pat_r_knee" pos="0 -0.25 0"><joint name="c_pat_r_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/><geom name="c_pat_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+      <body name="c_pat_l_hip" pos="-0.1 0 0"><joint name="c_pat_l_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="c_pat_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="c_pat_l_knee" pos="0 -0.25 0"><joint name="c_pat_l_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/><geom name="c_pat_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+    </body>
+    <body name="c_doctor" pos="-3.05 -0.3 2.0">
+      <geom name="c_doc_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="doctor_shell"/>
+      <body name="c_doc_torso" pos="0 0 0.61">
+        <geom name="c_doc_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="doctor_shell"/>
+        <geom name="c_doc_cross_h" type="box" size="0.04 0.001 0.01" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <geom name="c_doc_cross_v" type="box" size="0.01 0.001 0.04" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <body name="c_doc_r_shoulder" pos="0.2 0 0.34">
+          <joint name="c_doc_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <geom name="c_doc_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="doctor_shell"/>
+          <body name="c_doc_r_elbow" pos="0.08 0 -0.2">
+            <joint name="c_doc_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="c_doc_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="doctor_shell"/>
+          </body>
+        </body>
+      </body>
+      <body name="c_doc_r_hip" pos="0.1 0 0.5"><geom name="c_doc_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/><body name="c_doc_r_knee" pos="0 0 -0.25"><geom name="c_doc_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+      <body name="c_doc_l_hip" pos="-0.1 0 0.5"><geom name="c_doc_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/><body name="c_doc_l_knee" pos="0 0 -0.25"><geom name="c_doc_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+    </body>
+    <body name="c_nurse" pos="-1.45 -0.3 2.0">
+      <geom name="c_nrs_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="nurse_shell"/>
+      <body name="c_nrs_torso" pos="0 0 0.61">
+        <geom name="c_nrs_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="nurse_shell"/>
+        <body name="c_nrs_r_shoulder" pos="0.2 0 0.34">
+          <joint name="c_nrs_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <joint name="c_nrs_r_shoulder_yaw" type="hinge" axis="0 0 1" range="-90 90"/>
+          <geom name="c_nrs_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="nurse_shell"/>
+          <body name="c_nrs_r_elbow" pos="0.08 0 -0.2">
+            <joint name="c_nrs_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="c_nrs_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="nurse_shell"/>
+            <body name="c_nrs_r_hand" pos="0.03 0 -0.2">
+              <joint name="c_nrs_r_wrist" type="hinge" axis="0 1 0" range="-45 45"/>
+              <geom name="c_nrs_hand" type="box" size="0.03 0.02 0.04" material="robot_joint"/>
+              <geom name="c_nrs_syringe" type="cylinder" size="0.012 0.06" pos="0 0 -0.08" material="syringe_body"/>
+              <geom name="c_nrs_needle" type="cylinder" size="0.002 0.025" pos="0 0 -0.155" material="needle"/>
+              <site name="c_needle_tip" pos="0 0 -0.18" size="0.003" rgba="0.8 0.8 0.85 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="c_nrs_r_hip" pos="0.1 0 0.5"><geom name="c_nrs_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/><body name="c_nrs_r_knee" pos="0 0 -0.25"><geom name="c_nrs_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+      <body name="c_nrs_l_hip" pos="-0.1 0 0.5"><geom name="c_nrs_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/><body name="c_nrs_l_knee" pos="0 0 -0.25"><geom name="c_nrs_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+    </body>
+    <body name="c_iv" pos="-2.75 0.3 2.0"><geom name="c_iv_pole" type="cylinder" size="0.015 0.8" pos="0 0 0.8" material="iv_stand"/><geom name="c_iv_bag" type="box" size="0.04 0.02 0.07" pos="0 0 1.55" material="iv_bag"/></body>
+    <body name="c_tray" pos="-1.75 0.4 2.0"><geom name="c_tray_leg" type="cylinder" size="0.02 0.4" pos="0 0 0.4" material="tray_metal"/><geom name="c_tray_surf" type="box" size="0.2 0.12 0.005" pos="0 0 0.8" material="tray_metal"/></body>
+    <body name="c_monitor" pos="-3.05 0.2 2.0"><geom name="c_mon_stand" type="cylinder" size="0.025 0.5" pos="0 0 0.5" material="monitor_body"/><geom name="c_mon_housing" type="box" size="0.18 0.04 0.14" pos="0 0 1.15" material="monitor_body"/><geom name="c_mon_display" type="box" size="0.16 0.001 0.12" pos="0 -0.041 1.15" material="monitor_screen"/></body>
+
+    <!-- ============================== -->
+    <!-- STATION D (back-right) at (2.25, 0, 2.0) -->
+    <!-- ============================== -->
+    <body name="d_chair" pos="2.25 0 2.0">
+      <geom name="d_seat" type="box" size="0.25 0.22 0.03" pos="0 0 0.47" material="chair_cushion"/>
+      <geom name="d_back" type="box" size="0.25 0.03 0.3" pos="0 0.2 0.8" material="chair_cushion"/>
+      <geom name="d_arm_r" type="box" size="0.03 0.18 0.02" pos="0.27 0 0.62" material="chair_frame"/>
+      <geom name="d_arm_l" type="box" size="0.03 0.18 0.02" pos="-0.27 0 0.62" material="chair_frame"/>
+      <geom name="d_leg1" type="cylinder" size="0.025" fromto="-0.2 -0.2 0 -0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="d_leg2" type="cylinder" size="0.025" fromto="0.2 -0.2 0 0.2 -0.2 0.45" material="chair_frame"/>
+      <geom name="d_leg3" type="cylinder" size="0.025" fromto="-0.2 0.15 0 -0.2 0.15 0.45" material="chair_frame"/>
+      <geom name="d_leg4" type="cylinder" size="0.025" fromto="0.2 0.15 0 0.2 0.15 0.45" material="chair_frame"/>
+    </body>
+    <body name="d_patient" pos="2.25 0 2.5">
+      <geom name="d_pat_pelvis" type="box" size="0.16 0.1 0.06" material="patient_gown"/>
+      <body name="d_pat_torso" pos="0 0 0.06">
+        <geom name="d_pat_torso_g" type="box" size="0.15 0.09 0.18" pos="0 0 0.18" material="patient_gown"/>
+        <body name="d_pat_head" pos="0 0 0.42"><geom name="d_pat_head_g" type="sphere" size="0.1" material="robot_joint"/></body>
+        <body name="d_pat_r_shoulder" pos="0.2 0 0.3">
+          <joint name="d_pat_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-90 90"/>
+          <geom name="d_pat_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="patient_gown"/>
+          <site name="d_injection_target" pos="0.04 -0.04 -0.08" size="0.025" rgba="1 0.2 0.2 0.5"/>
+          <body name="d_pat_r_elbow" pos="0.08 0 -0.2">
+            <joint name="d_pat_r_elbow_flex" type="hinge" axis="1 0 0" range="0 130"/>
+            <geom name="d_pat_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="patient_gown"/>
+          </body>
+        </body>
+      </body>
+      <body name="d_pat_r_hip" pos="0.1 0 0"><joint name="d_pat_r_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="d_pat_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="d_pat_r_knee" pos="0 -0.25 0"><joint name="d_pat_r_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/><geom name="d_pat_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+      <body name="d_pat_l_hip" pos="-0.1 0 0"><joint name="d_pat_l_hip_flex" type="hinge" axis="1 0 0" range="-120 30"/>
+        <geom name="d_pat_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 -0.25 0" material="patient_gown"/>
+        <body name="d_pat_l_knee" pos="0 -0.25 0"><joint name="d_pat_l_knee_flex" type="hinge" axis="1 0 0" range="-130 0"/><geom name="d_pat_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="patient_gown"/></body>
+      </body>
+    </body>
+    <body name="d_doctor" pos="1.45 -0.3 2.0">
+      <geom name="d_doc_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="doctor_shell"/>
+      <body name="d_doc_torso" pos="0 0 0.61">
+        <geom name="d_doc_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="doctor_shell"/>
+        <geom name="d_doc_cross_h" type="box" size="0.04 0.001 0.01" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <geom name="d_doc_cross_v" type="box" size="0.01 0.001 0.04" pos="0 -0.091 0.3" rgba="0.8 0.15 0.15 1"/>
+        <body name="d_doc_r_shoulder" pos="0.2 0 0.34">
+          <joint name="d_doc_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <geom name="d_doc_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="doctor_shell"/>
+          <body name="d_doc_r_elbow" pos="0.08 0 -0.2">
+            <joint name="d_doc_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="d_doc_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="doctor_shell"/>
+          </body>
+        </body>
+      </body>
+      <body name="d_doc_r_hip" pos="0.1 0 0.5"><geom name="d_doc_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/><body name="d_doc_r_knee" pos="0 0 -0.25"><geom name="d_doc_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+      <body name="d_doc_l_hip" pos="-0.1 0 0.5"><geom name="d_doc_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/><body name="d_doc_l_knee" pos="0 0 -0.25"><geom name="d_doc_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="doctor_shell"/></body></body>
+    </body>
+    <body name="d_nurse" pos="3.05 -0.3 2.0">
+      <geom name="d_nrs_pelvis" type="box" size="0.16 0.1 0.06" pos="0 0 0.55" material="nurse_shell"/>
+      <body name="d_nrs_torso" pos="0 0 0.61">
+        <geom name="d_nrs_torso_g" type="box" size="0.15 0.09 0.2" pos="0 0 0.2" material="nurse_shell"/>
+        <body name="d_nrs_r_shoulder" pos="0.2 0 0.34">
+          <joint name="d_nrs_r_shoulder_pitch" type="hinge" axis="1 0 0" range="-180 90"/>
+          <joint name="d_nrs_r_shoulder_yaw" type="hinge" axis="0 0 1" range="-90 90"/>
+          <geom name="d_nrs_r_upper" type="capsule" size="0.04" fromto="0 0 0 0.08 0 -0.2" material="nurse_shell"/>
+          <body name="d_nrs_r_elbow" pos="0.08 0 -0.2">
+            <joint name="d_nrs_r_elbow_flex" type="hinge" axis="1 0 0" range="0 140"/>
+            <geom name="d_nrs_r_forearm" type="capsule" size="0.035" fromto="0 0 0 0.03 0 -0.18" material="nurse_shell"/>
+            <body name="d_nrs_r_hand" pos="0.03 0 -0.2">
+              <joint name="d_nrs_r_wrist" type="hinge" axis="0 1 0" range="-45 45"/>
+              <geom name="d_nrs_hand" type="box" size="0.03 0.02 0.04" material="robot_joint"/>
+              <geom name="d_nrs_syringe" type="cylinder" size="0.012 0.06" pos="0 0 -0.08" material="syringe_body"/>
+              <geom name="d_nrs_needle" type="cylinder" size="0.002 0.025" pos="0 0 -0.155" material="needle"/>
+              <site name="d_needle_tip" pos="0 0 -0.18" size="0.003" rgba="0.8 0.8 0.85 1"/>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="d_nrs_r_hip" pos="0.1 0 0.5"><geom name="d_nrs_r_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/><body name="d_nrs_r_knee" pos="0 0 -0.25"><geom name="d_nrs_r_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+      <body name="d_nrs_l_hip" pos="-0.1 0 0.5"><geom name="d_nrs_l_thigh" type="capsule" size="0.05" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/><body name="d_nrs_l_knee" pos="0 0 -0.25"><geom name="d_nrs_l_shin" type="capsule" size="0.04" fromto="0 0 0 0 0 -0.25" material="nurse_shell"/></body></body>
+    </body>
+    <body name="d_iv" pos="1.75 0.3 2.0"><geom name="d_iv_pole" type="cylinder" size="0.015 0.8" pos="0 0 0.8" material="iv_stand"/><geom name="d_iv_bag" type="box" size="0.04 0.02 0.07" pos="0 0 1.55" material="iv_bag"/></body>
+    <body name="d_tray" pos="2.75 0.4 2.0"><geom name="d_tray_leg" type="cylinder" size="0.02 0.4" pos="0 0 0.4" material="tray_metal"/><geom name="d_tray_surf" type="box" size="0.2 0.12 0.005" pos="0 0 0.8" material="tray_metal"/></body>
+    <body name="d_monitor" pos="1.45 0.2 2.0"><geom name="d_mon_stand" type="cylinder" size="0.025 0.5" pos="0 0 0.5" material="monitor_body"/><geom name="d_mon_housing" type="box" size="0.18 0.04 0.14" pos="0 0 1.15" material="monitor_body"/><geom name="d_mon_display" type="box" size="0.16 0.001 0.12" pos="0 -0.041 1.15" material="monitor_screen"/></body>
+  </worldbody>
+
+  <!-- Actuators for all 4 stations -->
+  <actuator>
+    <!-- Station A -->
+    <position name="a_doc_r_sp" joint="a_doc_r_shoulder_pitch" kp="50"/>
+    <position name="a_doc_r_el" joint="a_doc_r_elbow_flex" kp="40"/>
+    <position name="a_nrs_r_sp" joint="a_nrs_r_shoulder_pitch" kp="50"/>
+    <position name="a_nrs_r_sy" joint="a_nrs_r_shoulder_yaw" kp="50"/>
+    <position name="a_nrs_r_el" joint="a_nrs_r_elbow_flex" kp="40"/>
+    <position name="a_nrs_r_wr" joint="a_nrs_r_wrist" kp="30"/>
+    <position name="a_pat_r_sp" joint="a_pat_r_shoulder_pitch" kp="20"/>
+    <position name="a_pat_r_el" joint="a_pat_r_elbow_flex" kp="15"/>
+    <!-- Station B -->
+    <position name="b_doc_r_sp" joint="b_doc_r_shoulder_pitch" kp="50"/>
+    <position name="b_doc_r_el" joint="b_doc_r_elbow_flex" kp="40"/>
+    <position name="b_nrs_r_sp" joint="b_nrs_r_shoulder_pitch" kp="50"/>
+    <position name="b_nrs_r_sy" joint="b_nrs_r_shoulder_yaw" kp="50"/>
+    <position name="b_nrs_r_el" joint="b_nrs_r_elbow_flex" kp="40"/>
+    <position name="b_nrs_r_wr" joint="b_nrs_r_wrist" kp="30"/>
+    <position name="b_pat_r_sp" joint="b_pat_r_shoulder_pitch" kp="20"/>
+    <position name="b_pat_r_el" joint="b_pat_r_elbow_flex" kp="15"/>
+    <!-- Station C -->
+    <position name="c_doc_r_sp" joint="c_doc_r_shoulder_pitch" kp="50"/>
+    <position name="c_doc_r_el" joint="c_doc_r_elbow_flex" kp="40"/>
+    <position name="c_nrs_r_sp" joint="c_nrs_r_shoulder_pitch" kp="50"/>
+    <position name="c_nrs_r_sy" joint="c_nrs_r_shoulder_yaw" kp="50"/>
+    <position name="c_nrs_r_el" joint="c_nrs_r_elbow_flex" kp="40"/>
+    <position name="c_nrs_r_wr" joint="c_nrs_r_wrist" kp="30"/>
+    <position name="c_pat_r_sp" joint="c_pat_r_shoulder_pitch" kp="20"/>
+    <position name="c_pat_r_el" joint="c_pat_r_elbow_flex" kp="15"/>
+    <!-- Station D -->
+    <position name="d_doc_r_sp" joint="d_doc_r_shoulder_pitch" kp="50"/>
+    <position name="d_doc_r_el" joint="d_doc_r_elbow_flex" kp="40"/>
+    <position name="d_nrs_r_sp" joint="d_nrs_r_shoulder_pitch" kp="50"/>
+    <position name="d_nrs_r_sy" joint="d_nrs_r_shoulder_yaw" kp="50"/>
+    <position name="d_nrs_r_el" joint="d_nrs_r_elbow_flex" kp="40"/>
+    <position name="d_nrs_r_wr" joint="d_nrs_r_wrist" kp="30"/>
+    <position name="d_pat_r_sp" joint="d_pat_r_shoulder_pitch" kp="20"/>
+    <position name="d_pat_r_el" joint="d_pat_r_elbow_flex" kp="15"/>
+  </actuator>
+
+  <!-- Sensors for all stations -->
+  <sensor>
+    <framepos name="a_needle_pos" objtype="site" objname="a_needle_tip"/>
+    <framepos name="a_target_pos" objtype="site" objname="a_injection_target"/>
+    <framepos name="b_needle_pos" objtype="site" objname="b_needle_tip"/>
+    <framepos name="b_target_pos" objtype="site" objname="b_injection_target"/>
+    <framepos name="c_needle_pos" objtype="site" objname="c_needle_tip"/>
+    <framepos name="c_target_pos" objtype="site" objname="c_injection_target"/>
+    <framepos name="d_needle_pos" objtype="site" objname="d_needle_tip"/>
+    <framepos name="d_target_pos" objtype="site" objname="d_injection_target"/>
+  </sensor>
+</mujoco>
