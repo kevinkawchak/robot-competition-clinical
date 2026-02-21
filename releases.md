@@ -1,5 +1,28 @@
 # Releases
 
+## Clinical Robot Simulation - Peer Review & Release Planning
+v0.1.1 - 2026-02-21
+
+## Summary
+
+v0.1.1 adds a comprehensive senior engineering peer review covering simulation runtime safety, maintainability, CI/testing depth, and documentation consistency. This release documents an actionable, prioritized fix plan for the next implementation cycle.
+
+## Features
+
+- Added a dedicated peer-review artifact under `peer-review/` with 14 targeted recommendations grouped by severity
+- Added peer-review metrics for file coverage, issue counts, and implementation effort estimates
+- Added prioritized implementation order to guide follow-on coding corrections
+- Updated release/changelog records to track review-only changes distinctly from production code modifications
+
+## Contributors
+@kevinkawchak
+@codex
+@claude
+
+## Notes
+- This release is documentation/process oriented and does not alter runtime simulation behavior directly
+- Recommendation focus areas: input validation, MuJoCo ID safety checks, deterministic frame capture, CI/test expansion, and viewer modularization
+
 ## Clinical Robot Simulation - Initial Release
 v0.1.0 - 2026-02-20
 

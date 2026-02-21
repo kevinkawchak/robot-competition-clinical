@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.1.1] - 2026-02-21
+
+### Added
+- Senior engineering peer-review report for v0.1.1 with prioritized fix recommendations and implementation order (`peer-review/v0.1.1-senior-peer-review.md`)
+
+### Changed
+- Updated release documentation for v0.1.1 with summary, feature-level review outcomes, contributors, and notes
+
+### Notes
+- This release entry records review outcomes and recommendations only; no production code behavior changes are included in v0.1.1.
+
 ## [v0.1.0] - 2026-02-20
 
 ### Added
@@ -31,4 +42,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD: GitHub Actions with ruff linter
 - Zero-install viewing via GitHub Pages (static HTML/JS)
 
+[v0.1.1]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.1.1
 [v0.1.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.1.0
