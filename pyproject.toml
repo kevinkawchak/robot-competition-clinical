@@ -1,7 +1,7 @@
 [project]
 name = "robot-competition-clinical"
-version = "0.1.0"
-description = "Clinical trial robot simulation with G1 humanoid robots performing medical procedures, built on MuJoCo physics"
+version = "0.2.0"
+description = "Clinical trial robot competition simulation with G1 humanoid robots — 4-station PPO-driven injection procedure race, built on MuJoCo physics"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
@@ -13,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff>=0.4.0",
+    "pytest>=7.0.0",
 ]
 
 [tool.ruff]
@@ -25,3 +26,6 @@ select = ["E", "F", "I", "W"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
