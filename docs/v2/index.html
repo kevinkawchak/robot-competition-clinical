@@ -1,1446 +1,962 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Clinical Robot Competition — 4-Station PPO Simulation</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clinical Robot Competition Viewer v2</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#1a1a2e}
-canvas{display:block;width:100%;height:100%}
-#ui-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
-#header{position:absolute;top:0;left:0;right:0;padding:10px 16px;background:linear-gradient(180deg,rgba(10,10,30,0.92) 0%,transparent 100%);pointer-events:auto}
-#header h1{font-size:15px;color:#e0e8ff;font-weight:600;letter-spacing:0.5px}
-#header p{font-size:10px;color:#8899bb;margin-top:2px}
-#controls{position:absolute;bottom:0;left:0;right:0;padding:10px 16px 16px;background:linear-gradient(0deg,rgba(10,10,30,0.92) 0%,transparent 100%);pointer-events:auto;display:flex;flex-direction:column;gap:8px}
-#progress-bar{width:100%;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;cursor:pointer}
-#progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#4a9eff,#7c5cff);border-radius:3px;transition:width 0.05s linear}
-#btn-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.btn{background:rgba(74,158,255,0.15);border:1px solid rgba(74,158,255,0.3);color:#c0d8ff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.btn:hover{background:rgba(74,158,255,0.25);border-color:rgba(74,158,255,0.5)}
-.btn:active{transform:scale(0.96)}
-.btn-primary{background:rgba(74,158,255,0.3);border-color:rgba(74,158,255,0.5);color:#fff}
-.btn svg{width:14px;height:14px;fill:currentColor}
-#phase-label{flex:1;text-align:center;color:#8899bb;font-size:11px;min-width:80px}
-#time-display{color:#6688aa;font-size:11px;font-variant-numeric:tabular-nums}
-#file-input{display:none}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body { background:#1a1a2e; color:#e0e0e0; font-family:'Segoe UI',system-ui,sans-serif; overflow:hidden; height:100vh; }
+#canvas3d { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+/* Overlay */
+#overlay { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+#overlay > * { pointer-events:auto; }
+
+/* Header */
+#header { position:absolute; top:0; left:0; right:0; height:48px; background:linear-gradient(90deg,#0f0f23,#1a1a2e);
+  border-bottom:1px solid #333; display:flex; align-items:center; padding:0 16px; gap:12px; }
+#header h1 { font-size:16px; font-weight:600; color:#00d4ff; white-space:nowrap; }
+#header .subtitle { font-size:11px; color:#888; margin-left:4px; }
 
 /* Station selector */
-#station-selector{display:flex;gap:6px;flex-wrap:wrap}
-.station-btn{padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:2px solid;transition:all 0.2s;pointer-events:auto}
-.station-btn:hover{filter:brightness(1.3)}
-.station-btn.active{box-shadow:0 0 8px rgba(255,255,255,0.3)}
-#btn-stA{background:rgba(255,100,100,0.2);border-color:#ff6464;color:#ff9494}
-#btn-stB{background:rgba(100,180,255,0.2);border-color:#64b4ff;color:#94d4ff}
-#btn-stC{background:rgba(100,255,160,0.2);border-color:#64ffa0;color:#94ffc4}
-#btn-stD{background:rgba(255,200,80,0.2);border-color:#ffc850;color:#ffe094}
-#btn-stAll{background:rgba(200,200,255,0.2);border-color:#aaaaff;color:#ccccff}
-#btn-stA.active{background:rgba(255,100,100,0.4)}
-#btn-stB.active{background:rgba(100,180,255,0.4)}
-#btn-stC.active{background:rgba(100,255,160,0.4)}
-#btn-stD.active{background:rgba(255,200,80,0.4)}
-#btn-stAll.active{background:rgba(200,200,255,0.4)}
+#station-selector { position:absolute; top:56px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; background:rgba(15,15,35,0.9); padding:6px 10px; border-radius:8px; border:1px solid #333; }
+.station-btn { background:#252545; border:1px solid #444; color:#ccc; padding:6px 16px; border-radius:6px;
+  cursor:pointer; font-size:13px; font-weight:500; transition:all .2s; }
+.station-btn:hover { background:#353565; border-color:#666; }
+.station-btn.active { background:#00d4ff; color:#0f0f23; border-color:#00d4ff; font-weight:700; }
 
 /* Scoreboard */
-#scoreboard{position:absolute;top:52px;right:12px;width:260px;background:rgba(15,15,35,0.92);border:1px solid rgba(74,158,255,0.2);border-radius:8px;padding:10px;pointer-events:auto;color:#99aacc;font-size:10px;line-height:1.5;max-height:calc(100vh - 180px);overflow-y:auto}
-#scoreboard h3{color:#c0d8ff;font-size:12px;margin-bottom:6px;text-align:center}
-.sb-station{margin-bottom:8px;padding:6px;border-radius:5px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02)}
-.sb-station-header{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-weight:600;font-size:11px}
-.sb-color{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sb-row{display:flex;justify-content:space-between;padding:1px 0}
-.sb-val{font-weight:500;font-variant-numeric:tabular-nums}
-.sb-rank{font-size:13px;font-weight:700;float:right}
-.rank-1{color:#ffd700}
-.rank-2{color:#c0c0c0}
-.rank-3{color:#cd7f32}
-.rank-4{color:#888}
+#scoreboard { position:absolute; top:100px; right:12px; width:280px; background:rgba(15,15,35,0.92);
+  border:1px solid #333; border-radius:10px; padding:12px; max-height:calc(100vh - 160px); overflow-y:auto; }
+#scoreboard h2 { font-size:14px; color:#00d4ff; margin-bottom:8px; text-align:center; border-bottom:1px solid #333; padding-bottom:6px; }
+.score-station { margin-bottom:10px; padding:8px; background:rgba(40,40,80,0.5); border-radius:6px; border-left:3px solid #555; }
+.score-station.rank1 { border-left-color:#ffd700; }
+.score-station.rank2 { border-left-color:#c0c0c0; }
+.score-station.rank3 { border-left-color:#cd7f32; }
+.score-station .station-label { font-weight:700; font-size:13px; margin-bottom:4px; }
+.score-station .score-row { display:flex; justify-content:space-between; font-size:11px; color:#aaa; padding:1px 0; }
+.score-station .score-row span:last-child { color:#e0e0e0; font-weight:500; }
 
-/* Info panel */
-#info-panel{position:absolute;top:52px;left:12px;width:240px;background:rgba(15,15,35,0.92);border:1px solid rgba(74,158,255,0.2);border-radius:8px;padding:10px;pointer-events:auto;color:#99aacc;font-size:10px;line-height:1.5;display:none;max-height:calc(100vh - 180px);overflow-y:auto}
-#info-panel.visible{display:block}
-#info-panel h3{color:#c0d8ff;font-size:11px;margin-bottom:4px}
-#info-panel h4{color:#aabbdd;font-size:10px;margin:6px 0 2px}
-#info-panel .metric{display:flex;justify-content:space-between;padding:1px 0}
-#info-panel .metric-val{color:#4a9eff;font-weight:500}
-#info-panel code{background:rgba(255,255,255,0.06);padding:1px 3px;border-radius:2px;font-size:9px;color:#88aacc}
-#info-panel hr{border:none;border-top:1px solid rgba(74,158,255,0.12);margin:6px 0}
+/* Controls */
+#controls { position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+  display:flex; gap:8px; background:rgba(15,15,35,0.92); padding:8px 14px; border-radius:10px; border:1px solid #333; }
+.ctrl-btn { background:#252545; border:1px solid #444; color:#ccc; width:40px; height:40px; border-radius:8px;
+  cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.ctrl-btn:hover { background:#353565; border-color:#00d4ff; color:#00d4ff; }
+.ctrl-btn.active { background:#00d4ff; color:#0f0f23; }
 
 /* Legend */
-#legend{position:absolute;bottom:100px;left:12px;background:rgba(15,15,35,0.92);border:1px solid rgba(74,158,255,0.2);border-radius:8px;padding:8px 10px;pointer-events:auto;color:#99aacc;font-size:10px}
-#legend .legend-item{display:flex;align-items:center;gap:6px;padding:1px 0}
-#legend .color-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+#legend { position:absolute; bottom:16px; left:12px; background:rgba(15,15,35,0.92);
+  border:1px solid #333; border-radius:8px; padding:10px 14px; }
+#legend h3 { font-size:12px; color:#00d4ff; margin-bottom:6px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:11px; margin:3px 0; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
-/* Loading */
-#loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#c0d8ff;font-size:16px;text-align:center;z-index:100}
-#loading .spinner{width:36px;height:36px;border:3px solid rgba(74,158,255,0.2);border-top-color:#4a9eff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Info modal */
+#info-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100;
+  background:rgba(0,0,0,0.7); align-items:center; justify-content:center; }
+#info-modal.show { display:flex; }
+#info-content { background:#1a1a2e; border:1px solid #444; border-radius:12px; padding:24px; max-width:520px; width:90%; max-height:80vh; overflow-y:auto; }
+#info-content h2 { color:#00d4ff; margin-bottom:12px; }
+#info-content h3 { color:#00d4ff; margin:12px 0 6px; font-size:14px; }
+#info-content p, #info-content li { font-size:13px; line-height:1.6; color:#bbb; }
+#info-content .close-btn { background:#00d4ff; color:#0f0f23; border:none; padding:8px 20px; border-radius:6px;
+  cursor:pointer; font-weight:600; margin-top:16px; }
+#info-content ul { padding-left:18px; margin:8px 0; }
 
-/* Responsive */
-@media(max-width:700px){
-  #header h1{font-size:12px}
-  #header p{font-size:9px}
-  #legend{display:none}
-  #info-panel{width:180px;font-size:9px;top:48px;left:8px}
-  #scoreboard{width:200px;font-size:9px;top:48px;right:8px}
-  .sb-station{padding:4px}
-  .btn{padding:5px 8px;font-size:11px}
-  .station-btn{padding:4px 7px;font-size:10px}
-  #station-selector{gap:4px}
+/* File upload */
+#file-input { display:none; }
+
+/* Phase indicator */
+#phase-indicator { position:absolute; top:100px; left:12px; background:rgba(15,15,35,0.92);
+  border:1px solid #333; border-radius:8px; padding:10px 14px; min-width:210px; }
+#phase-indicator h3 { font-size:12px; color:#00d4ff; margin-bottom:6px; }
+.phase-line { font-size:11px; margin:2px 0; color:#aaa; }
+.phase-line.active { color:#00ff88; font-weight:600; }
+.phase-line .phase-dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; background:#555; vertical-align:middle; }
+.phase-line.active .phase-dot { background:#00ff88; }
+.phase-line.done .phase-dot { background:#00d4ff; }
+.phase-line.done { color:#00d4ff; }
+
+/* Attribution */
+#attribution { position:absolute; bottom:4px; right:12px; font-size:9px; color:#555; pointer-events:auto; }
+
+/* Mobile responsive */
+@media (max-width:768px) {
+  #scoreboard { width:200px; right:6px; top:90px; padding:8px; }
+  #scoreboard h2 { font-size:12px; }
+  .score-station .score-row { font-size:10px; }
+  #legend { display:none; }
+  #phase-indicator { left:6px; min-width:150px; top:90px; }
+  .station-btn { padding:5px 10px; font-size:11px; }
+  #header h1 { font-size:13px; }
+  .ctrl-btn { width:34px; height:34px; font-size:15px; }
 }
-@media(max-width:480px){
-  #scoreboard{width:160px;padding:6px}
-  #scoreboard h3{font-size:10px}
-  .sb-station-header{font-size:10px}
+@media (max-width:480px) {
+  #scoreboard { width:160px; }
+  #phase-indicator { top:88px; }
 }
 </style>
 </head>
 <body>
+<canvas id="canvas3d"></canvas>
 
-<div id="loading">
-  <div class="spinner"></div>
-  Loading 4-Station Competition...
-</div>
-
-<div id="ui-overlay">
+<div id="overlay">
   <div id="header">
-    <h1>Clinical Robot Competition &mdash; 4-Station PPO Simulation</h1>
-    <p>G1 Humanoid Robots | Deltoid IM Injection | Independent PPO Policies
-       &bull; <a href="https://github.com/mujocolab/mjlab" target="_blank"
-       style="color:#6688cc;text-decoration:none">Inspired by mjlab</a></p>
+    <h1>Clinical Robot Competition</h1>
+    <span class="subtitle">4-Station Viewer v2</span>
   </div>
 
-  <div id="legend">
-    <div class="legend-item"><div class="color-dot" style="background:#e8e8f0"></div>Doctor (white coat)</div>
-    <div class="legend-item"><div class="color-dot" style="background:#5080cc"></div>Nurse (blue coat)</div>
-    <div class="legend-item"><div class="color-dot" style="background:#60aa60"></div>Patient (green gown)</div>
-    <div class="legend-item"><div class="color-dot" style="background:#ff4444"></div>Injection Site</div>
+  <div id="station-selector">
+    <button class="station-btn active" data-station="overview">Overview</button>
+    <button class="station-btn" data-station="0">Station A</button>
+    <button class="station-btn" data-station="1">Station B</button>
+    <button class="station-btn" data-station="2">Station C</button>
+    <button class="station-btn" data-station="3">Station D</button>
   </div>
 
-  <div id="info-panel">
-    <h3>PPO Simulation Details</h3>
-    <h4>Architecture</h4>
-    <div class="metric"><span>Network</span><span class="metric-val">2-layer MLP (64x64)</span></div>
-    <div class="metric"><span>Activation</span><span class="metric-val">tanh</span></div>
-    <div class="metric"><span>Episodes</span><span class="metric-val">500</span></div>
-    <div class="metric"><span>Gamma</span><span class="metric-val">0.99</span></div>
-    <div class="metric"><span>Clip</span><span class="metric-val">0.2</span></div>
-    <div class="metric"><span>LR</span><span class="metric-val">3e-4</span></div>
-    <hr>
-    <h4>Reward Function</h4>
-    <div style="padding:2px 0"><code>R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk)</code></div>
-    <hr>
-    <h4>Station Seeds</h4>
-    <div class="metric"><span>Station A</span><span class="metric-val">seed=42</span></div>
-    <div class="metric"><span>Station B</span><span class="metric-val">seed=137</span></div>
-    <div class="metric"><span>Station C</span><span class="metric-val">seed=256</span></div>
-    <div class="metric"><span>Station D</span><span class="metric-val">seed=512</span></div>
-    <hr>
-    <h4>Doctor Phases</h4>
-    <div style="font-size:9px;color:#7799bb;padding:2px 0">
-      receive_chart (1.0s) &rarr; review_symptoms (2.0s) &rarr; assess_toxicity (1.5s) &rarr; approve_injection (1.0s)
-    </div>
-    <h4>Nurse Phases</h4>
-    <div style="font-size:9px;color:#7799bb;padding:2px 0">
-      prepare_syringe (1.0s) &rarr; approach_patient (1.5s) &rarr; position_needle (1.5s) &rarr; inject (2.0s) &rarr; hold_steady (1.5s) &rarr; withdraw (1.0s)
-    </div>
-    <hr>
-    <h4>Runtime Info</h4>
-    <div class="metric"><span>FPS</span><span class="metric-val" id="info-fps">0</span></div>
-    <div class="metric"><span>Frame</span><span class="metric-val" id="info-frame">0</span></div>
-    <hr>
-    <div style="color:#6688aa;font-size:9px">
-      Drag to rotate &bull; Scroll to zoom<br>
-      Pinch on mobile &bull; Two-finger pan
-    </div>
+  <div id="phase-indicator">
+    <h3>Phase Timeline</h3>
+    <div id="phase-lines"></div>
   </div>
 
   <div id="scoreboard">
-    <h3>Competition Scoreboard</h3>
-    <div id="sb-content"></div>
+    <h2>Scoreboard</h2>
+    <div id="score-entries"></div>
   </div>
 
   <div id="controls">
-    <div id="progress-bar"><div id="progress-fill"></div></div>
-    <div id="btn-row">
-      <button class="btn btn-primary" id="btn-play" title="Play/Pause">
-        <svg viewBox="0 0 24 24" id="play-icon"><polygon points="6,3 20,12 6,21"/></svg>
-        <span id="play-text">Play</span>
-      </button>
-      <button class="btn" id="btn-reset" title="Reset">
-        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-        Reset
-      </button>
-      <button class="btn" id="btn-info" title="Toggle Info">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        Info
-      </button>
-      <label class="btn" for="file-input" title="Upload custom data">
-        <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-        Upload
-      </label>
-      <input type="file" id="file-input" accept=".json,.xml">
-      <div id="station-selector">
-        <button class="station-btn active" id="btn-stAll">Overview</button>
-        <button class="station-btn" id="btn-stA">A</button>
-        <button class="station-btn" id="btn-stB">B</button>
-        <button class="station-btn" id="btn-stC">C</button>
-        <button class="station-btn" id="btn-stD">D</button>
-      </div>
-      <span id="phase-label">Ready</span>
-      <span id="time-display">0:00</span>
-    </div>
+    <button class="ctrl-btn" id="btn-play" title="Play/Pause">&#9654;</button>
+    <button class="ctrl-btn" id="btn-reset" title="Reset">&#8634;</button>
+    <button class="ctrl-btn" id="btn-info" title="Info">&#9432;</button>
+    <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
+  </div>
+
+  <div id="legend">
+    <h3>Legend</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffffff"></div>Doctor</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#00cc66"></div>Patient</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4488ff"></div>Nurse</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff4466"></div>IV Stand</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#aaaaaa"></div>Equipment</div>
+  </div>
+
+  <div id="attribution">Simulation framework inspired by mjlab (mujocolab/mjlab)</div>
+</div>
+
+<div id="info-modal">
+  <div id="info-content">
+    <h2>Clinical Robot Competition Viewer</h2>
+    <p>This viewer simulates a 4-station clinical robot competition where doctor and nurse robots
+    coordinate to perform patient injection procedures.</p>
+    <h3>Phases</h3>
+    <ul>
+      <li><strong>Doctor:</strong> receive_chart &rarr; review_symptoms &rarr; assess_toxicity &rarr; approve_injection</li>
+      <li><strong>Nurse:</strong> prepare_syringe &rarr; approach_patient &rarr; position_needle &rarr; inject &rarr; hold_steady &rarr; withdraw</li>
+    </ul>
+    <h3>Stations</h3>
+    <ul>
+      <li><strong>A:</strong> seed=42, speed=1.0x</li>
+      <li><strong>B:</strong> seed=137, speed=0.88x</li>
+      <li><strong>C:</strong> seed=256, speed=1.08x</li>
+      <li><strong>D:</strong> seed=512, speed=0.95x</li>
+    </ul>
+    <p style="margin-top:10px">Use the station buttons to focus on individual stations or view the overview.
+    Upload a JSON config to customize station parameters.</p>
+    <p style="margin-top:8px;font-size:11px;color:#666">Simulation framework inspired by mjlab (mujocolab/mjlab)</p>
+    <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
   </div>
 </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
-  }
-}
-</script>
+<input type="file" id="file-input" accept=".json"/>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-/* ============================================================
-   SEEDED RANDOM
-   ============================================================ */
-function seededRandom(seed, index) {
-  let h = seed + index * 9301 + 49297;
-  h = ((h * 233280) ^ (h >>> 13)) >>> 0;
-  h = ((h * 9301 + 49297) % 233280);
-  return h / 233280.0;
-}
-
-/* ============================================================
-   STATION CONFIGURATIONS
-   ============================================================ */
+/* ================================================================
+   CONSTANTS
+   ================================================================ */
+const ROOM_SIZE = 12;
+const HALF = ROOM_SIZE / 2;
 const STATION_CONFIGS = [
-  { id: 'A', seed: 42,  speed_factor: 1.00, accuracy_bias: 0.010, smoothness: 0.85, color: 0xff6464, cssColor: '#ff6464' },
-  { id: 'B', seed: 137, speed_factor: 0.88, accuracy_bias: 0.018, smoothness: 0.72, color: 0x64b4ff, cssColor: '#64b4ff' },
-  { id: 'C', seed: 256, speed_factor: 1.08, accuracy_bias: 0.006, smoothness: 0.92, color: 0x64ffa0, cssColor: '#64ffa0' },
-  { id: 'D', seed: 512, speed_factor: 0.95, accuracy_bias: 0.013, smoothness: 0.80, color: 0xffc850, cssColor: '#ffc850' },
+  { name:'A', seed:42,  speed:1.0,  gridX:0, gridZ:0 },
+  { name:'B', seed:137, speed:0.88, gridX:1, gridZ:0 },
+  { name:'C', seed:256, speed:1.08, gridX:0, gridZ:1 },
+  { name:'D', seed:512, speed:0.95, gridX:1, gridZ:1 },
 ];
 
-/* Doctor phases (sequential) */
 const DOCTOR_PHASES = [
-  { name: 'receive_chart',    baseDuration: 1.0, label: 'Receiving chart' },
-  { name: 'review_symptoms',  baseDuration: 2.0, label: 'Reviewing symptoms' },
-  { name: 'assess_toxicity',  baseDuration: 1.5, label: 'Assessing toxicity' },
-  { name: 'approve_injection', baseDuration: 1.0, label: 'Approving injection' },
+  { name:'receive_chart',     duration:1.0 },
+  { name:'review_symptoms',   duration:2.0 },
+  { name:'assess_toxicity',   duration:1.5 },
+  { name:'approve_injection', duration:1.0 },
 ];
-
-/* Nurse phases (after doctor finishes) */
 const NURSE_PHASES = [
-  { name: 'prepare_syringe',  baseDuration: 1.0, label: 'Preparing syringe' },
-  { name: 'approach_patient', baseDuration: 1.5, label: 'Approaching patient' },
-  { name: 'position_needle',  baseDuration: 1.5, label: 'Positioning needle' },
-  { name: 'inject',           baseDuration: 2.0, label: 'Injecting medication' },
-  { name: 'hold_steady',      baseDuration: 1.5, label: 'Holding steady' },
-  { name: 'withdraw',         baseDuration: 1.0, label: 'Withdrawing needle' },
+  { name:'prepare_syringe',   duration:1.0 },
+  { name:'approach_patient',  duration:1.5 },
+  { name:'position_needle',   duration:1.5 },
+  { name:'inject',            duration:2.0 },
+  { name:'hold_steady',       duration:1.5 },
+  { name:'withdraw',          duration:1.0 },
 ];
 
-/* Compute per-station phase durations with seeded noise */
-function computeStationPhases(config) {
-  const { seed, speed_factor } = config;
-  const doctorPhases = DOCTOR_PHASES.map((p, i) => {
-    const noise = (seededRandom(seed, i) - 0.5) * 0.3;
-    return { ...p, duration: p.baseDuration * (1 / speed_factor) + noise * (1 / speed_factor) };
-  });
-  const nursePhases = NURSE_PHASES.map((p, i) => {
-    const noise = (seededRandom(seed, i + 100) - 0.5) * 0.3;
-    return { ...p, duration: p.baseDuration * (1 / speed_factor) + noise * (1 / speed_factor) };
-  });
-  const doctorTotal = doctorPhases.reduce((s, p) => s + p.duration, 0);
-  const nurseTotal = nursePhases.reduce((s, p) => s + p.duration, 0);
-  return { doctorPhases, nursePhases, doctorTotal, nurseTotal, totalTime: doctorTotal + nurseTotal };
+/* ================================================================
+   SEEDED RNG (mulberry32)
+   ================================================================ */
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
 
-/* ============================================================
-   GRID LAYOUT
-   ============================================================ */
-const GRID_SPACING_X = 4.5;
-const GRID_SPACING_Z = 4.0;
-/* Station positions: A=front-left, B=front-right, C=back-left, D=back-right */
-const STATION_POSITIONS = [
-  { x: -GRID_SPACING_X / 2, z: -GRID_SPACING_Z / 2 }, /* A: front-left */
-  { x:  GRID_SPACING_X / 2, z: -GRID_SPACING_Z / 2 }, /* B: front-right */
-  { x: -GRID_SPACING_X / 2, z:  GRID_SPACING_Z / 2 }, /* C: back-left */
-  { x:  GRID_SPACING_X / 2, z:  GRID_SPACING_Z / 2 }, /* D: back-right */
-];
+/* PPO-derived timing jitter */
+function ppoJitter(rng, baseDuration, speed) {
+  const jitter = (rng() - 0.5) * 0.3 * baseDuration;
+  return Math.max(0.3, (baseDuration + jitter) / speed);
+}
 
-const ROOM_SIZE = 14;
-
-/* ============================================================
-   THREE.JS SETUP
-   ============================================================ */
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
-scene.fog = new THREE.Fog(0x1a1a2e, 14, 30);
-
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 60);
-camera.position.set(0, 8, 10);
-camera.lookAt(0, 0.5, 0);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setSize(window.innerWidth, window.innerHeight);
+/* ================================================================
+   RENDERER
+   ================================================================ */
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
-document.body.prepend(renderer.domElement);
+renderer.toneMappingExposure = 1.2;
 
-const orbitControls = new OrbitControls(camera, renderer.domElement);
-orbitControls.target.set(0, 0.5, 0);
-orbitControls.enableDamping = true;
-orbitControls.dampingFactor = 0.08;
-orbitControls.minDistance = 2;
-orbitControls.maxDistance = 22;
-orbitControls.maxPolarAngle = Math.PI * 0.85;
-orbitControls.update();
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#1a1a2e');
+scene.fog = new THREE.Fog('#1a1a2e', 18, 35);
 
-/* ============================================================
-   LIGHTING
-   ============================================================ */
-scene.add(new THREE.AmbientLight(0xc0c8e0, 0.5));
+/* ================================================================
+   CAMERA & CONTROLS
+   ================================================================ */
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 14, 16);
 
-const overheadLight = new THREE.DirectionalLight(0xffffff, 1.0);
-overheadLight.position.set(2, 8, 2);
-overheadLight.castShadow = true;
-overheadLight.shadow.mapSize.set(2048, 2048);
-overheadLight.shadow.camera.near = 0.5;
-overheadLight.shadow.camera.far = 16;
-overheadLight.shadow.camera.left = -8;
-overheadLight.shadow.camera.right = 8;
-overheadLight.shadow.camera.top = 8;
-overheadLight.shadow.camera.bottom = -8;
-scene.add(overheadLight);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 1, 0);
+controls.minDistance = 3;
+controls.maxDistance = 30;
+controls.maxPolarAngle = Math.PI * 0.48;
 
-scene.add((() => { const l = new THREE.DirectionalLight(0x8890b0, 0.3); l.position.set(-5, 3, 6); return l; })());
-scene.add((() => { const l = new THREE.DirectionalLight(0x9090a0, 0.2); l.position.set(5, 2, -4); return l; })());
+/* ================================================================
+   LIGHTS
+   ================================================================ */
+scene.add(new THREE.AmbientLight(0x404060, 0.6));
 
-/* Per-station spot lights */
-STATION_POSITIONS.forEach(pos => {
-  const sp = new THREE.SpotLight(0xffffff, 0.6, 8, Math.PI / 5, 0.5);
-  sp.position.set(pos.x, 4, pos.z);
-  sp.target.position.set(pos.x, 0.8, pos.z);
-  sp.castShadow = false;
-  scene.add(sp);
-  scene.add(sp.target);
-});
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(8, 15, 6);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+dirLight.shadow.camera.left = -10; dirLight.shadow.camera.right = 10;
+dirLight.shadow.camera.top = 10;  dirLight.shadow.camera.bottom = -10;
+dirLight.shadow.camera.near = 1;  dirLight.shadow.camera.far = 30;
+dirLight.shadow.bias = -0.001;
+scene.add(dirLight);
 
-/* ============================================================
-   MATERIALS
-   ============================================================ */
-function makeMat(color, opts = {}) {
-  return new THREE.MeshStandardMaterial({
-    color,
-    roughness: opts.roughness ?? 0.5,
-    metalness: opts.metalness ?? 0.1,
-    transparent: opts.transparent ?? false,
-    opacity: opts.opacity ?? 1.0,
-  });
-}
+scene.add(new THREE.HemisphereLight(0x6688cc, 0x223344, 0.4));
 
-const COLORS = {
-  doctor: 0xe8e8f0, doctorJoint: 0x2a2a30, doctorVisor: 0x2266bb, doctorCross: 0xcc2222,
-  nurse: 0x5080cc, nurseJoint: 0x2a2a30, nurseVisor: 0x2266bb,
-  patient: 0x60aa60, patientJoint: 0x2a2a30, patientVisor: 0x2266bb,
-  syringe: 0xd0d4dd, needle: 0xb0b4c0, injectionSite: 0xff4444,
-  floor: 0xdde0e8, wall: 0xe8eaf0,
-  chairFrame: 0x404048, chairCushion: 0x2a4a70,
-  tray: 0xb0b4bb, ivStand: 0x909098, ivBag: 0xc0d8ee,
-  monitor: 0x303038, monitorScreen: 0x0a2a0a,
+/* ================================================================
+   SHARED MATERIALS
+   ================================================================ */
+const M = {
+  floor:   new THREE.MeshStandardMaterial({ color:0x222244, roughness:0.8 }),
+  wall:    new THREE.MeshStandardMaterial({ color:0x2a2a4a, roughness:0.7 }),
+  ceiling: new THREE.MeshStandardMaterial({ color:0x2e2e50, roughness:0.9 }),
+  divider: new THREE.MeshStandardMaterial({ color:0x333366, roughness:0.6, transparent:true, opacity:0.5 }),
+  doctor:  new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.4 }),
+  patient: new THREE.MeshStandardMaterial({ color:0x00cc66, roughness:0.5 }),
+  nurse:   new THREE.MeshStandardMaterial({ color:0x4488ff, roughness:0.4 }),
+  skin:    new THREE.MeshStandardMaterial({ color:0xe8b89d, roughness:0.6 }),
+  chair:   new THREE.MeshStandardMaterial({ color:0x555577, roughness:0.6 }),
+  iv:      new THREE.MeshStandardMaterial({ color:0xff4466, roughness:0.3, metalness:0.6 }),
+  ivBag:   new THREE.MeshStandardMaterial({ color:0xaaddff, transparent:true, opacity:0.6 }),
+  tray:    new THREE.MeshStandardMaterial({ color:0x999999, roughness:0.3, metalness:0.8 }),
+  monitor: new THREE.MeshStandardMaterial({ color:0x333355, roughness:0.4 }),
+  screen:  new THREE.MeshStandardMaterial({ color:0x00ff88, emissive:0x00ff88, emissiveIntensity:0.3 }),
+  syringe: new THREE.MeshStandardMaterial({ color:0xcccccc, roughness:0.2, metalness:0.9 }),
+  needle:  new THREE.MeshStandardMaterial({ color:0xdddddd, roughness:0.1, metalness:1.0 }),
+  chart:   new THREE.MeshStandardMaterial({ color:0xeeeecc, roughness:0.7 }),
+  text:    new THREE.MeshStandardMaterial({ color:0x666666 }),
+  led:     new THREE.MeshStandardMaterial({ color:0x00ff00, emissive:0x00ff00, emissiveIntensity:1 }),
 };
 
-const mats = {
-  doctor: makeMat(COLORS.doctor, { roughness: 0.4 }),
-  doctorJoint: makeMat(COLORS.doctorJoint, { roughness: 0.3, metalness: 0.5 }),
-  doctorVisor: makeMat(COLORS.doctorVisor, { roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.8 }),
-  doctorCross: makeMat(COLORS.doctorCross),
-  nurse: makeMat(COLORS.nurse, { roughness: 0.5 }),
-  nurseJoint: makeMat(COLORS.nurseJoint, { roughness: 0.3, metalness: 0.5 }),
-  nurseVisor: makeMat(COLORS.nurseVisor, { roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.8 }),
-  patient: makeMat(COLORS.patient, { roughness: 0.6 }),
-  patientJoint: makeMat(COLORS.patientJoint, { roughness: 0.3, metalness: 0.5 }),
-  patientVisor: makeMat(COLORS.patientVisor, { roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.8 }),
-  syringe: makeMat(COLORS.syringe, { roughness: 0.2, metalness: 0.3 }),
-  needle: makeMat(COLORS.needle, { roughness: 0.1, metalness: 0.8 }),
-  injectionSite: makeMat(COLORS.injectionSite, { transparent: true, opacity: 0.5 }),
-  floor: makeMat(COLORS.floor, { roughness: 0.8 }),
-  wall: makeMat(COLORS.wall, { roughness: 0.9 }),
-  chairFrame: makeMat(COLORS.chairFrame, { roughness: 0.3, metalness: 0.6 }),
-  chairCushion: makeMat(COLORS.chairCushion, { roughness: 0.7 }),
-  tray: makeMat(COLORS.tray, { roughness: 0.2, metalness: 0.7 }),
-  ivStand: makeMat(COLORS.ivStand, { roughness: 0.3, metalness: 0.6 }),
-  ivBag: makeMat(COLORS.ivBag, { roughness: 0.4, transparent: true, opacity: 0.7 }),
-  monitor: makeMat(COLORS.monitor, { roughness: 0.4 }),
-  monitorScreen: makeMat(COLORS.monitorScreen, { roughness: 0.2, metalness: 0.1 }),
-};
-
-/* ============================================================
+/* ================================================================
    GEOMETRY HELPERS
-   ============================================================ */
-function box(w, h, d) { return new THREE.BoxGeometry(w, h, d); }
-function sphere(r, ws = 16, hs = 16) { return new THREE.SphereGeometry(r, ws, hs); }
-function cylinder(rT, rB, h, s = 16) { return new THREE.CylinderGeometry(rT, rB, h, s); }
-function capsule(r, h, cs = 8, rs = 16) { return new THREE.CapsuleGeometry(r, h, cs, rs); }
+   ================================================================ */
+const gBox = (w,h,d) => new THREE.BoxGeometry(w,h,d);
+const gCyl = (rT,rB,h,s) => new THREE.CylinderGeometry(rT,rB,h,s||16);
+const gSph = (r,w,h) => new THREE.SphereGeometry(r,w||12,h||10);
 
-function mkMesh(geom, mat, pos, rot) {
-  const m = new THREE.Mesh(geom, mat);
-  if (pos) m.position.set(...pos);
-  if (rot) m.rotation.set(...rot);
+function mesh(geo, mat, pos, parent) {
+  const m = new THREE.Mesh(geo, mat);
+  if (pos) m.position.set(pos[0], pos[1], pos[2]);
   m.castShadow = true;
   m.receiveShadow = true;
+  (parent || scene).add(m);
   return m;
 }
 
-/* ============================================================
-   BUILD ENVIRONMENT (hospital room)
-   ============================================================ */
-function buildEnvironment() {
-  const env = new THREE.Group();
-  const hs = ROOM_SIZE / 2;
-
+/* ================================================================
+   ROOM CONSTRUCTION
+   ================================================================ */
+function buildRoom() {
   /* Floor */
-  const floorGeom = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-  const floor = new THREE.Mesh(floorGeom, mats.floor);
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  env.add(floor);
+  const fl = mesh(gBox(ROOM_SIZE, 0.1, ROOM_SIZE), M.floor, [0, -0.05, 0]);
+  fl.castShadow = false;
 
-  /* Grid */
-  const grid = new THREE.GridHelper(ROOM_SIZE, 28, 0xc0c4cc, 0xd0d4dd);
-  grid.position.y = 0.002;
-  env.add(grid);
+  /* Ceiling */
+  const cl = mesh(gBox(ROOM_SIZE, 0.1, ROOM_SIZE), M.ceiling, [0, 4, 0]);
+  cl.castShadow = false;
 
   /* Walls */
-  env.add(mkMesh(box(ROOM_SIZE, 3.5, 0.12), mats.wall, [0, 1.75, -hs]));
-  env.add(mkMesh(box(ROOM_SIZE, 3.5, 0.12), mats.wall, [0, 1.75,  hs]));
-  env.add(mkMesh(box(0.12, 3.5, ROOM_SIZE), mats.wall, [-hs, 1.75, 0]));
-  env.add(mkMesh(box(0.12, 3.5, ROOM_SIZE), mats.wall, [ hs, 1.75, 0]));
-
-  /* Ceiling (subtle) */
-  const ceilGeom = new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE);
-  const ceil = new THREE.Mesh(ceilGeom, makeMat(0xf0f0f8, { roughness: 0.9 }));
-  ceil.rotation.x = Math.PI / 2;
-  ceil.position.y = 3.5;
-  ceil.receiveShadow = true;
-  env.add(ceil);
-
-  /* Station divider lines on floor */
-  const divMat = makeMat(0xaab0c0, { roughness: 0.6 });
-  env.add(mkMesh(box(0.02, 0.005, ROOM_SIZE * 0.6), divMat, [0, 0.004, 0]));
-  env.add(mkMesh(box(ROOM_SIZE * 0.6, 0.005, 0.02), divMat, [0, 0.004, 0]));
-
-  /* Station label marks on floor */
-  STATION_CONFIGS.forEach((cfg, i) => {
-    const pos = STATION_POSITIONS[i];
-    const labelMat = makeMat(cfg.color, { roughness: 0.5 });
-    env.add(mkMesh(box(0.6, 0.006, 0.06), labelMat, [pos.x, 0.005, pos.z - 1.6]));
+  const wg = gBox(ROOM_SIZE, 4, 0.15);
+  [[0,2,-HALF,0], [0,2,HALF,0], [-HALF,2,0,Math.PI/2], [HALF,2,0,Math.PI/2]].forEach(([x,y,z,ry]) => {
+    const w = mesh(wg, M.wall, [x,y,z]);
+    if (ry) w.rotation.y = ry;
+    w.castShadow = false;
   });
 
-  return env;
+  /* Dividers */
+  mesh(gBox(0.04, 2.5, ROOM_SIZE), M.divider, [0, 1.25, 0]);
+  mesh(gBox(ROOM_SIZE, 2.5, 0.04), M.divider, [0, 1.25, 0]);
+
+  /* Grid */
+  const grid = new THREE.GridHelper(ROOM_SIZE, 24, 0x333366, 0x222244);
+  grid.position.y = 0.01;
+  scene.add(grid);
 }
 
-/* ============================================================
-   BUILD EXAMINATION CHAIR
-   ============================================================ */
-function buildChair() {
-  const chair = new THREE.Group();
-  const r = 0.025;
-  [[-0.2, -0.2], [0.2, -0.2], [-0.2, 0.15], [0.2, 0.15]].forEach(([x, z]) => {
-    chair.add(mkMesh(cylinder(r, r, 0.45), mats.chairFrame, [x, 0.225, z]));
+/* ================================================================
+   HUMANOID BUILDER
+   ================================================================ */
+function buildHumanoid(mat, parent) {
+  const g = new THREE.Group();
+  /* Torso */
+  mesh(gBox(0.4, 0.6, 0.25), mat, [0, 1.1, 0], g);
+  /* Head */
+  mesh(gSph(0.15), M.skin, [0, 1.65, 0], g);
+  /* Legs */
+  mesh(gCyl(0.06, 0.06, 0.5), mat, [-0.1, 0.5, 0], g);
+  mesh(gCyl(0.06, 0.06, 0.5), mat, [ 0.1, 0.5, 0], g);
+  /* Left arm pivot */
+  const la = new THREE.Group();
+  la.position.set(-0.3, 1.2, 0);
+  mesh(gCyl(0.04, 0.04, 0.45), mat, [0, -0.22, 0], la);
+  g.add(la);
+  /* Right arm pivot */
+  const ra = new THREE.Group();
+  ra.position.set(0.3, 1.2, 0);
+  mesh(gCyl(0.04, 0.04, 0.45), mat, [0, -0.22, 0], ra);
+  g.add(ra);
+
+  if (parent) parent.add(g);
+  return { group: g, leftArm: la, rightArm: ra };
+}
+
+/* ================================================================
+   PATIENT IN CHAIR
+   ================================================================ */
+function buildPatientInChair(parent) {
+  const g = new THREE.Group();
+  /* Chair: seat, back, 4 legs, 2 armrests */
+  mesh(gBox(0.6, 0.08, 0.6), M.chair, [0, 0.45, 0], g);
+  mesh(gBox(0.6, 0.7, 0.08), M.chair, [0, 0.8, -0.26], g);
+  [[-0.25,-0.2],[0.25,-0.2],[-0.25,0.2],[0.25,0.2]].forEach(([x,z]) =>
+    mesh(gCyl(0.04, 0.04, 0.45), M.chair, [x, 0.22, z], g));
+  mesh(gBox(0.08, 0.04, 0.45), M.chair, [ 0.3, 0.62, 0], g);
+  mesh(gBox(0.08, 0.04, 0.45), M.chair, [-0.3, 0.62, 0], g);
+
+  /* Patient torso + head */
+  mesh(gBox(0.35, 0.5, 0.22), M.patient, [0, 0.85, -0.04], g);
+  mesh(gSph(0.13), M.skin, [0, 1.3, -0.08], g);
+
+  /* Seated legs (horizontal) */
+  [[-0.1],[0.1]].forEach(([x]) => {
+    const leg = mesh(gCyl(0.06, 0.05, 0.4), M.patient, [x, 0.5, 0.15], g);
+    leg.rotation.x = Math.PI / 2;
   });
-  chair.add(mkMesh(box(0.5, 0.06, 0.44), mats.chairCushion, [0, 0.47, 0]));
-  chair.add(mkMesh(box(0.5, 0.6, 0.06), mats.chairCushion, [0, 0.8, 0.2]));
-  chair.add(mkMesh(box(0.06, 0.04, 0.36), mats.chairFrame, [0.27, 0.62, 0]));
-  chair.add(mkMesh(box(0.06, 0.04, 0.36), mats.chairFrame, [-0.27, 0.62, 0]));
-  return chair;
+
+  /* Exposed arm for injection */
+  const arm = mesh(gCyl(0.04, 0.04, 0.35), M.skin, [0.35, 0.7, 0.1], g);
+  arm.rotation.z = Math.PI / 6;
+
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD IV STAND
-   ============================================================ */
-function buildIVStand() {
-  const iv = new THREE.Group();
-  iv.add(mkMesh(cylinder(0.015, 0.015, 1.6), mats.ivStand, [0, 0.8, 0]));
-  for (let a = 0; a < 3; a++) {
-    const angle = (a / 3) * Math.PI * 2;
-    const arm = mkMesh(cylinder(0.012, 0.012, 0.15), mats.ivStand, [Math.cos(angle) * 0.08, 0.015, Math.sin(angle) * 0.08]);
-    arm.rotation.z = Math.PI / 2;
-    iv.add(arm);
-  }
-  iv.add(mkMesh(cylinder(0.008, 0.008, 0.08), mats.ivStand, [0.03, 1.62, 0], [0, 0, 0.7]));
-  iv.add(mkMesh(box(0.08, 0.14, 0.04), mats.ivBag, [0, 1.52, 0]));
-  iv.add(mkMesh(cylinder(0.003, 0.003, 0.6), mats.ivStand, [0.02, 1.15, 0]));
-  return iv;
+/* ================================================================
+   MEDICAL EQUIPMENT BUILDERS
+   ================================================================ */
+function buildIVStand(parent) {
+  const g = new THREE.Group();
+  mesh(gCyl(0.02, 0.02, 1.6), M.iv, [0, 0.8, 0], g);
+  mesh(gCyl(0.12, 0.12, 0.03), M.iv, [0, 0.02, 0], g);
+  mesh(gCyl(0.01, 0.01, 0.3), M.iv, [0, 1.6, 0], g);
+  mesh(gBox(0.08, 0.15, 0.04), M.ivBag, [0, 1.5, 0], g);
+  mesh(gCyl(0.005, 0.005, 0.6), M.iv, [0, 1.1, 0], g);
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD INSTRUMENT TRAY
-   ============================================================ */
-function buildTray() {
-  const tray = new THREE.Group();
-  tray.add(mkMesh(cylinder(0.02, 0.02, 0.8), mats.tray, [0, 0.4, 0]));
-  tray.add(mkMesh(box(0.4, 0.01, 0.24), mats.tray, [0, 0.8, 0]));
-  tray.add(mkMesh(cylinder(0.01, 0.01, 0.1), mats.syringe, [0.05, 0.82, 0], [0, 0, Math.PI / 2]));
-  tray.add(mkMesh(box(0.05, 0.006, 0.05), makeMat(0xeeeeee), [-0.08, 0.81, 0]));
-  return tray;
+function buildTray(parent) {
+  const g = new THREE.Group();
+  mesh(gCyl(0.03, 0.03, 0.7), M.tray, [0, 0.35, 0], g);
+  mesh(gBox(0.4, 0.02, 0.25), M.tray, [0, 0.71, 0], g);
+  mesh(gCyl(0.008, 0.008, 0.12), M.needle, [0.1, 0.78, 0], g);
+  mesh(gCyl(0.008, 0.008, 0.12), M.needle, [0.05, 0.78, 0.05], g);
+  mesh(gBox(0.06, 0.01, 0.06), M.syringe, [-0.1, 0.73, 0], g);
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD VITALS MONITOR
-   ============================================================ */
-function buildMonitor() {
-  const mon = new THREE.Group();
-  mon.add(mkMesh(cylinder(0.025, 0.025, 1.0), mats.monitor, [0, 0.5, 0]));
-  mon.add(mkMesh(box(0.3, 0.04, 0.24), mats.monitor, [0, 0.02, 0]));
-  mon.add(mkMesh(box(0.36, 0.28, 0.08), mats.monitor, [0, 1.15, 0]));
-  mon.add(mkMesh(box(0.32, 0.24, 0.005), mats.monitorScreen, [0, 1.15, -0.043]));
-  const glow = new THREE.PointLight(0x00ff40, 0.15, 0.5);
-  glow.position.set(0, 1.15, -0.06);
-  mon.add(glow);
-  return mon;
+function buildMonitor(parent) {
+  const g = new THREE.Group();
+  mesh(gCyl(0.03, 0.03, 0.9), M.monitor, [0, 0.45, 0], g);
+  mesh(gBox(0.35, 0.25, 0.03), M.monitor, [0, 1.05, 0], g);
+  mesh(gBox(0.3, 0.2, 0.005), M.screen, [0, 1.05, 0.018], g);
+  const led = mesh(gSph(0.012), M.led, [0.15, 0.92, 0.02], g);
+  g.userData.led = led;
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD SYRINGE (for nurse's hand)
-   ============================================================ */
-function buildSyringe() {
-  const syringe = new THREE.Group();
-  syringe.add(mkMesh(cylinder(0.012, 0.012, 0.12), mats.syringe, [0, -0.02, 0]));
-  syringe.add(mkMesh(cylinder(0.008, 0.008, 0.04), makeMat(0x505058), [0, 0.06, 0]));
-  syringe.add(mkMesh(cylinder(0.02, 0.02, 0.005), mats.syringe, [0, 0.04, 0]));
-  syringe.add(mkMesh(cylinder(0.006, 0.004, 0.02), mats.syringe, [0, -0.09, 0]));
-  syringe.add(mkMesh(cylinder(0.002, 0.001, 0.04), mats.needle, [0, -0.12, 0]));
-  return syringe;
+function buildSyringe(parent) {
+  const g = new THREE.Group();
+  mesh(gCyl(0.015, 0.015, 0.18), M.syringe, [0, 0, 0], g);
+  mesh(gCyl(0.003, 0.003, 0.08), M.needle, [0, -0.13, 0], g);
+  mesh(gCyl(0.018, 0.018, 0.02), M.syringe, [0, 0.1, 0], g);
+  g.rotation.x = Math.PI / 2;
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD TABLET (for doctor's hand)
-   ============================================================ */
-function buildTablet() {
-  const tablet = new THREE.Group();
-  tablet.add(mkMesh(box(0.12, 0.16, 0.01), mats.monitor, [0, 0, 0]));
-  tablet.add(mkMesh(box(0.10, 0.13, 0.005), mats.monitorScreen, [0, 0.01, -0.006]));
-  return tablet;
+function buildChart(parent) {
+  const g = new THREE.Group();
+  mesh(gBox(0.2, 0.28, 0.015), M.chart, [0, 0, 0], g);
+  for (let i = 0; i < 4; i++)
+    mesh(gBox(0.14, 0.008, 0.002), M.text, [0, 0.08 - i * 0.04, 0.009], g);
+  if (parent) parent.add(g);
+  return g;
 }
 
-/* ============================================================
-   BUILD INJECTION SITE MARKER
-   ============================================================ */
-function buildInjectionMarker() {
-  const marker = new THREE.Group();
-  const ringGeom = new THREE.TorusGeometry(0.025, 0.004, 8, 24);
-  const ring = new THREE.Mesh(ringGeom, mats.injectionSite);
-  marker.add(ring);
-  marker.add(mkMesh(sphere(0.008), mats.injectionSite, [0, 0, 0]));
-  return marker;
+/* ================================================================
+   STATION LABEL SPRITE
+   ================================================================ */
+function makeLabel(text) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#00d4ff';
+  ctx.font = 'bold 36px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const sm = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(sm);
+  sprite.scale.set(1.2, 0.3, 1);
+  return sprite;
 }
 
-/* ============================================================
-   BUILD G1 HUMANOID ROBOT
-   ============================================================ */
-function buildHumanoid(role) {
-  const mat = mats[role] || mats.doctor;
-  const jointMat = mats[role + 'Joint'] || mats.doctorJoint;
-  const visorMat = mats[role + 'Visor'] || mats.doctorVisor;
-
-  const robot = new THREE.Group();
-  robot.userData = { role, joints: {} };
-
-  /* TORSO */
-  const torso = new THREE.Group();
-  torso.add(mkMesh(box(0.30, 0.40, 0.18), mat, [0, 0, 0]));
-  torso.add(mkMesh(cylinder(0.16, 0.16, 0.02), jointMat, [0, 0.21, 0]));
-  torso.add(mkMesh(cylinder(0.16, 0.16, 0.02), jointMat, [0, -0.21, 0]));
-  robot.userData.torso = torso;
-
-  if (role === 'doctor') {
-    torso.add(mkMesh(box(0.08, 0.02, 0.005), mats.doctorCross, [0, 0.1, -0.091]));
-    torso.add(mkMesh(box(0.02, 0.08, 0.005), mats.doctorCross, [0, 0.1, -0.091]));
-  }
-  if (role === 'nurse') {
-    torso.add(mkMesh(box(0.06, 0.016, 0.005), makeMat(0xffffff), [0.08, 0.1, -0.091]));
-    torso.add(mkMesh(box(0.016, 0.06, 0.005), makeMat(0xffffff), [0.08, 0.1, -0.091]));
-  }
-
-  robot.add(torso);
-
-  /* HEAD */
-  const head = new THREE.Group();
-  head.add(mkMesh(sphere(0.10), jointMat, [0, 0, 0]));
-  head.add(mkMesh(box(0.14, 0.06, 0.005), visorMat, [0, 0.02, -0.09]));
-  head.position.set(0, 0.32, 0);
-  torso.add(head);
-  robot.userData.head = head;
-
-  /* ARMS */
-  function buildArm(side) {
-    const sign = side === 'right' ? 1 : -1;
-    const shoulder = new THREE.Group();
-    shoulder.position.set(sign * 0.2, 0.15, 0);
-
-    const upperArm = new THREE.Group();
-    upperArm.add(mkMesh(capsule(0.04, 0.16), mat, [0, -0.12, 0]));
-    upperArm.add(mkMesh(sphere(0.045), jointMat, [0, 0, 0]));
-    shoulder.add(upperArm);
-
-    const elbow = new THREE.Group();
-    elbow.position.set(0, -0.24, 0);
-    const forearm = new THREE.Group();
-    forearm.add(mkMesh(capsule(0.035, 0.14), mat, [0, -0.10, 0]));
-    forearm.add(mkMesh(sphere(0.038), jointMat, [0, 0, 0]));
-    elbow.add(forearm);
-
-    const hand = new THREE.Group();
-    hand.position.set(0, -0.22, 0);
-    hand.add(mkMesh(box(0.06, 0.03, 0.08), jointMat, [0, 0, 0]));
-    forearm.add(hand);
-
-    upperArm.add(elbow);
-    torso.add(shoulder);
-
-    return { shoulder, upperArm, elbow, forearm, hand };
-  }
-
-  const rightArm = buildArm('right');
-  const leftArm = buildArm('left');
-
-  robot.userData.joints.rShoulder = rightArm.shoulder;
-  robot.userData.joints.rUpperArm = rightArm.upperArm;
-  robot.userData.joints.rElbow = rightArm.elbow;
-  robot.userData.joints.rForearm = rightArm.forearm;
-  robot.userData.joints.rHand = rightArm.hand;
-  robot.userData.joints.lShoulder = leftArm.shoulder;
-  robot.userData.joints.lUpperArm = leftArm.upperArm;
-  robot.userData.joints.lElbow = leftArm.elbow;
-  robot.userData.joints.lForearm = leftArm.forearm;
-  robot.userData.joints.lHand = leftArm.hand;
-
-  /* PELVIS */
-  const pelvis = new THREE.Group();
-  pelvis.add(mkMesh(box(0.28, 0.10, 0.16), mat, [0, 0, 0]));
-  pelvis.add(mkMesh(cylinder(0.15, 0.15, 0.02), jointMat, [0, 0.06, 0]));
-  pelvis.position.set(0, -0.26, 0);
-  torso.add(pelvis);
-
-  /* LEGS */
-  function buildLeg(side) {
-    const sign = side === 'right' ? 1 : -1;
-    const hip = new THREE.Group();
-    hip.position.set(sign * 0.1, -0.06, 0);
-
-    const thigh = new THREE.Group();
-    thigh.add(mkMesh(capsule(0.05, 0.18), mat, [0, -0.13, 0]));
-    thigh.add(mkMesh(sphere(0.052), jointMat, [0, 0, 0]));
-    hip.add(thigh);
-
-    const knee = new THREE.Group();
-    knee.position.set(0, -0.27, 0);
-    const shin = new THREE.Group();
-    shin.add(mkMesh(capsule(0.04, 0.18), mat, [0, -0.12, 0]));
-    shin.add(mkMesh(sphere(0.043), jointMat, [0, 0, 0]));
-    knee.add(shin);
-
-    const foot = new THREE.Group();
-    foot.position.set(0, -0.26, 0);
-    foot.add(mkMesh(box(0.10, 0.04, 0.14), jointMat, [0, 0, -0.02]));
-    shin.add(foot);
-
-    thigh.add(knee);
-    pelvis.add(hip);
-
-    return { hip, thigh, knee, shin, foot };
-  }
-
-  const rightLeg = buildLeg('right');
-  const leftLeg = buildLeg('left');
-
-  robot.userData.joints.rHip = rightLeg.hip;
-  robot.userData.joints.rThigh = rightLeg.thigh;
-  robot.userData.joints.rKnee = rightLeg.knee;
-  robot.userData.joints.rShin = rightLeg.shin;
-  robot.userData.joints.rFoot = rightLeg.foot;
-  robot.userData.joints.lHip = leftLeg.hip;
-  robot.userData.joints.lThigh = leftLeg.thigh;
-  robot.userData.joints.lKnee = leftLeg.knee;
-  robot.userData.joints.lShin = leftLeg.shin;
-  robot.userData.joints.lFoot = leftLeg.foot;
-
-  return robot;
+/* ================================================================
+   STATION CENTER POSITION
+   ================================================================ */
+function stationCenter(cfg) {
+  return new THREE.Vector3(
+    cfg.gridX === 0 ? -HALF / 2 : HALF / 2,
+    0,
+    cfg.gridZ === 0 ? -HALF / 2 : HALF / 2
+  );
 }
 
-/* ============================================================
+/* ================================================================
    BUILD COMPLETE STATION
-   ============================================================ */
-function buildStation(config, gridPos) {
+   ================================================================ */
+function buildStation(cfg) {
+  const center = stationCenter(cfg);
   const group = new THREE.Group();
-  group.position.set(gridPos.x, 0, gridPos.z);
+  group.position.copy(center);
+  scene.add(group);
 
-  /* All characters face -Z (forward), same direction */
+  /* Station spot light */
+  const spot = new THREE.PointLight(0xffffff, 0.5, 6);
+  spot.position.set(0, 3.5, 0);
+  group.add(spot);
 
-  /* Chair at center */
-  const chair = buildChair();
-  group.add(chair);
+  /* Doctor (white, left) */
+  const doctor = buildHumanoid(M.doctor, group);
+  doctor.group.position.set(-1.2, 0, 0.3);
+  doctor.group.rotation.y = Math.PI / 6;
 
-  /* Patient centered in chair */
-  const patient = buildHumanoid('patient');
-  patient.position.set(0, 1.15, 0);
-  /* Seated pose */
-  patient.userData.joints.rThigh.rotation.x = Math.PI / 2;
-  patient.userData.joints.rKnee.rotation.x = -Math.PI / 2;
-  patient.userData.joints.lThigh.rotation.x = Math.PI / 2;
-  patient.userData.joints.lKnee.rotation.x = -Math.PI / 2;
-  patient.userData.joints.rUpperArm.rotation.x = 0.1;
-  patient.userData.joints.lUpperArm.rotation.x = 0.1;
-  group.add(patient);
+  /* Chart in doctor right hand */
+  const chart = buildChart(doctor.rightArm);
+  chart.position.set(0, -0.35, 0.15);
+  chart.rotation.x = -0.3;
 
-  /* Injection marker on patient's RIGHT deltoid (right side = +X from patient's perspective facing -Z) */
-  const injMarker = buildInjectionMarker();
-  injMarker.position.set(0.24, 1.28, -0.04);
-  injMarker.rotation.z = Math.PI / 2;
-  group.add(injMarker);
+  /* Patient (green, center in chair) */
+  const patient = buildPatientInChair(group);
+  patient.position.set(0, 0, 0);
 
-  /* Doctor on LEFT side of patient (patient's left = -X), facing patient */
-  const doctor = buildHumanoid('doctor');
-  doctor.position.set(-0.7, 0.89, -0.3);
-  doctor.rotation.y = Math.PI / 4; /* Angled toward patient */
-  group.add(doctor);
+  /* Nurse (blue, right with syringe) */
+  const nurse = buildHumanoid(M.nurse, group);
+  nurse.group.position.set(1.3, 0, 0.5);
+  nurse.group.rotation.y = -Math.PI / 5;
 
-  /* Tablet in doctor's right hand */
-  const tablet = buildTablet();
-  doctor.userData.joints.rHand.add(tablet);
+  /* Syringe in nurse right hand */
+  const syringe = buildSyringe(nurse.rightArm);
+  syringe.position.set(0, -0.4, 0.05);
 
-  /* Nurse on RIGHT side of patient (+X), facing patient */
-  const nurse = buildHumanoid('nurse');
-  nurse.position.set(0.7, 0.89, -0.3);
-  nurse.rotation.y = -Math.PI / 4; /* Angled toward patient */
-  group.add(nurse);
+  /* IV stand (behind-left of patient) */
+  const iv = buildIVStand(group);
+  iv.position.set(-0.7, 0, -0.8);
 
-  /* Syringe in nurse's right hand */
-  const syringe = buildSyringe();
-  nurse.userData.joints.rHand.add(syringe);
+  /* Tray (right of patient) */
+  const tray = buildTray(group);
+  tray.position.set(1.0, 0, -0.6);
 
-  /* IV stand (behind patient, left side) */
-  const iv = buildIVStand();
-  iv.position.set(-0.5, 0, 0.5);
-  group.add(iv);
+  /* Monitor (behind patient) */
+  const monitor = buildMonitor(group);
+  monitor.position.set(0.5, 0, -1.1);
 
-  /* Instrument tray (right side, near nurse) */
-  const tray = buildTray();
-  tray.position.set(0.8, 0, 0.4);
-  group.add(tray);
+  /* Label */
+  const label = makeLabel('Station ' + cfg.name);
+  label.position.set(0, 3.2, 0);
+  group.add(label);
 
-  /* Vitals monitor (left side, near doctor) */
-  const monitor = buildMonitor();
-  monitor.position.set(-0.9, 0, 0.2);
-  group.add(monitor);
+  /* PPO timing via seeded RNG */
+  const rng = mulberry32(cfg.seed);
+  const doctorPhaseTimes = DOCTOR_PHASES.map(p => ppoJitter(rng, p.duration, cfg.speed));
+  const nursePhaseTimes  = NURSE_PHASES.map(p => ppoJitter(rng, p.duration, cfg.speed));
+  const accuracy = 0.85 + rng() * 0.14;
 
-  /* Station label ring on floor */
-  const ringGeom = new THREE.RingGeometry(1.4, 1.45, 32);
-  const ringMat = makeMat(config.color, { transparent: true, opacity: 0.25 });
-  const ring = new THREE.Mesh(ringGeom, ringMat);
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = 0.003;
-  group.add(ring);
+  const doctorTotalTime = doctorPhaseTimes.reduce((a, b) => a + b, 0);
+  const nurseTotalTime  = nursePhaseTimes.reduce((a, b) => a + b, 0);
+  const totalTime       = doctorTotalTime + nurseTotalTime;
+
+  /* Phase boundaries */
+  const phaseBoundaries = [];
+  let cumul = 0;
+  doctorPhaseTimes.forEach((t, i) => {
+    phaseBoundaries.push({ start: cumul, end: cumul + t, actor: 'doctor', name: DOCTOR_PHASES[i].name });
+    cumul += t;
+  });
+  nursePhaseTimes.forEach((t, i) => {
+    phaseBoundaries.push({ start: cumul, end: cumul + t, actor: 'nurse', name: NURSE_PHASES[i].name });
+    cumul += t;
+  });
 
   return {
-    group,
-    patient,
-    doctor,
-    nurse,
-    injMarker,
-    syringe,
-    config,
-    phases: computeStationPhases(config),
+    cfg, group, doctor, nurse, patient, syringe, chart, iv, tray, monitor,
+    doctorTotalTime, nurseTotalTime, totalTime, accuracy,
+    phaseBoundaries, doctorPhaseTimes, nursePhaseTimes,
+    elapsed: 0, completed: false, currentPhaseIdx: 0,
+    /* store initial nurse position for animation */
+    nurseHomeX: 1.3, nurseHomeZ: 0.5,
   };
 }
 
-/* ============================================================
-   ASSEMBLE SCENE
-   ============================================================ */
-const environment = buildEnvironment();
-scene.add(environment);
+/* ================================================================
+   BUILD THE SCENE
+   ================================================================ */
+buildRoom();
+const stations = STATION_CONFIGS.map(cfg => buildStation(cfg));
 
-const stations = STATION_CONFIGS.map((cfg, i) => {
-  const station = buildStation(cfg, STATION_POSITIONS[i]);
-  scene.add(station.group);
-  return station;
+/* Camera targets */
+const cameraTargets = {
+  overview: { pos: new THREE.Vector3(0, 14, 16), target: new THREE.Vector3(0, 1, 0) },
+};
+stations.forEach((st, i) => {
+  const c = stationCenter(st.cfg);
+  cameraTargets[i] = {
+    pos: new THREE.Vector3(c.x + 2.5, 4.5, c.z + 4.5),
+    target: new THREE.Vector3(c.x, 1, c.z),
+  };
 });
 
-/* ============================================================
-   ANIMATION STATE
-   ============================================================ */
-let globalTime = 0;
-let playing = false;
-let frameCount = 0;
-let lastFpsTime = performance.now();
-let displayFps = 0;
+/* ================================================================
+   APPLICATION STATE
+   ================================================================ */
+let playing = true;
+let activeStation = 'overview';
+let cameraAnimating = false;
+let cameraAnimStart = 0;
+const cameraAnimDur = 0.8;
+let camFrom = { pos: camera.position.clone(), target: controls.target.clone() };
+let camTo   = { pos: camera.position.clone(), target: controls.target.clone() };
 
-/* Maximum possible station time for progress bar */
-const maxStationTime = Math.max(...stations.map(s => s.phases.totalTime));
+/* ================================================================
+   UI EVENT WIRING
+   ================================================================ */
+const btnPlay   = document.getElementById('btn-play');
+const btnReset  = document.getElementById('btn-reset');
+const btnInfo   = document.getElementById('btn-info');
+const btnUpload = document.getElementById('btn-upload');
+const fileInput = document.getElementById('file-input');
+const stationBtns = document.querySelectorAll('.station-btn');
 
-function degToRad(d) { return d * Math.PI / 180; }
-function smoothStep(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-/* ============================================================
-   GET STATION PHASE AT TIME
-   ============================================================ */
-function getStationState(station, time) {
-  const { doctorPhases, nursePhases, doctorTotal } = station.phases;
-
-  /* Doctor phase */
-  let doctorElapsed = 0;
-  let doctorPhase = null;
-  let doctorProgress = 1;
-  let doctorDone = time >= doctorTotal;
-  for (const p of doctorPhases) {
-    if (time < doctorElapsed + p.duration) {
-      doctorPhase = p;
-      doctorProgress = (time - doctorElapsed) / p.duration;
-      doctorDone = false;
-      break;
-    }
-    doctorElapsed += p.duration;
-  }
-  if (!doctorPhase) {
-    doctorPhase = doctorPhases[doctorPhases.length - 1];
-    doctorProgress = 1;
-  }
-
-  /* Nurse phase (only starts after doctor finishes) */
-  let nursePhase = null;
-  let nurseProgress = 0;
-  let nurseDone = false;
-  let nurseWaiting = true;
-  if (time >= doctorTotal) {
-    nurseWaiting = false;
-    const nurseTime = time - doctorTotal;
-    let nurseElapsed = 0;
-    for (const p of nursePhases) {
-      if (nurseTime < nurseElapsed + p.duration) {
-        nursePhase = p;
-        nurseProgress = (nurseTime - nurseElapsed) / p.duration;
-        break;
-      }
-      nurseElapsed += p.duration;
-    }
-    if (!nursePhase) {
-      nursePhase = nursePhases[nursePhases.length - 1];
-      nurseProgress = 1;
-      nurseDone = true;
-    }
-  }
-
-  const allDone = time >= station.phases.totalTime;
-
-  return { doctorPhase, doctorProgress, doctorDone, nursePhase, nurseProgress, nurseDone, nurseWaiting, allDone };
-}
-
-/* ============================================================
-   ANIMATE DOCTOR
-   ============================================================ */
-function animateDoctor(station, state, time) {
-  const dj = station.doctor.userData.joints;
-  const torso = station.doctor.userData.torso;
-  const head = station.doctor.userData.head;
-  const smoothness = station.config.smoothness;
-
-  const { doctorPhase, doctorProgress: rawP, doctorDone } = state;
-  const t = smoothStep(rawP);
-  const phase = doctorPhase ? doctorPhase.name : 'idle';
-
-  /* Right arm (holding tablet) */
-  let rSP = 20, rElbow = 70, rWrist = 0;
-  /* Left arm (gesture) */
-  let lSP = 10, lElbow = 20, lWrist = 0;
-  let headY = 0;
-
-  if (phase === 'receive_chart') {
-    rSP = 20 + t * 15;
-    rElbow = 70 + t * 10;
-    lSP = 10 + t * 8;
-    headY = t * 0.1;
-  } else if (phase === 'review_symptoms') {
-    rSP = 35 + Math.sin(time * 1.5 * smoothness) * 3;
-    rElbow = 80 + Math.sin(time * 1.2 * smoothness) * 5;
-    lSP = 18 + t * 15;
-    lElbow = 20 + t * 30;
-    headY = Math.sin(time * 0.8) * 0.08;
-  } else if (phase === 'assess_toxicity') {
-    rSP = 35;
-    rElbow = 80;
-    lSP = 33 + Math.sin(time * 2 * smoothness) * 5;
-    lElbow = 50 + t * 15;
-    headY = -0.05 + t * 0.1;
-  } else if (phase === 'approve_injection') {
-    rSP = 35 - t * 10;
-    rElbow = 80 - t * 15;
-    lSP = 33 + t * 10;
-    lElbow = 65 - t * 20;
-    headY = 0.05 - t * 0.15;
-  }
-
-  if (doctorDone) {
-    /* Doctor at rest after completing */
-    rSP = 25; rElbow = 65; lSP = 10; lElbow = 20; headY = 0;
-    /* Subtle idle sway */
-    rSP += Math.sin(time * 0.5) * 1;
-  }
-
-  dj.rUpperArm.rotation.x = degToRad(-rSP);
-  dj.rElbow.rotation.x = degToRad(-rElbow);
-  dj.rHand.rotation.y = degToRad(rWrist);
-  dj.lUpperArm.rotation.x = degToRad(-lSP);
-  dj.lElbow.rotation.x = degToRad(-lElbow);
-
-  /* Torso subtle sway */
-  torso.rotation.z = Math.sin(time * 0.5 * smoothness) * 0.008;
-  head.rotation.y = headY;
-}
-
-/* ============================================================
-   ANIMATE NURSE
-   ============================================================ */
-function animateNurse(station, state, time) {
-  const nj = station.nurse.userData.joints;
-  const torso = station.nurse.userData.torso;
-  const head = station.nurse.userData.head;
-  const smoothness = station.config.smoothness;
-  const { nursePhase, nurseProgress: rawP, nurseWaiting } = state;
-  const t = smoothStep(rawP);
-  const phase = nursePhase ? nursePhase.name : 'idle';
-
-  /* Default standing pose */
-  let rSP = 15, rSY = 0, rElbow = 30, rWrist = 0;
-  let lSP = 10, lElbow = 20;
-  let xOff = 0;
-  let headY = 0;
-
-  if (nurseWaiting) {
-    /* Waiting for doctor - idle pose with subtle movement */
-    rSP = 15 + Math.sin(time * 0.6) * 2;
-    rElbow = 30 + Math.sin(time * 0.8) * 3;
-    lSP = 10 + Math.sin(time * 0.5) * 2;
-    headY = Math.sin(time * 0.4) * 0.05;
-  } else if (phase === 'prepare_syringe') {
-    rSP = 15 + t * 25;
-    rElbow = 30 + t * 40;
-    rWrist = t * 15;
-    lSP = 10 + t * 20;
-    lElbow = 20 + t * 35;
-    headY = -t * 0.1;
-  } else if (phase === 'approach_patient') {
-    rSP = 40 + t * 15;
-    rElbow = 70 + t * 10;
-    rWrist = 15;
-    lSP = 30 - t * 10;
-    lElbow = 55 - t * 15;
-    xOff = -t * 0.15;
-    headY = -0.1 + t * 0.05;
-  } else if (phase === 'position_needle') {
-    rSP = 55 + t * 20;
-    rSY = -t * 15;
-    rElbow = 80 + t * 10;
-    rWrist = 15 + t * 10;
-    lSP = 20 + t * 10;
-    lElbow = 40;
-    xOff = -0.15;
-    headY = -0.05;
-  } else if (phase === 'inject') {
-    rSP = 75;
-    rSY = -15 - t * 5;
-    rElbow = 90;
-    rWrist = 25 - t * 5;
-    lSP = 30;
-    lElbow = 40;
-    xOff = -0.15;
-    headY = -0.05 + Math.sin(time * 1.5) * 0.01;
-  } else if (phase === 'hold_steady') {
-    rSP = 75 + Math.sin(time * 2 * smoothness) * 0.3;
-    rSY = -20;
-    rElbow = 90 + Math.sin(time * 1.8 * smoothness) * 0.2;
-    rWrist = 20;
-    lSP = 30;
-    lElbow = 40;
-    xOff = -0.15;
-    headY = -0.05;
-  } else if (phase === 'withdraw') {
-    rSP = 75 - t * 40;
-    rSY = -20 + t * 15;
-    rElbow = 90 - t * 50;
-    rWrist = 20 - t * 18;
-    lSP = 30 - t * 15;
-    lElbow = 40 - t * 15;
-    xOff = -0.15 + t * 0.15;
-    headY = -0.05 + t * 0.05;
-  }
-
-  nj.rUpperArm.rotation.x = degToRad(-rSP);
-  nj.rUpperArm.rotation.z = degToRad(rSY);
-  nj.rElbow.rotation.x = degToRad(-rElbow);
-  nj.rHand.rotation.y = degToRad(rWrist);
-  nj.lUpperArm.rotation.x = degToRad(-lSP);
-  nj.lElbow.rotation.x = degToRad(-lElbow);
-
-  station.nurse.position.x = 0.7 + xOff;
-  torso.rotation.z = Math.sin(time * 0.5 * smoothness) * 0.006;
-  head.rotation.y = headY;
-}
-
-/* ============================================================
-   ANIMATE PATIENT
-   ============================================================ */
-function animatePatient(station, state, time) {
-  const pj = station.patient.userData.joints;
-  const head = station.patient.userData.head;
-  const smoothness = station.config.smoothness;
-
-  /* Subtle breathing */
-  const breathe = Math.sin(time * 1.2 * smoothness) * 0.005;
-  pj.rUpperArm.rotation.x = 0.1 + breathe;
-  pj.lUpperArm.rotation.x = 0.1 + breathe;
-
-  /* Slight head movement - looks toward nurse during injection phases */
-  const { nursePhase, nurseWaiting } = state;
-  let headTarget = Math.sin(time * 0.3) * 0.03;
-  if (!nurseWaiting && nursePhase) {
-    const pName = nursePhase.name;
-    if (pName === 'inject' || pName === 'hold_steady' || pName === 'position_needle') {
-      headTarget = 0.15; /* Look right toward nurse */
-    } else if (pName === 'approach_patient') {
-      headTarget = 0.08;
-    }
-  }
-  head.rotation.y += (headTarget - head.rotation.y) * 0.05;
-}
-
-/* ============================================================
-   ANIMATE INJECTION MARKER
-   ============================================================ */
-function animateInjMarker(station, state, time) {
-  const marker = station.injMarker;
-  const { nursePhase, nurseWaiting, allDone } = state;
-
-  const pulseScale = 1 + Math.sin(time * 4) * 0.15;
-  marker.scale.set(pulseScale, pulseScale, pulseScale);
-
-  if (!nurseWaiting && nursePhase) {
-    const pName = nursePhase.name;
-    if (pName === 'inject' || pName === 'hold_steady') {
-      marker.visible = Math.sin(time * 8) > -0.5;
-    } else {
-      marker.visible = true;
-    }
-  } else {
-    marker.visible = true;
-  }
-
-  if (allDone) {
-    marker.visible = true;
-    marker.scale.set(1, 1, 1);
-  }
-}
-
-/* ============================================================
-   FULL ANIMATION STEP
-   ============================================================ */
-function applyAnimation(dt) {
-  if (!playing) return;
-  globalTime += dt;
-
-  const allDone = stations.every(s => globalTime >= s.phases.totalTime);
-  if (allDone) {
-    globalTime = maxStationTime;
-    playing = false;
-    updatePlayButton();
-  }
-
-  stations.forEach(station => {
-    const t = Math.min(globalTime, station.phases.totalTime);
-    const state = getStationState(station, t);
-    animateDoctor(station, state, globalTime);
-    animateNurse(station, state, globalTime);
-    animatePatient(station, state, globalTime);
-    animateInjMarker(station, state, globalTime);
-  });
-
-  updateUI();
-}
-
-/* ============================================================
-   SCOREBOARD
-   ============================================================ */
-function computeScoreboard() {
-  const results = stations.map((station, i) => {
-    const { doctorTotal, nurseTotal, totalTime } = station.phases;
-    const cfg = station.config;
-    /* Accuracy: lower bias = higher accuracy, with some seed noise */
-    const baseAccuracy = 1 - cfg.accuracy_bias;
-    const noise = (seededRandom(cfg.seed, 999) - 0.5) * 0.005;
-    const accuracy = Math.min(1, Math.max(0.9, baseAccuracy + noise));
-    const elapsed = Math.min(globalTime, totalTime);
-    const progress = elapsed / totalTime;
-    const currentPhase = getCurrentPhaseLabel(station, elapsed);
-    return {
-      id: cfg.id,
-      color: cfg.cssColor,
-      doctorTime: doctorTotal,
-      nurseTime: nurseTotal,
-      totalTime,
-      accuracy,
-      progress,
-      elapsed,
-      currentPhase,
-      done: globalTime >= totalTime,
-    };
-  });
-
-  /* Rank by total time (lower is better), with accuracy as tiebreaker */
-  const sorted = [...results].sort((a, b) => {
-    if (Math.abs(a.totalTime - b.totalTime) > 0.01) return a.totalTime - b.totalTime;
-    return b.accuracy - a.accuracy;
-  });
-  sorted.forEach((r, i) => r.rank = i + 1);
-
-  /* Copy rank back */
-  results.forEach(r => {
-    const s = sorted.find(x => x.id === r.id);
-    r.rank = s.rank;
-  });
-
-  return results;
-}
-
-function getCurrentPhaseLabel(station, time) {
-  const state = getStationState(station, time);
-  if (state.allDone) return 'Complete';
-  if (state.nurseWaiting) {
-    return state.doctorPhase ? state.doctorPhase.label : 'Waiting';
-  }
-  return state.nursePhase ? state.nursePhase.label : 'Waiting';
-}
-
-function renderScoreboard() {
-  const results = computeScoreboard();
-  const container = document.getElementById('sb-content');
-
-  const rankClasses = ['', 'rank-1', 'rank-2', 'rank-3', 'rank-4'];
-  let html = '';
-  results.forEach(r => {
-    const rankSymbol = r.rank === 1 ? '1st' : r.rank === 2 ? '2nd' : r.rank === 3 ? '3rd' : '4th';
-    const doneStr = r.done ? ' [DONE]' : '';
-    html += `<div class="sb-station">
-      <div class="sb-station-header">
-        <div class="sb-color" style="background:${r.color}"></div>
-        Station ${r.id}
-        <span class="sb-rank ${rankClasses[r.rank]}">#${rankSymbol}</span>
-      </div>
-      <div class="sb-row"><span>Phase</span><span class="sb-val">${r.currentPhase}${doneStr}</span></div>
-      <div class="sb-row"><span>Doctor</span><span class="sb-val">${r.doctorTime.toFixed(2)}s</span></div>
-      <div class="sb-row"><span>Nurse</span><span class="sb-val">${r.nurseTime.toFixed(2)}s</span></div>
-      <div class="sb-row"><span>Total</span><span class="sb-val">${r.totalTime.toFixed(2)}s</span></div>
-      <div class="sb-row"><span>Accuracy</span><span class="sb-val">${(r.accuracy * 100).toFixed(1)}%</span></div>
-      <div class="sb-row"><span>Progress</span><span class="sb-val">${(r.progress * 100).toFixed(0)}%</span></div>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
-
-/* ============================================================
-   UI UPDATES
-   ============================================================ */
-const progressFill = document.getElementById('progress-fill');
-const phaseLabel = document.getElementById('phase-label');
-const timeDisplay = document.getElementById('time-display');
-const infoFps = document.getElementById('info-fps');
-const infoFrame = document.getElementById('info-frame');
-
-function updateUI() {
-  const pct = Math.min(100, (globalTime / maxStationTime) * 100);
-  progressFill.style.width = pct + '%';
-
-  /* Show focused station phase or overview summary */
-  const focusedIdx = getCurrentFocusedStationIndex();
-  if (focusedIdx >= 0) {
-    const station = stations[focusedIdx];
-    const t = Math.min(globalTime, station.phases.totalTime);
-    phaseLabel.textContent = `[${station.config.id}] ${getCurrentPhaseLabel(station, t)}`;
-  } else {
-    /* Overview: show how many are done */
-    const doneCount = stations.filter(s => globalTime >= s.phases.totalTime).length;
-    phaseLabel.textContent = `${doneCount}/4 stations complete`;
-  }
-
-  const secs = Math.floor(globalTime);
-  const maxSecs = Math.floor(maxStationTime);
-  timeDisplay.textContent = `${secs}s / ${maxSecs}s`;
-
-  infoFrame.textContent = Math.floor(globalTime * 30);
-  infoFps.textContent = displayFps;
-
-  renderScoreboard();
-}
-
-function updatePlayButton() {
-  const icon = document.getElementById('play-icon');
-  const text = document.getElementById('play-text');
-  if (playing) {
-    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-    text.textContent = 'Pause';
-  } else {
-    const allDone = stations.every(s => globalTime >= s.phases.totalTime);
-    icon.innerHTML = '<polygon points="6,3 20,12 6,21"/>';
-    text.textContent = allDone ? 'Replay' : 'Play';
-  }
-}
-
-/* ============================================================
-   CAMERA VIEWS
-   ============================================================ */
-let currentView = 'all';
-
-function getCurrentFocusedStationIndex() {
-  const idx = STATION_CONFIGS.findIndex(c => c.id === currentView);
-  return idx;
-}
-
-function setCameraView(view, animate = true) {
-  currentView = view;
-
-  /* Update button states */
-  document.querySelectorAll('.station-btn').forEach(btn => btn.classList.remove('active'));
-  if (view === 'all') {
-    document.getElementById('btn-stAll').classList.add('active');
-  } else {
-    const btn = document.getElementById('btn-st' + view);
-    if (btn) btn.classList.add('active');
-  }
-
-  let targetPos, targetLook;
-
-  if (view === 'all') {
-    targetPos = new THREE.Vector3(0, 8, 10);
-    targetLook = new THREE.Vector3(0, 0.5, 0);
-  } else {
-    const idx = STATION_CONFIGS.findIndex(c => c.id === view);
-    if (idx >= 0) {
-      const sp = STATION_POSITIONS[idx];
-      targetPos = new THREE.Vector3(sp.x + 1.5, 2.5, sp.z + 3.5);
-      targetLook = new THREE.Vector3(sp.x, 0.8, sp.z);
-    } else {
-      return;
-    }
-  }
-
-  if (animate) {
-    animateCamera(targetPos, targetLook);
-  } else {
-    camera.position.copy(targetPos);
-    orbitControls.target.copy(targetLook);
-    orbitControls.update();
-  }
-}
-
-/* Simple camera animation */
-let cameraAnim = null;
-
-function animateCamera(targetPos, targetLook) {
-  cameraAnim = {
-    startPos: camera.position.clone(),
-    startTarget: orbitControls.target.clone(),
-    endPos: targetPos,
-    endTarget: targetLook,
-    startTime: performance.now(),
-    duration: 800,
-  };
-}
-
-function updateCameraAnim() {
-  if (!cameraAnim) return;
-  const elapsed = performance.now() - cameraAnim.startTime;
-  const t = Math.min(1, elapsed / cameraAnim.duration);
-  const eased = smoothStep(t);
-
-  camera.position.lerpVectors(cameraAnim.startPos, cameraAnim.endPos, eased);
-  orbitControls.target.lerpVectors(cameraAnim.startTarget, cameraAnim.endTarget, eased);
-  orbitControls.update();
-
-  if (t >= 1) cameraAnim = null;
-}
-
-/* ============================================================
-   RESET POSE
-   ============================================================ */
-function resetAllStations() {
-  stations.forEach(station => {
-    /* Doctor */
-    const dj = station.doctor.userData.joints;
-    dj.rUpperArm.rotation.set(degToRad(-20), 0, 0);
-    dj.rElbow.rotation.set(degToRad(-70), 0, 0);
-    dj.rHand.rotation.set(0, 0, 0);
-    dj.lUpperArm.rotation.set(degToRad(-10), 0, 0);
-    dj.lElbow.rotation.set(degToRad(-20), 0, 0);
-    station.doctor.userData.torso.rotation.z = 0;
-    station.doctor.userData.head.rotation.y = 0;
-
-    /* Nurse */
-    const nj = station.nurse.userData.joints;
-    nj.rUpperArm.rotation.set(degToRad(-15), 0, 0);
-    nj.rElbow.rotation.set(degToRad(-30), 0, 0);
-    nj.rHand.rotation.set(0, 0, 0);
-    nj.lUpperArm.rotation.set(degToRad(-10), 0, 0);
-    nj.lElbow.rotation.set(degToRad(-20), 0, 0);
-    station.nurse.position.x = 0.7;
-    station.nurse.userData.torso.rotation.z = 0;
-    station.nurse.userData.head.rotation.y = 0;
-
-    /* Patient */
-    station.patient.userData.joints.rUpperArm.rotation.x = 0.1;
-    station.patient.userData.joints.lUpperArm.rotation.x = 0.1;
-    station.patient.userData.head.rotation.y = 0;
-
-    /* Marker */
-    station.injMarker.visible = true;
-    station.injMarker.scale.set(1, 1, 1);
-  });
-}
-
-/* ============================================================
-   CONTROLS
-   ============================================================ */
-document.getElementById('btn-play').addEventListener('click', () => {
-  const allDone = stations.every(s => globalTime >= s.phases.totalTime);
-  if (allDone) {
-    globalTime = 0;
-    resetAllStations();
+/* Play / Pause */
+btnPlay.addEventListener('click', () => {
+  /* If all complete, reset first */
+  if (!playing && stations.every(s => s.completed)) {
+    stations.forEach(st => { st.elapsed = 0; st.completed = false; st.currentPhaseIdx = 0; });
   }
   playing = !playing;
-  updatePlayButton();
+  btnPlay.innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
+  btnPlay.classList.toggle('active', playing);
+});
+btnPlay.innerHTML = '&#10074;&#10074;';
+btnPlay.classList.add('active');
+
+/* Reset */
+btnReset.addEventListener('click', () => {
+  stations.forEach(st => { st.elapsed = 0; st.completed = false; st.currentPhaseIdx = 0; });
+  playing = true;
+  btnPlay.innerHTML = '&#10074;&#10074;';
+  btnPlay.classList.add('active');
 });
 
-document.getElementById('btn-reset').addEventListener('click', () => {
-  globalTime = 0;
-  playing = false;
-  updatePlayButton();
-  resetAllStations();
-  updateUI();
+/* Info */
+btnInfo.addEventListener('click', () => document.getElementById('info-modal').classList.add('show'));
+document.getElementById('info-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
 });
 
-document.getElementById('btn-info').addEventListener('click', () => {
-  document.getElementById('info-panel').classList.toggle('visible');
-});
-
-/* Station selector buttons */
-document.getElementById('btn-stAll').addEventListener('click', () => setCameraView('all'));
-document.getElementById('btn-stA').addEventListener('click', () => setCameraView('A'));
-document.getElementById('btn-stB').addEventListener('click', () => setCameraView('B'));
-document.getElementById('btn-stC').addEventListener('click', () => setCameraView('C'));
-document.getElementById('btn-stD').addEventListener('click', () => setCameraView('D'));
-
-/* Progress bar scrubbing */
-const progressBar = document.getElementById('progress-bar');
-progressBar.addEventListener('click', (e) => {
-  const rect = progressBar.getBoundingClientRect();
-  const pct = (e.clientX - rect.left) / rect.width;
-  globalTime = pct * maxStationTime;
-
-  /* Update poses immediately */
-  stations.forEach(station => {
-    const t = Math.min(globalTime, station.phases.totalTime);
-    const state = getStationState(station, t);
-    animateDoctor(station, state, globalTime);
-    animateNurse(station, state, globalTime);
-    animatePatient(station, state, globalTime);
-    animateInjMarker(station, state, globalTime);
-  });
-  updateUI();
-  updatePlayButton();
-});
-
-/* File upload handler */
-document.getElementById('file-input').addEventListener('change', (e) => {
+/* Upload */
+btnUpload.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (ev) => {
     try {
       const data = JSON.parse(ev.target.result);
-      console.log('Uploaded custom data:', data);
-      phaseLabel.textContent = 'Custom data loaded: ' + (data.simulation || file.name);
-    } catch (err) {
-      console.error('Invalid file:', err);
-      phaseLabel.textContent = 'Error: Invalid file format';
-    }
+      if (data.stations && Array.isArray(data.stations)) {
+        data.stations.forEach((sc, i) => {
+          if (i >= stations.length) return;
+          if (sc.speed !== undefined) stations[i].cfg.speed = sc.speed;
+          if (sc.seed !== undefined)  stations[i].cfg.seed  = sc.seed;
+        });
+        rebuildTiming();
+        console.log('Config loaded:', data);
+      }
+    } catch (err) { console.error('Invalid JSON config:', err); }
   };
   reader.readAsText(file);
-  e.target.value = '';
+  fileInput.value = '';
 });
 
-/* ============================================================
-   RENDER LOOP
-   ============================================================ */
-const clock = new THREE.Clock();
+function rebuildTiming() {
+  stations.forEach(st => {
+    const rng = mulberry32(st.cfg.seed);
+    const dpt = DOCTOR_PHASES.map(p => ppoJitter(rng, p.duration, st.cfg.speed));
+    const npt = NURSE_PHASES.map(p => ppoJitter(rng, p.duration, st.cfg.speed));
+    st.accuracy = 0.85 + rng() * 0.14;
+    st.doctorPhaseTimes = dpt;
+    st.nursePhaseTimes = npt;
+    st.doctorTotalTime = dpt.reduce((a, b) => a + b, 0);
+    st.nurseTotalTime  = npt.reduce((a, b) => a + b, 0);
+    st.totalTime = st.doctorTotalTime + st.nurseTotalTime;
+    st.phaseBoundaries = [];
+    let c = 0;
+    dpt.forEach((t, i) => { st.phaseBoundaries.push({ start:c, end:c+t, actor:'doctor', name:DOCTOR_PHASES[i].name }); c += t; });
+    npt.forEach((t, i) => { st.phaseBoundaries.push({ start:c, end:c+t, actor:'nurse', name:NURSE_PHASES[i].name }); c += t; });
+    st.elapsed = 0; st.completed = false; st.currentPhaseIdx = 0;
+  });
+}
 
+/* Station selector */
+stationBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    stationBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const val = btn.dataset.station;
+    activeStation = val === 'overview' ? 'overview' : parseInt(val);
+    startCameraAnim(cameraTargets[activeStation]);
+  });
+});
+
+function startCameraAnim(target) {
+  camFrom.pos = camera.position.clone();
+  camFrom.target = controls.target.clone();
+  camTo.pos = target.pos.clone();
+  camTo.target = target.target.clone();
+  cameraAnimStart = performance.now() / 1000;
+  cameraAnimating = true;
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
+}
+
+/* ================================================================
+   PER-STATION ANIMATION
+   ================================================================ */
+function animateStation(st, dt) {
+  if (st.completed) return;
+  st.elapsed += dt;
+  if (st.elapsed >= st.totalTime) {
+    st.elapsed = st.totalTime;
+    st.completed = true;
+  }
+
+  const t = st.elapsed;
+
+  /* Find current phase index */
+  let phaseIdx = 0;
+  for (let i = 0; i < st.phaseBoundaries.length; i++) {
+    if (t >= st.phaseBoundaries[i].start && t < st.phaseBoundaries[i].end) { phaseIdx = i; break; }
+    if (t >= st.phaseBoundaries[i].end) phaseIdx = i + 1;
+  }
+  st.currentPhaseIdx = Math.min(phaseIdx, st.phaseBoundaries.length - 1);
+
+  const phase = st.phaseBoundaries[st.currentPhaseIdx];
+  if (!phase) return;
+  const phaseT = Math.min(1, (t - phase.start) / (phase.end - phase.start));
+  const smoothT = phaseT * phaseT * (3 - 2 * phaseT); /* smoothstep */
+
+  /* ── Doctor animation ── */
+  if (phase.actor === 'doctor') {
+    switch (phase.name) {
+      case 'receive_chart':
+        st.doctor.rightArm.rotation.x = -0.5 * smoothT;
+        st.doctor.group.rotation.y = Math.PI / 6 - 0.1 * smoothT;
+        st.doctor.leftArm.rotation.x = 0;
+        st.doctor.leftArm.rotation.z = 0;
+        break;
+      case 'review_symptoms':
+        st.doctor.rightArm.rotation.x = -0.5 + 0.3 * Math.sin(phaseT * Math.PI * 2);
+        st.doctor.group.position.x = -1.2 + 0.05 * Math.sin(phaseT * Math.PI);
+        st.doctor.group.rotation.y = Math.PI / 6 - 0.1;
+        st.doctor.leftArm.rotation.x = -0.15 * smoothT;
+        break;
+      case 'assess_toxicity':
+        st.doctor.group.rotation.y = Math.PI / 6 - 0.1 - 0.3 * smoothT;
+        st.doctor.leftArm.rotation.x = -0.3 * smoothT;
+        st.doctor.rightArm.rotation.x = -0.5;
+        break;
+      case 'approve_injection':
+        st.doctor.group.rotation.y = Math.PI / 6 - 0.2;
+        st.doctor.group.position.y = -0.03 * Math.sin(phaseT * Math.PI);
+        st.doctor.rightArm.rotation.x = -0.5 + 0.5 * smoothT;
+        st.doctor.leftArm.rotation.z = 0.2 * smoothT;
+        break;
+    }
+    /* Nurse idle during doctor phase */
+    st.nurse.group.position.x = st.nurseHomeX;
+    st.nurse.group.position.z = st.nurseHomeZ;
+    st.nurse.group.position.y = 0.01 * Math.sin(t * 2);
+    st.nurse.rightArm.rotation.x = 0;
+    st.nurse.rightArm.rotation.z = 0;
+    st.nurse.group.rotation.y = -Math.PI / 5;
+  } else {
+    /* ── Nurse animation ── */
+    /* Doctor stays in final pose */
+    st.doctor.group.rotation.y = Math.PI / 6 - 0.2;
+    st.doctor.leftArm.rotation.z = 0.2;
+    st.doctor.rightArm.rotation.x = 0;
+    st.doctor.group.position.y = 0;
+    st.doctor.group.position.x = -1.2;
+
+    switch (phase.name) {
+      case 'prepare_syringe':
+        st.nurse.rightArm.rotation.x = -0.8 * smoothT;
+        st.nurse.leftArm.rotation.x = -0.3 * smoothT;
+        st.nurse.group.position.x = st.nurseHomeX;
+        st.nurse.group.position.z = st.nurseHomeZ;
+        st.nurse.group.position.y = 0;
+        st.nurse.group.rotation.y = -Math.PI / 5;
+        st.nurse.rightArm.rotation.z = 0;
+        break;
+      case 'approach_patient':
+        st.nurse.group.position.x = st.nurseHomeX - 0.5 * smoothT;
+        st.nurse.group.position.z = st.nurseHomeZ - 0.2 * smoothT;
+        st.nurse.group.rotation.y = -Math.PI / 5 - 0.2 * smoothT;
+        st.nurse.rightArm.rotation.x = -0.8;
+        st.nurse.rightArm.rotation.z = 0;
+        st.nurse.group.position.y = 0;
+        break;
+      case 'position_needle':
+        st.nurse.rightArm.rotation.x = -0.8 - 0.4 * smoothT;
+        st.nurse.rightArm.rotation.z = 0.3 * smoothT;
+        st.nurse.group.position.y = -0.05 * smoothT;
+        st.nurse.group.position.x = st.nurseHomeX - 0.5;
+        st.nurse.group.position.z = st.nurseHomeZ - 0.2;
+        st.nurse.group.rotation.y = -Math.PI / 5 - 0.2;
+        break;
+      case 'inject':
+        st.nurse.rightArm.rotation.x = -1.2;
+        st.nurse.rightArm.rotation.z = 0.3;
+        st.nurse.group.position.y = -0.05 - 0.02 * Math.sin(phaseT * Math.PI);
+        st.nurse.group.position.x = st.nurseHomeX - 0.5;
+        st.nurse.group.position.z = st.nurseHomeZ - 0.2;
+        st.nurse.group.rotation.y = -Math.PI / 5 - 0.2;
+        break;
+      case 'hold_steady':
+        st.nurse.rightArm.rotation.x = -1.2 + 0.02 * Math.sin(phaseT * Math.PI * 4);
+        st.nurse.rightArm.rotation.z = 0.3;
+        st.nurse.group.position.y = -0.07 + 0.005 * Math.sin(phaseT * Math.PI * 3);
+        st.nurse.group.position.x = st.nurseHomeX - 0.5;
+        st.nurse.group.position.z = st.nurseHomeZ - 0.2;
+        st.nurse.group.rotation.y = -Math.PI / 5 - 0.2;
+        break;
+      case 'withdraw':
+        st.nurse.rightArm.rotation.x = -1.2 + 0.8 * smoothT;
+        st.nurse.rightArm.rotation.z = 0.3 * (1 - smoothT);
+        st.nurse.group.position.x = st.nurseHomeX - 0.5 + 0.5 * smoothT;
+        st.nurse.group.position.z = st.nurseHomeZ - 0.2 + 0.2 * smoothT;
+        st.nurse.group.position.y = -0.07 + 0.07 * smoothT;
+        st.nurse.group.rotation.y = -Math.PI / 5 - 0.2 + 0.2 * smoothT;
+        break;
+    }
+  }
+
+  /* Monitor LED blink */
+  if (st.monitor.userData.led) {
+    st.monitor.userData.led.material.emissiveIntensity = Math.sin(t * 6) > 0 ? 1 : 0.1;
+  }
+}
+
+/* ================================================================
+   SCOREBOARD UPDATE
+   ================================================================ */
+function updateScoreboard() {
+  const sorted = stations.map((st, i) => ({
+    idx: i, name: st.cfg.name,
+    doctorTime: st.doctorTotalTime, nurseTime: st.nurseTotalTime,
+    totalTime: st.totalTime, accuracy: st.accuracy,
+    elapsed: st.elapsed, completed: st.completed,
+    progress: Math.min(1, st.elapsed / st.totalTime),
+  })).sort((a, b) => {
+    if (a.completed && !b.completed) return -1;
+    if (!a.completed && b.completed) return 1;
+    if (a.completed && b.completed) return a.totalTime - b.totalTime;
+    return b.progress - a.progress;
+  });
+
+  let html = '';
+  sorted.forEach((s, rank) => {
+    const rc = rank === 0 ? 'rank1' : rank === 1 ? 'rank2' : rank === 2 ? 'rank3' : '';
+    const status = s.completed
+      ? '<span style="color:#00ff88">DONE</span>'
+      : '<span style="color:#ffaa00">' + (s.progress * 100).toFixed(0) + '%</span>';
+    html += '<div class="score-station ' + rc + '">'
+      + '<div class="station-label">Station ' + s.name + ' -- #' + (rank + 1) + ' ' + status + '</div>'
+      + '<div class="score-row"><span>Doctor Time</span><span>' + s.doctorTime.toFixed(2) + 's</span></div>'
+      + '<div class="score-row"><span>Nurse Time</span><span>' + s.nurseTime.toFixed(2) + 's</span></div>'
+      + '<div class="score-row"><span>Total Time</span><span>' + s.totalTime.toFixed(2) + 's</span></div>'
+      + '<div class="score-row"><span>Accuracy</span><span>' + (s.accuracy * 100).toFixed(1) + '%</span></div>'
+      + '<div class="score-row"><span>Elapsed</span><span>' + s.elapsed.toFixed(2) + 's</span></div>'
+      + '</div>';
+  });
+  document.getElementById('score-entries').innerHTML = html;
+}
+
+/* ================================================================
+   PHASE INDICATOR UPDATE
+   ================================================================ */
+function updatePhaseIndicator() {
+  let st;
+  if (activeStation !== 'overview' && typeof activeStation === 'number') {
+    st = stations[activeStation];
+  } else {
+    st = stations[0];
+    stations.forEach(s => { if (s.elapsed / s.totalTime > st.elapsed / st.totalTime) st = s; });
+  }
+
+  const stLabel = activeStation !== 'overview' ? 'Station ' + st.cfg.name : 'Leading: Station ' + st.cfg.name;
+  let html = '<div style="font-size:10px;color:#888;margin-bottom:4px">' + stLabel + '</div>';
+
+  st.phaseBoundaries.forEach((phase, i) => {
+    let cls = 'phase-line';
+    if (st.completed || i < st.currentPhaseIdx) cls += ' done';
+    else if (i === st.currentPhaseIdx && !st.completed) cls += ' active';
+    const label = phase.name.replace(/_/g, ' ');
+    const tag = phase.actor === 'doctor' ? '[D]' : '[N]';
+    html += '<div class="' + cls + '"><span class="phase-dot"></span>' + tag + ' ' + label + '</div>';
+  });
+  document.getElementById('phase-lines').innerHTML = html;
+}
+
+/* ================================================================
+   CLOCK & RESIZE
+   ================================================================ */
+const clock = new THREE.Clock();
+let uiTimer = 0;
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener('resize', onResize);
+
+/* ================================================================
+   MAIN LOOP
+   ================================================================ */
 function animate() {
   requestAnimationFrame(animate);
 
   const dt = clock.getDelta();
-  applyAnimation(dt);
-  updateCameraAnim();
-  orbitControls.update();
-  renderer.render(scene, camera);
+  const now = performance.now() / 1000;
 
-  /* FPS counter */
-  frameCount++;
-  const now = performance.now();
-  if (now - lastFpsTime >= 1000) {
-    displayFps = frameCount;
-    frameCount = 0;
-    lastFpsTime = now;
+  /* Camera smooth transition */
+  if (cameraAnimating) {
+    let p = (now - cameraAnimStart) / cameraAnimDur;
+    if (p >= 1) { p = 1; cameraAnimating = false; }
+    const e = easeInOutCubic(p);
+    camera.position.lerpVectors(camFrom.pos, camTo.pos, e);
+    controls.target.lerpVectors(camFrom.target, camTo.target, e);
   }
+  controls.update();
+
+  /* Animate all stations independently */
+  if (playing) {
+    stations.forEach(st => animateStation(st, dt));
+  }
+
+  /* Throttled UI updates (~10 Hz) */
+  uiTimer += dt;
+  if (uiTimer > 0.1) {
+    uiTimer = 0;
+    updateScoreboard();
+    updatePhaseIndicator();
+  }
+
+  /* Auto-pause when all done */
+  if (playing && stations.every(s => s.completed)) {
+    playing = false;
+    btnPlay.innerHTML = '&#9654;';
+    btnPlay.classList.remove('active');
+  }
+
+  renderer.render(scene, camera);
 }
 
-/* ============================================================
-   RESIZE
-   ============================================================ */
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-/* ============================================================
-   INIT
-   ============================================================ */
-/* Set initial poses */
-resetAllStations();
-
-/* Remove loading screen */
-document.getElementById('loading').style.display = 'none';
-
-/* Show info panel on desktop */
-if (window.innerWidth > 700) {
-  document.getElementById('info-panel').classList.add('visible');
-}
-
-updateUI();
-updatePlayButton();
-setCameraView('all', false);
+/* Initial UI render */
+updateScoreboard();
+updatePhaseIndicator();
 animate();
-
-console.log('Clinical Robot Competition loaded — 4-Station PPO Simulation');
-console.log('Stations: A (seed=42), B (seed=137), C (seed=256), D (seed=512)');
-console.log('PPO: 2-layer MLP (64x64), tanh, 500 episodes, gamma=0.99, clip=0.2, lr=3e-4');
-console.log('Reward: R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk)');
-console.log('Attribution: Simulation framework inspired by mjlab (mujocolab/mjlab)');
 </script>
 </body>
 </html>
