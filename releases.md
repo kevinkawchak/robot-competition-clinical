@@ -1,5 +1,31 @@
 # Releases
 
+## Clinical Robot Competition - Senior Peer Review Recommendations
+v0.2.1 - 2026-02-21
+
+## Summary
+
+v0.2.1 is a review-and-planning release that adds a new senior engineering peer-review artifact for the full repository. The report provides implementation-ready fixes for Claude, with a specific plan to resolve GitHub Pages directory/path usability so either simulation viewer can be run effectively from different directories and fork paths.
+
+## Features
+
+- Added a new peer-review report at `peer-review/v0.2.1-senior-peer-review.md` with prioritized fixes (high/medium/low)
+- Added a concrete GitHub Pages path-portability remediation plan for root (`/`) and competition (`/v2/`) viewers
+- Added measurable peer-review metrics: file coverage, check counts, issue severity split, estimated implementation effort, and release-readiness scoring
+- Added recommendation metrics summarizing runtime, schema/versioning, testing, and maintainability actions to implement next
+
+## Contributors
+@kevinkawchak
+@codex
+@claude
+
+## Notes
+- This release does not change simulation runtime logic directly
+- Recommended implementation includes adding base-path aware navigation between root and `/v2/` viewers
+- Recommended implementation includes version/schema alignment for exported payloads and added boundary tests
+
+---
+
 ## Clinical Robot Competition — 4-Station PPO Simulation
 v0.2.0 - 2026-02-21
 
