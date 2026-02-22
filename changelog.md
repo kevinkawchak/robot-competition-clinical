@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] — 2026-02-22
+
+### Added
+- **v0.5.0 competition viewer** (`docs/v5/index.html`) replicating v0.1.0's exact station
+  layout across 4 competing stations in a 2x2 grid
+- **Open-top building** — ceiling removed so viewers can see through the hospital room
+- **v0.1.0 articulated humanoids** with full joint hierarchy: shoulder, elbow, wrist pivots
+  enabling realistic doctor injection animation with CapsuleGeometry limbs, joint rings
+  at every articulation point, and role markers (red cross, gold badge)
+- **v0.1.0 7-phase procedure** per station: prepare, approach, position, inject, hold,
+  withdraw, monitor — doctor performs injection with syringe (matching v0.1.0 exactly)
+- **Doctor holds syringe** (right of patient) — v0.1.0 layout restored
+- **Nurse holds tablet** (left of patient) — v0.1.0 layout restored
+- **Full medical equipment per station**: IV stand with hook/tube/3-arm base, instrument
+  tray with spare syringe/vials/swab/rim, vitals monitor with base/screen/LED, exam chair
+  with armrest supports and cushions
+- **Archived v0.4.0 diagrams** in `docs/diagrams/v4_architecture.md`
+- **v0.5.0 release notes** in `releases.md`
+- **v0.5.0 build prompt** in `prompts.md`
+
+### Changed
+- **Nav banner** now links only v0.1.0 and v0.5.0 (removed v0.3.0/v0.4.0 links)
+- Updated v0.1.0 viewer nav banner to link to v0.5.0 (was linking to v0.4.0)
+- Updated `pyproject.toml` version from 0.4.0 to 0.5.0
+- Updated `simulation_v2/run_competition.py` version string to 0.5.0
+- Updated `simulation_v2/export_competition.py` version string to 0.5.0
+- Updated `tests/test_exports.py` to expect version 0.5.0
+- Updated README with v0.5.0 documentation, new architecture diagrams, simulation details
+- All stations use v0.1.0's 7-phase doctor injection procedure instead of v0.4.0's
+  4-phase doctor review + 6-phase nurse injection split
+- Station layout matches v0.1.0: doctor (right, syringe), nurse (left, tablet)
+
+### Fixed
+- **Building visibility**: removed ceiling so camera can see through the room from above
+- **Station fidelity**: stations now exactly replicate v0.1.0's robot detail, props, and
+  joint articulation rather than the simplified v0.4.0 layout
+
 ## [0.4.0] — 2026-02-22
 
 ### Added

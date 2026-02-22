@@ -1,11 +1,13 @@
 # Clinical Robot Competition
 
 MuJoCo-based clinical trial simulation with Unitree G1 humanoid robots competing
-across **four simultaneous stations** in a 2x2 grid. Each station features a
-**doctor** (white coat, left) reviewing patient symptoms/toxicities and a **nurse**
-(blue coat, right) performing a deltoid injection to the patient's nearest arm,
-all driven by **PPO reinforcement learning** policies with distinct behavior
-profiles.
+across **four simultaneous stations** in a 2x2 grid. Each station replicates the
+**v0.1.0 single-station layout**: a **doctor** (white coat, right of patient) performs
+a 7-phase deltoid injection with syringe, while a **nurse** (blue coat, left of patient)
+monitors the procedure with a tablet. All stations are driven by **PPO reinforcement
+learning** policies with distinct behavior profiles from different random seeds.
+
+The building ceiling is removed so viewers can see through the hospital room from above.
 
 Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
 (mujocolab/mjlab), extending GPU-accelerated robot simulation into clinical
@@ -20,9 +22,8 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 | Simulation | URL | Description |
 |---|---|---|
-| **v0.4.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v4/](https://kevinkawchak.github.io/robot-competition-clinical/v4/) | 4-station PPO competition (light mode) |
+| **v0.5.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v5/](https://kevinkawchak.github.io/robot-competition-clinical/v5/) | 4-station PPO competition (light mode, open-top) |
 | **v0.1.0 Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection (stable) |
-| **v0.3.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v2/](https://kevinkawchak.github.io/robot-competition-clinical/v2/) | Legacy 4-station competition (dark mode) |
 
 Press **Play** to start the competition and watch all 4 stations race. Use the
 toggle buttons to open/close the **Phase Timeline** and **Scoreboard** panels.
@@ -30,28 +31,22 @@ When all stations finish, a **Competition Results** overlay displays the final
 1st/2nd/3rd/4th ranking with times and accuracies. Close the overlay and use
 **Reset** to replay.
 
-## What This Simulates (v0.4.0)
+## What This Simulates (v0.5.0)
 
-Four identical doctor/patient/nurse stations compete simultaneously. Each station
-uses the same PPO policy architecture but with different random seed
+Four identical stations compete simultaneously, each replicating the v0.1.0 single-station
+layout. Every station uses the same PPO policy architecture but with different random seed
 initialization, producing distinct timing and accuracy behavior.
 
-### v0.4.0 Improvements Over v0.3.0
+### v0.5.0 Changes from v0.4.0
 
-| Aspect | v0.3.0 | v0.4.0 |
+| Aspect | v0.4.0 | v0.5.0 |
 |---|---|---|
-| Theme | Dark mode (#0f0f1e) | **Light mode (#e8ecf0)** — easier station zoom |
-| Robot detail | Simplified (box torso, sphere head) | **Full articulation** (joint rings, visor, pelvis, knee/elbow joints, role markers) |
-| Hospital props | Minimal IV, tray, monitor | **Full equipment** (IV with hook+tube+base arms, tray with vials+swabs, monitor with base, chair with armrest supports) |
-| Injection marker | Static red dot | **Pulsing ring + center dot** |
-| Doctor emblem | None | **Red cross on chest** |
-| Nurse emblem | None | **Gold badge on chest** |
-| Metrics reset | Metrics persisted between runs | **Full reset on replay** |
-| Results overlay | "Close & Replay" (auto-reset) | **"Close Results"** (manual replay via Reset) |
-| Room size | 14m x 14m | **16m x 16m** (more space between stations) |
-| Grid spacing | 5.0m | **5.5m** |
-| Orientation | All face +Z | **All face +Z** (consistent with v0.1.0) |
-| URL path | `/v2/` (version mismatch) | **`/v4/`** (matches version) |
+| Station layout | Doctor LEFT (tablet), Nurse RIGHT (syringe) | **Doctor RIGHT (syringe), Nurse LEFT (tablet)** — matches v0.1.0 |
+| Procedure | 4 doctor review + 6 nurse injection phases | **7 doctor injection phases** — matches v0.1.0 |
+| Building | Ceiling present | **No ceiling** — see through from above |
+| Humanoids | CylinderGeometry arms, simple groups | **CapsuleGeometry limbs, hierarchical joint groups** — v0.1.0 articulation |
+| Nav banner | v0.1.0, v0.3.0, v0.4.0 links | **v0.1.0 and v0.5.0 only** |
+| URL path | `/v4/` | **`/v5/`** |
 
 ### Station Layout (2x2 Grid)
 
@@ -62,29 +57,27 @@ initialization, producing distinct timing and accuracy behavior.
 | **C** | Back-left | 256 | 1.08x | Highest | Accuracy-focused |
 | **D** | Back-right | 512 | 0.95x | High | Cautious |
 
-### Role Assignments
+### Role Assignments (v0.1.0 Layout)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor | Left of patient | White coat, red cross | Tablet/chart | Reviews symptoms/toxicities |
+| Doctor | Right of patient | White coat, red cross | Syringe | Performs 7-phase injection |
 | Patient | Center (seated) | Green gown | Exam chair | Receives injection (right arm) |
-| Nurse | Right of patient | Blue coat, gold badge | Syringe | Performs deltoid injection |
+| Nurse | Left of patient | Blue coat, gold badge | Tablet | Monitors procedure |
 
-### Phase Flow Per Station
+### 7-Phase Injection Procedure Per Station (v0.1.0)
 
-**Doctor Review** (4 phases, ~5.5s base):
-1. **Receive Chart** — Doctor receives patient chart (1.0s)
-2. **Review Symptoms** — Doctor reviews symptoms on tablet (2.0s)
-3. **Assess Toxicity** — Doctor assesses toxicity levels (1.5s)
-4. **Approve Injection** — Doctor approves injection (1.0s)
+All 7 phases are performed by the **doctor** (matching v0.1.0 exactly):
 
-**Nurse Injection** (6 phases, ~8.5s base, starts after doctor approval):
-5. **Prepare Syringe** — Nurse prepares syringe (1.0s)
-6. **Approach Patient** — Nurse approaches from the right (1.5s)
-7. **Position Needle** — Needle aligned with right deltoid (1.5s)
-8. **Inject** — Needle insertion at 90 degree angle (2.0s)
-9. **Hold Steady** — Steady hold during medication delivery (1.5s)
-10. **Withdraw** — Syringe removal from injection site (1.0s)
+1. **Prepare** — Doctor prepares syringe (1.0s base)
+2. **Approach** — Doctor approaches patient from the right (2.0s base)
+3. **Position** — Doctor positions needle at right deltoid (1.5s base)
+4. **Inject** — Needle insertion at injection target (2.0s base)
+5. **Hold** — Steady hold during medication delivery (1.5s base)
+6. **Withdraw** — Syringe removal from injection site (1.5s base)
+7. **Monitor** — Post-injection monitoring, nurse assists (2.0s base)
+
+**Total base duration:** 11.5 seconds. PPO jitter produces actual times of ~10–14s.
 
 ### PPO Reinforcement Learning Details
 
@@ -107,92 +100,96 @@ objectives: speed (finish fast), accuracy (needle close to target), and smoothne
 
 ### Measurement
 
-- **Time**: Elapsed simulation seconds from start to nurse withdrawal completion
-- **Accuracy**: Euclidean distance (meters) between needle tip and injection target site
+- **Time**: Elapsed simulation seconds from prepare phase start to monitor phase end (all 7 phases)
+- **Accuracy**: Simulated Euclidean distance (meters) between needle tip and injection target site
 - **Accuracy Score**: `1.0 / (1.0 + distance * 100.0)` — higher is better
 - **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
 - **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
 
+### Simulation Results (v0.5.0)
+
+Results from `python -m simulation_v2.run_competition`:
+
+| Rank | Station | Total Time | Accuracy | Needle Dist | PPO Reward |
+|------|---------|-----------|----------|-------------|------------|
+| #1 | **B** | 12.514s | 32.8% | 0.0205m | -3.1064 |
+| #2 | D | 13.734s | 50.6% | 0.0098m | -3.4585 |
+| #3 | A | 13.810s | 43.6% | 0.0130m | -3.4684 |
+| #4 | C | 14.830s | 61.1% | 0.0064m | -3.7605 |
+
+**Winner: Station B** — fastest total time (12.514s) despite lower accuracy, demonstrating
+the speed vs. accuracy tradeoff inherent in the PPO reward function.
+
 ## Features
 
 - **4-Station Competition**: Simultaneous independent simulation across all stations
+- **v0.1.0 Station Layout**: Doctor (right, syringe) performs injection, nurse (left, tablet) monitors
+- **7-Phase Procedure**: Matching v0.1.0's exact injection procedure per station
 - **PPO RL Policies**: Distinct behavior from seeded policy training
-- **Light-Mode Viewer** (v0.4.0): White/light theme for easy zooming into each station
-- **Full-Detail Humanoids**: Joint rings, visors, pelvis, articulated arms/legs, role markers
-- **Full Medical Equipment**: IV stand (hook, tube, base arms), tray (vials, swabs), monitor (base, LED)
-- **Pulsing Injection Marker**: Red dot with animated ring on patient deltoid
-- **Closable Scoreboard**: Toggle on/off — doctor time, nurse time, total, accuracy, rank
-- **Closable Phase Timeline**: Toggle on/off — tracks each phase per station
-- **Competition Results Overlay**: Clear 1st/2nd/3rd/4th display with times and accuracies
+- **Open-Top Building**: No ceiling for unobstructed viewing from above
+- **Light-Mode Viewer** (v0.5.0): White/light theme for easy station inspection
+- **Articulated Humanoids**: CapsuleGeometry limbs, hierarchical joint groups (shoulder/elbow/wrist)
+- **Joint Detail**: Rings at every articulation, visors, role markers (red cross, gold badge)
+- **Full Medical Equipment**: IV stand, instrument tray, vitals monitor, exam chair per station
+- **Pulsing Injection Marker**: Red dot with animated ring on patient right deltoid
+- **Closable Scoreboard**: Toggle on/off — total time, accuracy, needle distance, rank
+- **Closable Phase Timeline**: Toggle on/off — tracks all 7 phases per station
+- **Competition Results Overlay**: 1st/2nd/3rd/4th display with times and accuracies
 - **Metrics Reset**: Full state reset between competition runs
 - **Cross-Device 3D Viewer**: Desktop, iOS, Android via Three.js
 - **Zero Installation**: View directly from GitHub Pages
 - **MuJoCo Physics**: Full MJCF scene models with articulated humanoids
 - **Interactive Controls**: Play/pause, reset, station camera focus
-- **File Upload**: Upload custom competition_data.json for future simulations
+- **File Upload**: Upload custom JSON configs for station seeds/speeds
 - **Mobile-Optimized**: Responsive layout across iPhone, Android, tablet, desktop
-- **Triple Viewers**: Separate GitHub Pages for v0.1.0, v0.3.0, and v0.4.0
 - **Open & Free**: All dependencies open-source (no wandb)
-
-## Uploading Custom Simulations
-
-To upload custom data for future simulations:
-
-1. **v0.4.0 Competition**: Generate a `competition_data.json` file using
-   `python -m simulation_v2.export_competition --output competition_data.json`
-   and upload it via the **Upload** button in the `/v4/` viewer.
-
-2. **v0.1.0 Single Station**: Generate an `animation_data.json` file using
-   `python -m simulation.export_animation --output animation_data.json`
-   and upload it via the **Upload** button in the root viewer.
-
-The viewer will parse the JSON structure and apply it to the simulation.
 
 ## Architecture Diagrams
 
-### Diagram 1: Multi-Station Competition Architecture (v0.4.0)
+### Diagram 1: Multi-Station Competition Architecture (v0.5.0)
 
 ```
 +----------------------------------------------------------------------+
-|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.4.0       |
-|       4-Station PPO Simulation with Light-Mode Full-Detail Viewer    |
+|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.5.0       |
+|  4-Station PPO Simulation — v0.1.0 Layout, Open-Top, Light-Mode     |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |  MuJoCo Backend      |        |   Three.js Competition Viewer |   |
-|  |  (Python)            |        |   (HTML/JS - docs/v4/)        |   |
+|  |  (Python)            |        |   (HTML/JS - docs/v5/)        |   |
 |  |                      |        |                               |   |
 |  | +------------------+ |  JSON  | +---------------------------+ |   |
 |  | | competition_scene| | -----> | | 4-Station 3D Renderer    | |   |
 |  | | .xml (4 stations)| | export | | - 2x2 Grid (5.5m space)  | |   |
-|  | +------------------+ |        | | - 12 Full-Detail G1 Bots | |   |
-|  |        |             |        | | - Joint rings + visors    | |   |
+|  | +------------------+ |        | | - 12 Articulated G1 Bots | |   |
+|  |        |             |        | | - CapsuleGeom + joints    | |   |
 |  |        v             |        | | - Role markers            | |   |
 |  | +------------------+ |        | | - Pulsing inject target   | |   |
 |  | | ppo_policy.py    | |        | | - 4x Full Equipment      | |   |
-|  | | - PPO MLP 64x64  | |        | +---------------------------+ |   |
-|  | | - 4 seed configs | |        |          |                    |   |
-|  | | - Reward function| |        |          v                    |   |
+|  | | - PPO MLP 64x64  | |        | | - NO ceiling (see thru)  | |   |
+|  | | - 4 seed configs | |        | +---------------------------+ |   |
+|  | | - Reward function| |        |          |                    |   |
+|  | +------------------+ |        |          v                    |   |
+|  |        |             |        | +---------------------------+ |   |
+|  |        v             |        | | Per-Station Animation    | |   |
+|  | +------------------+ |        | | - 7 doctor phases (v0.1) | |   |
+|  | | run_competition  | |        | | - Nurse monitors          | |   |
+|  | | .py              | |        | | - Independent timing      | |   |
+|  | | - 4 stations     | |        | | - Hierarchical arm anim   | |   |
+|  | | - Metrics/rank   | |        | | - Finish-order tracking   | |   |
 |  | +------------------+ |        | +---------------------------+ |   |
-|  |        |             |        | | Per-Station Animation    | |   |
-|  |        v             |        | | - Doctor review (4 phase) | |   |
-|  | +------------------+ |        | | - Nurse inject (6 phase)  | |   |
-|  | | run_competition  | |        | | - Independent timing      | |   |
-|  | | .py              | |        | | - Finish-order tracking   | |   |
-|  | | - 4 stations     | |        | | - Full arm articulation   | |   |
-|  | | - Metrics/rank   | |        | +---------------------------+ |   |
-|  | +------------------+ |        |          |                    |   |
-|  |        |             |        |          v                    |   |
-|  |        v             |        | +---------------------------+ |   |
-|  | +------------------+ |        | | Light-Mode UI (v0.4.0)   | |   |
-|  | | export_competitn | |        | | - #e8ecf0 background      | |   |
-|  | | .py              | |        | | - Closable scoreboard     | |   |
-|  | | - Station frames | |        | | - Closable phase timeline | |   |
-|  | | - JSON output    | |        | | - Results overlay (close) | |   |
-|  | | - Schema v0.4.0  | |        | | - Metrics reset on replay | |   |
-|  | +------------------+ |        | | - Cross-nav banner        | |   |
-|  |                      |        | +---------------------------+ |   |
-|  +----------------------+        +-------------------------------+   |
+|  |        |             |        |          |                    |   |
+|  |        v             |        |          v                    |   |
+|  | +------------------+ |        | +---------------------------+ |   |
+|  | | export_competitn | |        | | Light-Mode UI (v0.5.0)   | |   |
+|  | | .py              | |        | | - #e8ecf0 background      | |   |
+|  | | - Station frames | |        | | - Closable scoreboard     | |   |
+|  | | - JSON output    | |        | | - Closable phase timeline | |   |
+|  | | - Schema v0.5.0  | |        | | - Results overlay (close) | |   |
+|  | +------------------+ |        | | - Metrics reset on replay | |   |
+|  |                      |        | | - v0.1.0 + v0.5.0 banner  | |   |
+|  +----------------------+        | +---------------------------+ |   |
+|                                  +-------------------------------+   |
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |   CI/CD + Testing    |        | Device Targets               |   |
@@ -206,34 +203,31 @@ The viewer will parse the JSON structure and apply it to the simulation.
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 2: PPO Competition Workflow
+### Diagram 2: PPO Competition Workflow (v0.5.0)
 
 ```
 +----------------------------------------------------------------------+
 |              PPO COMPETITION WORKFLOW - 4-STATION RACE                |
-|              Doctor Review -> Nurse Injection -> Ranking              |
+|     v0.5.0: Doctor 7-Phase Injection (matching v0.1.0 procedure)     |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +--- STATION A (seed=42, balanced) ----------------------------+   |
-|  | DOCTOR REVIEW            | NURSE INJECTION                    |   |
-|  | [recv][review][assess][ok]|[prep][approach][pos][inject][hold][wd]|
-|  | <-- 5.5s base ---------->|<-- 8.5s base ------------------>  |   |
-|  +--------------------------------------------------------------|   |
-|  +--- STATION B (seed=137, speed-focused) ----------------------+   |
-|  | DOCTOR REVIEW          | NURSE INJECTION                      |   |
-|  | [recv][review][asses][ok]|[prep][appr][pos][inject][hold][wd] |   |
-|  | <-- ~4.8s ------------>|<-- ~7.5s ------------------------>   |   |
-|  +--------------------------------------------------------------|   |
-|  +--- STATION C (seed=256, accuracy-focused) -------------------+   |
-|  | DOCTOR REVIEW              | NURSE INJECTION                  |   |
-|  | [recv][review ][assess][ok]|[prep][approach][pos][inj][hold][wd] |
-|  | <-- ~5.9s --------------->|<-- ~9.2s ---------------------->  |   |
-|  +--------------------------------------------------------------|   |
-|  +--- STATION D (seed=512, cautious) ---------------------------+   |
-|  | DOCTOR REVIEW            | NURSE INJECTION                    |   |
-|  | [recv][review][assess][ok]|[prep][approach][pos][inject][hd][wd] |
-|  | <-- ~5.2s ------------->|<-- ~8.1s ----------------------->   |   |
-|  +--------------------------------------------------------------|   |
+|  +--- STATION A (seed=42, balanced, 1.00x speed) ----------------+  |
+|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
+|  | <-- base 1.0 + 2.0 + 1.5 + 2.0 + 1.5 + 1.5 + 2.0 = 11.5s -> |  |
+|  | Actual: ~13.8s (PPO jitter) | Accuracy: 43.6%                 |  |
+|  +----------------------------------------------------------------+  |
+|  +--- STATION B (seed=137, speed-focused, 0.88x) ----------------+  |
+|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
+|  | Actual: ~12.5s (FASTEST) | Accuracy: 32.8% (lowest)           |  |
+|  +----------------------------------------------------------------+  |
+|  +--- STATION C (seed=256, accuracy-focused, 1.08x) -------------+  |
+|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
+|  | Actual: ~14.8s (slowest) | Accuracy: 61.1% (HIGHEST)          |  |
+|  +----------------------------------------------------------------+  |
+|  +--- STATION D (seed=512, cautious, 0.95x) ---------------------+  |
+|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
+|  | Actual: ~13.7s | Accuracy: 50.6%                              |  |
+|  +----------------------------------------------------------------+  |
 |                                                                      |
 |  +--------------- PPO REWARD FUNCTION --------------------------+   |
 |  |                                                               |   |
@@ -242,94 +236,51 @@ The viewer will parse the JSON structure and apply it to the simulation.
 |  |   Speed penalty     Accuracy reward     Smoothness reward    |   |
 |  |                                                               |   |
 |  |  Policy: MLP 64x64, tanh | g=0.99 | clip=0.2 | lr=3e-4     |   |
-|  |  Same architecture, different seeds -> different behaviors    |   |
+|  |  Same architecture, 4 different seeds -> 4 distinct policies  |   |
 |  +---------------------------------------------------------------+   |
 |                                                                      |
-|  +--------------- COMPETITION RESULTS OVERLAY -------------------+   |
-|  |   #1  Station B - 12.3s - 85.2% accuracy                    |   |
-|  |   #2  Station D - 13.3s - 88.1% accuracy                    |   |
-|  |   #3  Station A - 14.0s - 90.5% accuracy                    |   |
-|  |   #4  Station C - 15.1s - 93.8% accuracy                    |   |
-|  |           [ Close Results ]  <- user manually replays        |   |
-|  +---------------------------------------------------------------+   |
-|                                                                      |
-|  Note: Exact times vary per run via seeded PPO policy noise.        |
+|  +--------------- COMPETITION RESULTS ----------------------------+  |
+|  |   #1  Station B - 12.51s - 32.8% accuracy  (speed wins)      |  |
+|  |   #2  Station D - 13.73s - 50.6% accuracy                    |  |
+|  |   #3  Station A - 13.81s - 43.6% accuracy                    |  |
+|  |   #4  Station C - 14.83s - 61.1% accuracy  (most accurate)   |  |
+|  |           [ Close Results ]  <- user manually replays          |  |
+|  +----------------------------------------------------------------+  |
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 3: Full-Detail 3D Layout and Technology Stack
+### Diagram 3: v0.5.0 3D Layout and Technology Stack
 
 ```
 +----------------------------------------------------------------------+
-|      FULL-DETAIL 3D LAYOUT & TECHNOLOGY STACK (v0.4.0)               |
+|      3D LAYOUT & TECHNOLOGY STACK (v0.5.0 — Open-Top Building)       |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +---------------- HOSPITAL ROOM (16m x 16m) -------------------+   |
-|  |                                                               |   |
-|  |  +-- Station A ------+    +-- Station B ------+              |   |
-|  |  | [Doc]  [Pat]  [Nrs]|    | [Doc]  [Pat]  [Nrs]|             |   |
-|  |  |  (L)   chair   (R) |    |  (L)   chair   (R) |             |   |
-|  |  |  tab   IV+mon  syr |    |  tab   IV+mon  syr |             |   |
-|  |  |  +     [target]    B|    |  +     [target]    B|            |   |
-|  |  +--------------------+    +--------------------+             |   |
-|  |        5.5m spacing             5.5m spacing                  |   |
-|  |  +-- Station C ------+    +-- Station D ------+              |   |
-|  |  | [Doc]  [Pat]  [Nrs]|    | [Doc]  [Pat]  [Nrs]|             |   |
-|  |  |  (L)   chair   (R) |    |  (L)   chair   (R) |             |   |
-|  |  |  tab   IV+mon  syr |    |  tab   IV+mon  syr |             |   |
-|  |  |  +     [target]    B|    |  +     [target]    B|            |   |
-|  |  +--------------------+    +--------------------+             |   |
-|  |        5.5m row spacing                                       |   |
-|  |  Legend: +=Doctor(cross) B=Nurse(badge) target=pulsing ring  |   |
-|  |  Doc=Doctor(white) Pat=Patient(green) Nrs=Nurse(blue)        |   |
-|  +---------------------------------------------------------------+   |
+|  +---------- HOSPITAL ROOM (16m x 16m, NO CEILING) --------------+  |
+|  |                    (open top — see through)                    |  |
+|  |  +-- Station A --------+    +-- Station B --------+           |  |
+|  |  | [Nrs]  [Pat]  [Doc] |    | [Nrs]  [Pat]  [Doc] |           |  |
+|  |  |  (L)   chair   (R)  |    |  (L)   chair   (R)  |           |  |
+|  |  |  tab   IV+mon  syr  |    |  tab   IV+mon  syr  |           |  |
+|  |  |  +     [target]    X |    |  +     [target]    X |           |  |
+|  |  +----------------------+    +----------------------+           |  |
+|  |        5.5m spacing               5.5m spacing                 |  |
+|  |  +-- Station C --------+    +-- Station D --------+           |  |
+|  |  | [Nrs]  [Pat]  [Doc] |    | [Nrs]  [Pat]  [Doc] |           |  |
+|  |  |  (L)   chair   (R)  |    |  (L)   chair   (R)  |           |  |
+|  |  |  tab   IV+mon  syr  |    |  tab   IV+mon  syr  |           |  |
+|  |  |  +     [target]    X |    |  +     [target]    X |           |  |
+|  |  +----------------------+    +----------------------+           |  |
+|  |                                                                |  |
+|  |  Legend: X=Doctor(cross,syringe) +=Nurse(badge,tablet)         |  |
+|  |  Doc=Doctor(white,R) Pat=Patient(green) Nrs=Nurse(blue,L)     |  |
+|  +----------------------------------------------------------------+  |
 |                                                                      |
-|  LAYER 1: PHYSICS ENGINE                                             |
-|  +------------------------------------------------------------+     |
-|  |  MuJoCo (Multi-Joint dynamics with Contact)                |     |
-|  |  - 4-station MJCF XML scene (competition_scene.xml)        |     |
-|  |  - 48 joint actuators (12 per station x 4)                 |     |
-|  |  - 8 contact sensors (needle_tip + target per station)     |     |
-|  |  - 0.002s timestep, position-controlled actuators          |     |
-|  +------------------------------------------------------------+     |
-|                          |                                           |
-|  LAYER 2: PPO POLICY LAYER                                           |
-|  +------------------------------------------------------------+     |
-|  |  Proximal Policy Optimization (PPO)                        |     |
-|  |  - MLP 64x64 with tanh activation (per station)            |     |
-|  |  - 4 seeds: 42, 137, 256, 512 -> 4 distinct policies      |     |
-|  |  - Reward: speed (-0.3) + accuracy (0.5) + smooth (0.2)    |     |
-|  |  - Observation: phase, joints, needle pos, target, time     |     |
-|  |  - Action: shoulder/elbow/wrist deltas, approach velocity   |     |
-|  +------------------------------------------------------------+     |
-|                          |                                           |
-|  LAYER 3: VISUALIZATION (v0.4.0 - Light Mode)                       |
-|  +------------------------------------------------------------+     |
-|  |  Three.js r169 Competition Viewer (docs/v4/index.html)     |     |
-|  |  - 12 full-detail G1 humanoid robots (3 per station)       |     |
-|  |  - Joint rings, visors, pelvis, articulated arms/legs      |     |
-|  |  - Role markers: red cross (doctor), gold badge (nurse)    |     |
-|  |  - Pulsing injection target (ring + center dot)            |     |
-|  |  - Light theme (#e8ecf0), ACES filmic, PCF shadows         |     |
-|  |  - Closable scoreboard + closable phase timeline           |     |
-|  |  - Results overlay (close only - manual replay)            |     |
-|  |  - Full metrics reset between competition runs             |     |
-|  |  - Responsive: iPhone, Android, tablet, desktop            |     |
-|  +------------------------------------------------------------+     |
-|                          |                                           |
-|  LAYER 4: DEPLOYMENT & TESTING                                       |
-|  +------------------------------------------------------------+     |
-|  |  GitHub Pages + CI Pipeline                                |     |
-|  |  - /docs/index.html -> v0.1.0 single station (stable)     |     |
-|  |  - /docs/v2/index.html -> v0.3.0 competition (legacy)     |     |
-|  |  - /docs/v4/index.html -> v0.4.0 competition (current)    |     |
-|  |  - ruff lint + format (Python 3.10/3.11/3.12)              |     |
-|  |  - pytest (113 tests)                                      |     |
-|  |  - pre-commit hooks for local development                  |     |
-|  +------------------------------------------------------------+     |
+|  LAYER 1: MuJoCo + PPO (Python backend)                             |
+|  LAYER 2: Three.js r169 (docs/v5/index.html)                        |
+|  LAYER 3: GitHub Pages (static hosting)                              |
 |                                                                      |
-|  OPEN-SOURCE STACK (all free, no wandb)                              |
-|  MuJoCo(Apache2) Three.js(MIT) GitHub(Free) Python(PSF) Ruff(MIT)  |
+|  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)  |
 +----------------------------------------------------------------------+
 ```
 
@@ -344,12 +295,16 @@ robot-competition-clinical/
 │   ├── v2/
 │   │   └── index.html                  # v0.3.0 Competition viewer (legacy)
 │   ├── v4/
-│   │   └── index.html                  # v0.4.0 Competition viewer (current)
+│   │   ├── index.html                  # v0.4.0 Competition viewer (legacy)
+│   │   └── competition_data.json       # v0.4.0 animation data
+│   ├── v5/
+│   │   └── index.html                  # v0.5.0 Competition viewer (current)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams
 │       ├── v2_viewer_modules.md        # v0.3.0 viewer internal module map
-│       └── v3_architecture.md          # Archived v0.3.0 text diagrams
+│       ├── v3_architecture.md          # Archived v0.3.0 text diagrams
+│       └── v4_architecture.md          # Archived v0.4.0 text diagrams
 ├── simulation/                         # v0.1.x single-station simulation
 │   ├── __init__.py
 │   ├── constants.py
@@ -390,9 +345,9 @@ The Python backend is optional — the web viewers work independently.
 # Install dependencies
 pip install mujoco numpy
 
-# --- v0.4.0 Competition ---
+# --- v0.5.0 Competition ---
 python -m simulation_v2.run_competition
-python -m simulation_v2.export_competition --output docs/v4/competition_data.json
+python -m simulation_v2.export_competition --output docs/v5/competition_data.json
 
 # --- v0.1.0 Single Station ---
 python -m simulation.run_simulation --export output/animation.json
