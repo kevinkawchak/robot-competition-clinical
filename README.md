@@ -16,16 +16,19 @@ competition scenarios with universal device accessibility.
 **Step 1:** Enable GitHub Pages in your fork:
 Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder: `/docs` → Save
 
-**Step 2:** Open the generated URL on any device (desktop, iOS, Android):
+**Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
 | Simulation | URL | Description |
 |---|---|---|
-| **v0.2.0 Competition** | `https://<user>.github.io/robot-competition-clinical/v2/` | 4-station PPO competition |
-| **v0.1.x Single Station** | `https://<user>.github.io/robot-competition-clinical/` | Original single-station injection |
+| **v0.3.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v2/](https://kevinkawchak.github.io/robot-competition-clinical/v2/) | 4-station PPO competition |
+| **v0.1.x Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection |
 
-Press **Play** to start the competition and watch all 4 stations race.
+Press **Play** to start the competition and watch all 4 stations race. Use the
+toggle buttons to open/close the **Phase Timeline** and **Scoreboard** panels.
+When all stations finish, a **Competition Results** overlay displays the final
+1st/2nd/3rd/4th ranking with times and accuracies.
 
-## What This Simulates (v0.2.0)
+## What This Simulates (v0.3.0)
 
 Four identical doctor/patient/nurse stations compete simultaneously. Each station
 uses the same PPO policy architecture but with different random seed
@@ -44,9 +47,9 @@ initialization, producing distinct timing and accuracy behavior.
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor | Left of patient | White coat, red cross | Tablet | Reviews symptoms/toxicities |
+| Doctor | Left of patient | White coat | Tablet/chart | Reviews symptoms/toxicities |
 | Patient | Center (seated) | Green gown | Exam chair | Receives injection (right arm) |
-| Nurse | Right of patient | Blue coat, badge | Syringe | Performs deltoid injection |
+| Nurse | Right of patient | Blue coat | Syringe | Performs deltoid injection |
 
 ### Phase Flow Per Station
 
@@ -75,32 +78,44 @@ All four stations use **Proximal Policy Optimization (PPO)** with:
 - **Training**: 500 episodes, gamma=0.99, clip_ratio=0.2, learning_rate=3e-4
 - **Key insight**: Same policy architecture + different random seeds → different learned behaviors
 
+**Same policy, different state**: Each station shares the same MLP architecture and
+PPO hyperparameters. The only difference between stations is the random seed used during
+training initialization (42, 137, 256, 512). This produces genuinely distinct learned
+parameters — different speed/accuracy tradeoffs — from the same reward function. The
+PPO reward `R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk)` balances three competing
+objectives: speed (finish fast), accuracy (needle close to target), and smoothness
+(minimal jerk in arm motion).
+
 ### Measurement
 
 - **Time**: Elapsed simulation seconds from start to nurse withdrawal completion
 - **Accuracy**: Euclidean distance (meters) between needle tip and injection target site
 - **Accuracy Score**: `1.0 / (1.0 + distance * 100.0)` — higher is better
 - **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
+- **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
 
 ## Features
 
 - **4-Station Competition**: Simultaneous independent simulation across all stations
 - **PPO RL Policies**: Distinct behavior from seeded policy training
-- **Real-Time Scoreboard**: Doctor time, nurse time, total time, accuracy, rank
+- **Closable Scoreboard**: Toggle on/off — doctor time, nurse time, total, accuracy, rank
+- **Closable Phase Timeline**: Toggle on/off — tracks each phase per station
+- **Final Results Overlay**: Clear 1st/2nd/3rd/4th display with times and accuracies
 - **Cross-Device 3D Viewer**: Desktop, iOS, Android via Three.js
 - **Zero Installation**: View directly from GitHub Pages
 - **MuJoCo Physics**: Full MJCF scene models with articulated humanoids
-- **Interactive Controls**: Play/pause, reset, progress scrubbing, station camera focus
-- **File Upload**: Upload custom JSON/XML for future configurations
-- **Mobile-Friendly**: Responsive layout with collapsible scoreboard
-- **Dual Viewers**: Separate GitHub Pages for v1 and v2 simulations
+- **Interactive Controls**: Play/pause, reset, station camera focus
+- **File Upload**: Upload custom competition_data.json for future simulations
+- **Mobile-Optimized**: Responsive layout across iPhone, Android, tablet, desktop
+- **Dual Viewers**: Separate GitHub Pages for v1 and v2 with cross-navigation banner
+- **Injection Target Marker**: Red marker on patient's deltoid shows needle target
 - **Open & Free**: All dependencies open-source (no wandb)
 
 ## Uploading Custom Simulations
 
 To upload custom data for future simulations:
 
-1. **v0.2.0 Competition**: Generate a `competition_data.json` file using
+1. **v0.3.0 Competition**: Generate a `competition_data.json` file using
    `python -m simulation_v2.export_competition --output competition_data.json`
    and upload it via the **Upload** button in the `/v2/` viewer.
 
@@ -112,12 +127,12 @@ The viewer will parse the JSON structure and apply it to the simulation.
 
 ## Architecture Diagrams
 
-### Diagram 1: Multi-Station Competition Architecture
+### Diagram 1: Multi-Station Competition Architecture (v0.3.0)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│          CLINICAL ROBOT COMPETITION — SYSTEM ARCHITECTURE            │
-│                    4-Station PPO Simulation                           │
+│        CLINICAL ROBOT COMPETITION — SYSTEM ARCHITECTURE v0.3.0       │
+│          4-Station PPO Simulation with Closable UI Panels            │
 ├──────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌──────────────────────┐        ┌───────────────────────────────┐  │
@@ -126,49 +141,54 @@ The viewer will parse the JSON structure and apply it to the simulation.
 │  │                      │        │                               │  │
 │  │ ┌──────────────────┐ │  JSON  │ ┌───────────────────────────┐│  │
 │  │ │ competition_scene│ │ ─────► │ │ 4-Station 3D Renderer    ││  │
-│  │ │ .xml (4 stations)│ │ export │ │ - 2x2 Grid Layout        ││  │
+│  │ │ .xml (4 stations)│ │ export │ │ - 2x2 Grid (5m spacing)  ││  │
 │  │ └──────────────────┘ │        │ │ - 12 G1 Humanoid Models  ││  │
 │  │        │             │        │ │ - 4x Medical Equipment   ││  │
-│  │        ▼             │        │ └───────────────────────────┘│  │
-│  │ ┌──────────────────┐ │        │          │                    │  │
-│  │ │ ppo_policy.py    │ │        │          ▼                    │  │
-│  │ │ - PPO MLP 64x64  │ │        │ ┌───────────────────────────┐│  │
-│  │ │ - 4 seed configs │ │        │ │ Per-Station Animation    ││  │
-│  │ │ - Reward function│ │        │ │ - Doctor review (4 phase) ││  │
-│  │ └──────────────────┘ │        │ │ - Nurse inject (6 phase)  ││  │
-│  │        │             │        │ │ - Independent timing      ││  │
-│  │        ▼             │        │ └───────────────────────────┘│  │
-│  │ ┌──────────────────┐ │        │          │                    │  │
-│  │ │ run_competition  │ │        │          ▼                    │  │
-│  │ │ .py              │ │        │ ┌───────────────────────────┐│  │
-│  │ │ - 4 stations     │ │        │ │ Competition UI           ││  │
-│  │ │ - Metrics/rank   │ │        │ │ - Scoreboard (4 stations)││  │
-│  │ └──────────────────┘ │        │ │ - Station selector A-D   ││  │
-│  │        │             │        │ │ - Play/Pause/Reset       ││  │
-│  │        ▼             │        │ │ - Upload + Info          ││  │
+│  │        ▼             │        │ │ - Injection target marker ││  │
 │  │ ┌──────────────────┐ │        │ └───────────────────────────┘│  │
-│  │ │ export_competitn │ │        │          │                    │  │
-│  │ │ .py              │ │        │          ▼                    │  │
-│  │ │ - Station frames │ │        │ ┌───────────────────────────┐│  │
-│  │ │ - JSON output    │ │        │ │ Device Targets           ││  │
-│  │ └──────────────────┘ │        │ │ ✓ Desktop (mouse+kb)     ││  │
-│  │                      │        │ │ ✓ iOS (touch+pinch)      ││  │
-│  └──────────────────────┘        │ │ ✓ Android (touch+pinch)  ││  │
-│                                  │ └───────────────────────────┘│  │
-│  ┌──────────────────────┐        └───────────────────────────────┘  │
-│  │   CI/CD + Testing    │                                           │
-│  │ - ruff lint/format   │     ┌───────────────────────────────┐    │
-│  │ - pytest smoke tests │     │  v0.1.x Single-Station Viewer │    │
-│  │ - Python 3.10-3.12   │     │  (docs/index.html — separate) │    │
-│  │ - pre-commit hooks   │     └───────────────────────────────┘    │
-│  └──────────────────────┘                                           │
+│  │ │ ppo_policy.py    │ │        │          │                    │  │
+│  │ │ - PPO MLP 64x64  │ │        │          ▼                    │  │
+│  │ │ - 4 seed configs │ │        │ ┌───────────────────────────┐│  │
+│  │ │ - Reward function│ │        │ │ Per-Station Animation    ││  │
+│  │ └──────────────────┘ │        │ │ - Doctor review (4 phase) ││  │
+│  │        │             │        │ │ - Nurse inject (6 phase)  ││  │
+│  │        ▼             │        │ │ - Independent timing      ││  │
+│  │ ┌──────────────────┐ │        │ │ - Finish-order tracking   ││  │
+│  │ │ run_competition  │ │        │ └───────────────────────────┘│  │
+│  │ │ .py              │ │        │          │                    │  │
+│  │ │ - 4 stations     │ │        │          ▼                    │  │
+│  │ │ - Metrics/rank   │ │        │ ┌───────────────────────────┐│  │
+│  │ └──────────────────┘ │        │ │ Competition UI (v0.3.0)  ││  │
+│  │        │             │        │ │ - Closable scoreboard     ││  │
+│  │        ▼             │        │ │ - Closable phase timeline ││  │
+│  │ ┌──────────────────┐ │        │ │ - Final results overlay   ││  │
+│  │ │ export_competitn │ │        │ │ - Cross-nav banner        ││  │
+│  │ │ .py              │ │        │ │ - Station selector A-D    ││  │
+│  │ │ - Station frames │ │        │ │ - JSON upload validation  ││  │
+│  │ │ - JSON output    │ │        │ └───────────────────────────┘│  │
+│  │ │ - Schema v0.3.0  │ │        │          │                    │  │
+│  │ └──────────────────┘ │        │          ▼                    │  │
+│  │                      │        │ ┌───────────────────────────┐│  │
+│  │                      │        │ │ Device Targets           ││  │
+│  └──────────────────────┘        │ │ ✓ Desktop (mouse+kb)     ││  │
+│                                  │ │ ✓ iPhone (touch+pinch)   ││  │
+│  ┌──────────────────────┐        │ │ ✓ Android (touch+pinch)  ││  │
+│  │   CI/CD + Testing    │        │ │ ✓ Tablet (responsive)    ││  │
+│  │ - ruff lint/format   │        │ └───────────────────────────┘│  │
+│  │ - pytest (113 tests) │        └───────────────────────────────┘  │
+│  │ - Python 3.10-3.12   │                                           │
+│  │ - export boundary    │     ┌───────────────────────────────┐    │
+│  │   tests              │     │  v0.1.x Single-Station Viewer │    │
+│  │ - pre-commit hooks   │     │  (docs/index.html — separate) │    │
+│  └──────────────────────┘     └───────────────────────────────┘    │
 │                                                                      │
 │  Attribution: Inspired by mjlab (mujocolab/mjlab)                   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 **Benefits**: Dual-viewer architecture provides both single-station and
-competition experiences via separate GitHub Pages URLs. The PPO policy layer
+competition experiences via separate GitHub Pages URLs with cross-navigation.
+Closable panels prevent UI overlap on all devices. The PPO policy layer
 enables distinct per-station behaviors from a single codebase. JSON export
 bridges MuJoCo physics with zero-install web viewing on any device.
 
@@ -180,17 +200,17 @@ bridges MuJoCo physics with zero-install web viewing on any device.
 │              Doctor Review → Nurse Injection → Ranking               │
 ├──────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  ┌─── STATION A (seed=42) ──────────────────────────────────────┐   │
+│  ┌─── STATION A (seed=42, balanced) ────────────────────────────┐   │
 │  │ DOCTOR REVIEW            │ NURSE INJECTION                    │   │
 │  │ [recv][review][assess][ok]│[prep][approach][pos][inject][hold][wd]│
 │  │ ◄── 5.5s base ──────────►│◄── 8.5s base ────────────────────►│   │
 │  └──────────────────────────────────────────────────────────────-┘   │
-│  ┌─── STATION B (seed=137, faster) ────────────────────────────-┐   │
+│  ┌─── STATION B (seed=137, speed-focused) ─────────────────────-┐   │
 │  │ DOCTOR REVIEW          │ NURSE INJECTION                      │   │
 │  │ [recv][review][asses][ok]│[prep][appr][pos][inject][hold][wd] │   │
 │  │ ◄── ~4.8s ────────────►│◄── ~7.5s ──────────────────────────►│   │
 │  └──────────────────────────────────────────────────────────────-┘   │
-│  ┌─── STATION C (seed=256, most accurate) ─────────────────────-┐   │
+│  ┌─── STATION C (seed=256, accuracy-focused) ──────────────────-┐   │
 │  │ DOCTOR REVIEW              │ NURSE INJECTION                  │   │
 │  │ [recv][review ][assess][ok] │[prep][approach][pos][inj][hold][wd]│
 │  │ ◄── ~5.9s ────────────────►│◄── ~9.2s ──────────────────────►│   │
@@ -201,25 +221,21 @@ bridges MuJoCo physics with zero-install web viewing on any device.
 │  │ ◄── ~5.2s ──────────────►│◄── ~8.1s ────────────────────────►│   │
 │  └──────────────────────────────────────────────────────────────-┘   │
 │                                                                      │
-│  ┌────────────────────── PPO REWARD FUNCTION ──────────────────-┐   │
+│  ┌──────────────── PPO REWARD FUNCTION ──────────────────────-──┐   │
 │  │                                                               │   │
 │  │  R = -0.3 × time  +  0.5 / (1 + dist)  +  0.2 / (1 + jerk) │   │
 │  │       ▲                   ▲                    ▲              │   │
-│  │       │                   │                    │              │   │
 │  │   Speed penalty     Accuracy reward     Smoothness reward    │   │
-│  │   (lower time =     (closer needle =    (less jerk =        │   │
-│  │    higher reward)    higher reward)      higher reward)      │   │
 │  │                                                               │   │
 │  │  Policy: MLP 64×64, tanh | γ=0.99 | clip=0.2 | lr=3e-4     │   │
+│  │  Same architecture, different seeds → different behaviors    │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 │                                                                      │
-│  ┌────────────────── COMPETITION SCOREBOARD ───────────────────-┐   │
-│  │  Rank │ Station │ Dr Time │ Nurse Time │ Total │ Accuracy   │   │
-│  │  ─────┼─────────┼─────────┼────────────┼───────┼──────────  │   │
-│  │   #1  │    B    │  4.84s  │   7.48s    │ 12.3s │  0.643     │   │
-│  │   #2  │    D    │  5.22s  │   8.05s    │ 13.3s │  0.435     │   │
-│  │   #3  │    A    │  5.50s  │   8.50s    │ 14.0s │  0.500     │   │
-│  │   #4  │    C    │  5.94s  │   9.18s    │ 15.1s │  0.625     │   │
+│  ┌──────────────── FINAL RESULTS DISPLAY ────────────────────-──┐   │
+│  │   #1  Station B — 12.3s — 85.2% accuracy                    │   │
+│  │   #2  Station D — 13.3s — 88.1% accuracy                    │   │
+│  │   #3  Station A — 14.0s — 90.5% accuracy                    │   │
+│  │   #4  Station C — 15.1s — 93.8% accuracy                    │   │
 │  └───────────────────────────────────────────────────────────────┘   │
 │                                                                      │
 │  Note: Exact times vary per run via seeded PPO policy noise.        │
@@ -236,25 +252,27 @@ competition run a unique race between four plausible strategies.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│      MULTI-STATION 3D LAYOUT & TECHNOLOGY STACK                      │
+│      MULTI-STATION 3D LAYOUT & TECHNOLOGY STACK (v0.3.0)             │
 ├──────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  ┌────────────────── HOSPITAL ROOM (12m × 12m) ────────────────-┐  │
+│  ┌────────────────── HOSPITAL ROOM (14m × 14m) ────────────────-┐  │
 │  │                                                               │  │
 │  │  ┌── Station A ──────┐    ┌── Station B ──────┐              │  │
 │  │  │ [Doc]  [Pat]  [Nrs]│    │ [Doc]  [Pat]  [Nrs]│             │  │
 │  │  │  (L)   chair   (R) │    │  (L)   chair   (R) │             │  │
 │  │  │  tab   IV+mon  syr │    │  tab   IV+mon  syr │             │  │
+│  │  │       [●target]     │    │       [●target]     │             │  │
 │  │  └────────────────────┘    └────────────────────┘             │  │
-│  │        4.5m spacing             4.5m spacing                  │  │
+│  │        5.0m spacing             5.0m spacing                  │  │
 │  │  ┌── Station C ──────┐    ┌── Station D ──────┐              │  │
 │  │  │ [Doc]  [Pat]  [Nrs]│    │ [Doc]  [Pat]  [Nrs]│             │  │
 │  │  │  (L)   chair   (R) │    │  (L)   chair   (R) │             │  │
 │  │  │  tab   IV+mon  syr │    │  tab   IV+mon  syr │             │  │
+│  │  │       [●target]     │    │       [●target]     │             │  │
 │  │  └────────────────────┘    └────────────────────┘             │  │
-│  │        4.0m row spacing                                       │  │
+│  │        5.0m row spacing                                       │  │
 │  │  Legend: Doc=Doctor(white) Pat=Patient(green) Nrs=Nurse(blue) │  │
-│  │          tab=tablet syr=syringe IV=IV stand mon=vitals monitor│  │
+│  │          ●=injection target tab=tablet syr=syringe            │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                      │
 │  LAYER 1: PHYSICS ENGINE                                             │
@@ -263,9 +281,8 @@ competition run a unique race between four plausible strategies.
 │  │  ├── 4-station MJCF XML scene (competition_scene.xml)      │     │
 │  │  ├── 48 joint actuators (12 per station × 4)               │     │
 │  │  ├── 8 contact sensors (needle_tip + target per station)   │     │
-│  │  ├── Rigid body dynamics, 9.81 m/s² gravity                │     │
+│  │  ├── Injection target marker on each patient's deltoid     │     │
 │  │  └── 0.002s timestep, position-controlled actuators        │     │
-│  │  Benefit: Research-grade physics across all 4 stations      │     │
 │  └────────────────────────────────────────────────────────────┘     │
 │                          │                                           │
 │  LAYER 2: PPO POLICY LAYER                                           │
@@ -276,7 +293,6 @@ competition run a unique race between four plausible strategies.
 │  │  ├── Reward: speed (-0.3) + accuracy (0.5) + smooth (0.2)  │     │
 │  │  ├── Observation: phase, joints, needle pos, target, time   │     │
 │  │  └── Action: shoulder/elbow/wrist deltas, approach velocity │     │
-│  │  Benefit: Principled RL produces realistic behavior variety │     │
 │  └────────────────────────────────────────────────────────────┘     │
 │                          │                                           │
 │  LAYER 3: VISUALIZATION                                              │
@@ -284,21 +300,21 @@ competition run a unique race between four plausible strategies.
 │  │  Three.js r169 Competition Viewer (docs/v2/index.html)     │     │
 │  │  ├── 12 articulated G1 humanoid robots (3 per station)     │     │
 │  │  ├── WebGL PBR rendering, PCF soft shadows                 │     │
-│  │  ├── Station-focus camera with A/B/C/D selector buttons    │     │
-│  │  ├── Competition scoreboard with live metrics              │     │
-│  │  └── Responsive layout: desktop, iOS, Android              │     │
-│  │  Benefit: Simultaneous 4-station visualization, any device  │     │
+│  │  ├── Closable scoreboard + closable phase timeline         │     │
+│  │  ├── Final results overlay (1st/2nd/3rd/4th + times + acc) │     │
+│  │  ├── Cross-viewer navigation banner                        │     │
+│  │  └── Responsive: iPhone, Android, tablet, desktop          │     │
 │  └────────────────────────────────────────────────────────────┘     │
 │                          │                                           │
 │  LAYER 4: DEPLOYMENT & TESTING                                       │
 │  ┌────────────────────────────────────────────────────────────┐     │
 │  │  GitHub Pages + CI Pipeline                                │     │
 │  │  ├── /docs/index.html → v0.1.x single station             │     │
-│  │  ├── /docs/v2/index.html → v0.2.0 competition             │     │
+│  │  ├── /docs/v2/index.html → v0.3.0 competition             │     │
 │  │  ├── ruff lint + format (Python 3.10/3.11/3.12)            │     │
-│  │  ├── pytest unit tests (phases, interpolation, competition)│     │
+│  │  ├── pytest (113 tests: phases, interp, competition,       │     │
+│  │  │   export boundaries)                                    │     │
 │  │  └── pre-commit hooks for local development                │     │
-│  │  Benefit: Dual viewers, automated quality checks            │     │
 │  └────────────────────────────────────────────────────────────┘     │
 │                                                                      │
 │  OPEN-SOURCE STACK (all free, no wandb)                              │
@@ -310,35 +326,32 @@ competition run a unique race between four plausible strategies.
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Benefits**: The 2x2 grid layout maximizes visual comparison across stations
-while maintaining proper 3D spacing for camera orbiting. Four technology
-layers cleanly separate physics, RL policy, visualization, and deployment.
-The PPO policy layer is the key differentiator from v0.1.x, enabling
-autonomous behavior variation from a shared codebase.
-
 ## Advances Over mjlab and v0.1.x
 
-| Aspect | mjlab | v0.1.x | v0.2.0 (This Release) |
+| Aspect | mjlab | v0.1.x | v0.3.0 (This Release) |
 |---|---|---|---|
 | Domain | General RL locomotion | Clinical injection | **Clinical competition** |
 | Stations | Single agent | Single station | **4 simultaneous stations** |
 | RL Policy | IsaacLab API | Scripted phases | **PPO with seeded training** |
 | Roles | Single agent | Doctor + Nurse + Patient | **Doctor(review) + Nurse(inject) + Patient** |
 | Measurement | Velocity tracking | Needle distance | **Time + accuracy + rank** |
-| Device Support | NVIDIA GPU required | Any browser | **Any browser (mobile-friendly)** |
+| UI Panels | N/A | Always visible | **Closable (user preference)** |
+| Results | N/A | Single metric | **Final overlay (1st-4th)** |
+| Device Support | NVIDIA GPU required | Any browser | **Any browser (mobile-optimized)** |
 
 ## Project Structure
 
 ```
 robot-competition-clinical/
-├── .github/workflows/ci.yml           # Lint/format/test CI for Python 3.10-3.12
+├── .github/workflows/ci.yml           # Lint/format CI for Python 3.10-3.12
 ├── .pre-commit-config.yaml            # Local ruff hooks
 ├── docs/
 │   ├── index.html                      # v0.1.x Three.js viewer (GitHub Pages)
 │   ├── v2/
-│   │   └── index.html                  # v0.2.0 Competition viewer (GitHub Pages)
+│   │   └── index.html                  # v0.3.0 Competition viewer (GitHub Pages)
 │   └── diagrams/
-│       └── v1_architecture.md          # Archived v0.1.x text diagrams
+│       ├── v1_architecture.md          # Archived v0.1.x text diagrams
+│       └── v2_architecture.md          # Archived v0.2.0 text diagrams
 ├── simulation/                         # v0.1.x single-station simulation
 │   ├── __init__.py
 │   ├── constants.py                    # Shared phase timings + TypedDicts
@@ -346,9 +359,9 @@ robot-competition-clinical/
 │   │   └── clinical_scene.xml          # MuJoCo MJCF (single station)
 │   ├── run_simulation.py               # MuJoCo simulation runner
 │   └── export_animation.py             # Animation export to JSON
-├── simulation_v2/                      # v0.2.0 competition simulation
+├── simulation_v2/                      # v0.2+ competition simulation
 │   ├── __init__.py
-│   ├── constants.py                    # Competition constants + station configs
+│   ├── constants.py                    # Competition constants + PpoConfig TypedDict
 │   ├── ppo_policy.py                   # PPO policy simulation
 │   ├── run_competition.py              # 4-station competition runner
 │   ├── export_competition.py           # Competition animation export
@@ -358,15 +371,18 @@ robot-competition-clinical/
 │   ├── __init__.py
 │   ├── test_phases.py                  # Phase transition tests
 │   ├── test_interpolation.py           # Interpolation + FPS tests
-│   └── test_competition.py             # Competition metric tests
+│   ├── test_competition.py             # Competition metric tests
+│   └── test_exports.py                 # Export payload boundary tests
 ├── peer-review/
-│   └── v0.1.1-senior-peer-review.md   # Peer review with 14 recommendations
+│   ├── v0.1.1-senior-peer-review.md   # Peer review (14 recommendations)
+│   ├── v0.2.1-senior-peer-review.md   # Peer review (10 recommendations)
+│   └── v0.3.0-implementation-report.md # Implementation report for v0.3.0
 ├── .gitignore
 ├── LICENSE                             # Apache License 2.0
 ├── README.md                           # This file
 ├── changelog.md                        # Version history
 ├── releases.md                         # Release notes
-├── prompts.md                          # Build prompts (v0.1.0 + v0.2.0)
+├── prompts.md                          # Build prompts (v0.1.0 — v0.3.0)
 └── pyproject.toml                      # Project config + ruff + pytest
 ```
 
@@ -378,7 +394,7 @@ The Python backend is optional — the web viewers work independently.
 # Install dependencies
 pip install mujoco numpy
 
-# --- v0.2.0 Competition ---
+# --- v0.3.0 Competition ---
 # Run the 4-station competition
 python -m simulation_v2.run_competition
 
@@ -393,11 +409,19 @@ python -m simulation.run_simulation --export output/animation.json
 python -m simulation.export_animation --output docs/animation_data.json
 ```
 
-## Running Tests
+## Running Tests and Linting
 
 ```bash
-pip install pytest
-pytest tests/
+pip install pytest ruff
+
+# Run all tests (113 tests)
+pytest tests/ -v
+
+# Lint check
+ruff check .
+
+# Format check
+ruff format --check .
 ```
 
 ## Attribution

@@ -125,6 +125,19 @@ class StationMetrics(TypedDict):
     rank: int
 
 
+class PpoConfig(TypedDict):
+    """PPO policy configuration payload."""
+
+    weight_time: float
+    weight_accuracy: float
+    weight_smooth: float
+    architecture: str
+    training_episodes: int
+    gamma: float
+    clip_ratio: float
+    learning_rate: float
+
+
 class CompetitionResult(TypedDict):
     """Full competition result payload."""
 
@@ -133,7 +146,7 @@ class CompetitionResult(TypedDict):
     num_stations: int
     max_duration: float
     fps: int
-    ppo_config: dict[str, float]
+    ppo_config: PpoConfig
     stations: list[StationMetrics]
     winner: str
 

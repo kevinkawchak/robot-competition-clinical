@@ -1,5 +1,43 @@
 # Releases
 
+## Clinical Robot Competition — v0.3.0 Peer Review Implementation
+v0.3.0 - 2026-02-22
+
+## Summary
+
+v0.3.0 implements all 10 peer-review recommendations from v0.2.1, completely rebuilds the v2 competition viewer, and adds significant usability improvements. The v2 simulation now features closable scoreboard and phase timeline panels (no more overlapping UI elements), a final results overlay showing clear 1st-4th rankings with times and accuracies, injection target markers on each patient's deltoid, cross-navigation banners between both viewers, mobile-optimized responsive layouts for iPhone and Android, and JSON upload validation. On the Python side, version strings are aligned to project semver (0.3.0), a `PpoConfig` TypedDict replaces the loose `dict[str, float]`, explicit terminal frames are added to the v1 export, and 14 new export boundary tests bring the total test count to 113.
+
+## Features
+
+- **Rebuilt v2 Viewer**: Complete rewrite of `docs/v2/index.html` — proper 3D 2x2 grid without divider boxes, closable panels, final results overlay, injection target markers, responsive mobile layout
+- **Closable Scoreboard & Phase Timeline**: Toggle buttons to show/hide panels based on user preference — prevents overlap with 3D scene
+- **Final Results Overlay**: When all 4 stations finish, a clear overlay shows 1st/2nd/3rd/4th ranking with times and accuracy percentages
+- **Cross-Navigation Banner**: Both HTML viewers (root and `/v2/`) have a banner with base-path-aware links for easy switching
+- **Version Alignment**: Schema version `"2.0.0"` → `"0.3.0"` in all exported payloads, matching project semver stream
+- **PpoConfig TypedDict**: Type-safe PPO configuration replacing `dict[str, float]` with explicit mixed-type fields
+- **Terminal Frame Fix**: v1 export animation now includes explicit final keyframe at exact `TOTAL_DURATION`
+- **Export Boundary Tests**: 14 new tests validating schema fields, terminal frames, version strings, and payload structure
+- **JSON Upload Validation**: v2 viewer validates required fields before applying uploaded config
+- **Mobile Optimization**: Three responsive breakpoints (768px, 420px) for iPhone, Android, and tablet
+- **Full Clickable URLs**: README now shows full clickable URLs for both simulations
+- **Archived v0.2.0 Diagrams**: Prior diagrams stored in `docs/diagrams/v2_architecture.md`
+- **Smoke Command Docs**: README includes pytest and ruff commands for contributors
+
+## Contributors
+@kevinkawchak
+@claude
+@codex
+
+## Notes
+- The v0.1.x single-station simulation remains fully intact and unchanged (except for a navigation banner addition)
+- All 10 peer-review recommendations from v0.2.1 are addressed (3 high, 5 medium, 2 low)
+- Peer review #7 (modularize viewer scripts) is tracked but not implemented — viewer remains a single HTML file for zero-build deployment simplicity
+- 113 tests pass across all test files
+- ruff lint and format checks pass for Python 3.10, 3.11, 3.12
+- For future simulations, upload `competition_data.json` (v2) or `animation_data.json` (v1) via the Upload button
+
+---
+
 ## Clinical Robot Competition - Senior Peer Review Recommendations
 v0.2.1 - 2026-02-21
 

@@ -152,6 +152,26 @@ def generate_web_animation(fps: int = 30) -> AnimationData:
         }
         keyframes.append(keyframe)
 
+    # Peer review fix #3: ensure explicit terminal frame at TOTAL_DURATION
+    if not keyframes or keyframes[-1]["t"] < round(TOTAL_DURATION, 3):
+        terminal: AnimationKeyframe = {
+            "t": round(TOTAL_DURATION, 3),
+            "phase": phases[-1]["name"],
+            "label": phases[-1]["label"],
+            "doctor": {
+                "x_offset": 0.0,
+                "r_shoulder_pitch": 0.0,
+                "r_shoulder_yaw": 0.0,
+                "r_elbow": 0.0,
+                "r_wrist": 0.0,
+            },
+            "nurse": {
+                "r_shoulder": 35.0,
+                "r_elbow": 50.0,
+            },
+        }
+        keyframes.append(terminal)
+
     return {
         "version": "1.0.0",
         "simulation": "clinical_injection",
