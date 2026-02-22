@@ -1,6 +1,6 @@
 [project]
 name = "robot-competition-clinical"
-version = "0.2.0"
+version = "0.3.0"
 description = "Clinical trial robot competition simulation with G1 humanoid robots — 4-station PPO-driven injection procedure race, built on MuJoCo physics"
 readme = "README.md"
 license = {text = "Apache-2.0"}

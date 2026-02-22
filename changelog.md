@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.0] - 2026-02-22
+
+### Added
+- Completely rebuilt v2 competition viewer (`docs/v2/index.html`) with closable scoreboard and phase timeline panels
+- Final results overlay showing clear 1st/2nd/3rd/4th ranking with times and accuracies
+- Cross-navigation banner in both HTML viewers (root ↔ v2) with base-path-aware links
+- Injection target marker (red dot) on each patient's deltoid muscle
+- Export boundary tests (`tests/test_exports.py`) — 14 new tests for payload schema validation
+- `PpoConfig` TypedDict for type-safe PPO configuration in `simulation_v2/constants.py`
+- Archived v0.2.0 diagrams to `docs/diagrams/v2_architecture.md`
+- Peer review implementation report at `peer-review/v0.3.0-implementation-report.md`
+- v0.3.0 build prompt stored in `prompts.md`
+- Smoke command docs in README (pytest, ruff)
+
+### Changed
+- `docs/v2/index.html` — full rewrite: removed divider boxes hiding stations, added toggle-based panels, mobile-optimized responsive breakpoints, JSON upload validation, station finish-order tracking
+- `docs/index.html` — added navigation banner with link to v2 competition viewer
+- `README.md` — full clickable URLs for both simulations, updated project structure with new files, detailed PPO documentation (same policy, different state), measurement methodology, closable UI features
+- `simulation_v2/constants.py` — added `PpoConfig` TypedDict (peer review fix #4)
+- `simulation_v2/run_competition.py` — version string `"2.0.0"` → `"0.3.0"` (peer review fix #2)
+- `simulation_v2/export_competition.py` — version string `"2.0.0"` → `"0.3.0"` (peer review fix #2)
+- `simulation/export_animation.py` — added explicit terminal frame at `TOTAL_DURATION` (peer review fix #3)
+- `pyproject.toml` — version bumped to 0.3.0
+- `prompts.md` — added v0.3.0 build prompt
+- `changelog.md` — added v0.3.0 release entry
+- `releases.md` — added v0.3.0 release notes
+
+### Fixed
+- Phase timeline and scoreboard overlapping visual elements (now closable)
+- Stations appearing hidden inside large box dividers (removed dividers, proper grid)
+- Payload version inconsistency: `"2.0.0"` → `"0.3.0"` to align with project semver (peer review fix #2)
+- Missing terminal frame in v1 export animation (peer review fix #3)
+- Loose `ppo_config` typing: `dict[str, float]` → `PpoConfig` TypedDict (peer review fix #4)
+- GitHub Pages path portability: base-path-aware cross-viewer navigation (peer review fix #1)
+- Missing JSON upload validation in v2 viewer (peer review fix #5)
+- No competition completion display — now shows final results overlay
+- Mobile layout issues on iPhone/Android — three responsive breakpoints (768px, 420px)
+
 ## [v0.2.1] - 2026-02-21
 
 ### Added
@@ -89,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD: GitHub Actions with ruff linter
 - Zero-install viewing via GitHub Pages (static HTML/JS)
 
+[v0.3.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.3.0
 [v0.2.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.2.0
 [v0.2.1]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.2.1
 [v0.1.1]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.1.1
