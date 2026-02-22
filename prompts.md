@@ -1,5 +1,45 @@
 # Prompts
 
+## Senior Software Engineer Code Review Prompt (v0.2.1)
+
+You are a senior software engineer that provides comprehensive code reviews to find errors and flaws across the entire kevinkawchak/robot-competition-clinical GitHub codebase. Provide all fixes needed, which will be provided to Claude code to make corrections. Add your code fix recommendations as a new .md to the “peer-review” directory under main. Make sure to resolve the GitHub pages issue so either index.html simulation can be run be run easily and effectively from different directories. Do not fix any code. Make sure to clone from the current repository.
+
+When you are finished, provide a list of new additions and what changed from old to new files. The user will then review your lists prior to committing changes. Provide an update to the changelog (v0.2.1), and add new release notes in the releases.md (v0.2.1) folder using the format below. Include metrics that help track your peer-review process along with your final recommendation metrics (code specifics, number of recommended code fixes, etc.) 
+
+In summary, update the repository (changelog.md, releases.md, peer-review directory and .md) according to your end to end senior software engineer peer review recommendations. A single pull request will be merged by the user at the end. Release notes formatting is shown below. Separately, provide your processing notes as shown below.
+
+“FORMAT”
+Release title 
+v0.2.1 - 
+
+## Summary
+
+## Features
+
+## Contributors
+@kevinkawchak
+@codex
+@claude
+
+## Notes
+“FORMAT”
+
+
+
+“PROCESSING”
+[CC_PROCESSING]
+Model: {ID} | API turns: {n}
+Agents spawned: {total} (Bash:{n} Explore:{n} Plan:{n} general-purpose:{n})
+Tool calls: {total} | Read:{n} Edit:{n} Write:{n} Glob:{n} Grep:{n} Bash:{n} WebFetch:{n} WebSearch:{n} Task:{n} TodoWrite:{n}
+Anthropic features: {e.g. extended thinking, tool use, agentic loop, prompt caching}
+Hooks: {active or "none"} | Skills: {invoked or "none"} | Plugins: {used or "none"}
+MCP servers: {count} ({names or "none"})
+Files: read:{n} written:{n} edited:{n} | LOC: +{added} -{removed}
+[/CC_PROCESSING]
+
+Report actual counts. "N/A" if unknown. Do not omit lines.
+“PROCESSING”
+
 ## Multi-Station Competition Prompt (v0.2.0)
 
 > First, address peer review recommendations in kevinkawchak/robot-competition-clinical/blob/main/peer-review/v0.1.1-senior-peer-review.md. After finishing, document your changes in peer-review, changelog, and releases.
@@ -45,6 +85,43 @@
 >
 > Report actual counts. "N/A" if unknown. Do not omit lines.
 > "PROCESSING"
+
+## Senior Software Engineer Code Review Prompt (v0.1.1)
+You are a senior software engineer that provides comprehensive code reviews to find errors and flaws across the entire kevinkawchak/robot-competition-clinical GitHub codebase. Provide all fixes needed, which will be provided to Claude code to make corrections. Add your code fix recommendations as a new .md to the “peer-review” directory under main. Do not fix any code. Make sure to clone from the current repo state.
+
+When you are finished, provide a list of new additions and what changed from old to new files. The user will then review your lists prior to committing changes. Provide an update to the changelog (v0.1.1), and add new release notes in the releases.md (v0.1.1) folder using the format below. Include metrics that help track your peer-review process along with your final recommendation metrics (code specifics, number of recommended code fixes, etc.) 
+
+In summary, update the repository (changelog.md, releases.md, peer-review directory and .md) according to your end to end senior software engineer peer review recommendations. A single pull request will be merged by the user at the end.
+
+“FORMAT”
+Release title 
+v0.1.1 - 
+
+## Summary
+
+## Features
+
+## Contributors
+@kevinkawchak
+@codex
+@claude
+
+## Notes
+“FORMAT”
+
+
+Separately, provide your processing details.
+[CC_PROCESSING]
+Model: {ID} | API turns: {n}
+Agents spawned: {total} (Bash:{n} Explore:{n} Plan:{n} general-purpose:{n})
+Tool calls: {total} | Read:{n} Edit:{n} Write:{n} Glob:{n} Grep:{n} Bash:{n} WebFetch:{n} WebSearch:{n} Task:{n} TodoWrite:{n}
+Anthropic features: {e.g. extended thinking, tool use, agentic loop, prompt caching}
+Hooks: {active or "none"} | Skills: {invoked or "none"} | Plugins: {used or "none"}
+MCP servers: {count} ({names or "none"})
+Files: read:{n} written:{n} edited:{n} | LOC: +{added} -{removed}
+[/CC_PROCESSING]
+
+Report actual counts. "N/A" if unknown. Do not omit lines.
 
 ## Initial Build Prompt (v0.1.0)
 
