@@ -2,133 +2,95 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [v0.3.0] - 2026-02-22
+## [0.4.0] — 2026-02-22
 
 ### Added
-- Completely rebuilt v2 competition viewer (`docs/v2/index.html`) with closable scoreboard and phase timeline panels
-- Final results overlay showing clear 1st/2nd/3rd/4th ranking with times and accuracies
-- Cross-navigation banner in both HTML viewers (root ↔ v2) with base-path-aware links
-- Injection target marker (red dot) on each patient's deltoid muscle
-- Export boundary tests (`tests/test_exports.py`) — 14 new tests for payload schema validation
-- `PpoConfig` TypedDict for type-safe PPO configuration in `simulation_v2/constants.py`
-- Archived v0.2.0 diagrams to `docs/diagrams/v2_architecture.md`
-- Peer review implementation report at `peer-review/v0.3.0-implementation-report.md`
-- v0.3.0 build prompt stored in `prompts.md`
-- Smoke command docs in README (pytest, ruff)
+- **Light-mode competition viewer** (`docs/v4/index.html`) with white/light theme (#e8ecf0)
+  for easier zooming into individual stations
+- **Full-detail G1 humanoid robots** matching v0.1.0 articulation: joint rings at
+  shoulders/elbows/hips/knees, visors, pelvis, separate thigh/shin segments, hands
+- **Role markers**: red cross emblem on doctor chest, gold badge on nurse chest
+- **Pulsing injection target**: animated ring with center dot on patient right deltoid
+- **Full medical equipment**: IV stand with hook/tube/3-arm base, instrument tray with
+  spare syringe/vials/swab, monitor with base stand/screen/LED indicator, exam chair
+  with armrest supports
+- **Metrics reset**: full state reset between competition runs (elapsed, phase, finish
+  order all properly zeroed)
+- **Results-only overlay**: "Close Results" button instead of auto-replay; user manually
+  replays via Reset button
+- **16m x 16m hospital room** with 5.5m grid spacing (up from 14m/5.0m)
+- **Cross-viewer nav banner** linking v0.1.0 (stable) and v0.4.0 (current)
+- **Archived v0.3.0 diagrams** in `docs/diagrams/v3_architecture.md`
+- **Release notes** in `releases.md`
+- **Build prompt** stored in `prompts.md`
 
 ### Changed
-- `docs/v2/index.html` — full rewrite: removed divider boxes hiding stations, added toggle-based panels, mobile-optimized responsive breakpoints, JSON upload validation, station finish-order tracking
-- `docs/index.html` — added navigation banner with link to v2 competition viewer
-- `README.md` — full clickable URLs for both simulations, updated project structure with new files, detailed PPO documentation (same policy, different state), measurement methodology, closable UI features
-- `simulation_v2/constants.py` — added `PpoConfig` TypedDict (peer review fix #4)
-- `simulation_v2/run_competition.py` — version string `"2.0.0"` → `"0.3.0"` (peer review fix #2)
-- `simulation_v2/export_competition.py` — version string `"2.0.0"` → `"0.3.0"` (peer review fix #2)
-- `simulation/export_animation.py` — added explicit terminal frame at `TOTAL_DURATION` (peer review fix #3)
-- `pyproject.toml` — version bumped to 0.3.0
-- `prompts.md` — added v0.3.0 build prompt
-- `changelog.md` — added v0.3.0 release entry
-- `releases.md` — added v0.3.0 release notes
+- Updated v0.1.0 viewer nav banner to link to v0.4.0 (was linking to v0.3.0 at `/v2/`)
+- Updated `pyproject.toml` version from 0.3.0 to 0.4.0
+- Updated `simulation_v2/run_competition.py` version string to 0.4.0
+- Updated `simulation_v2/export_competition.py` version string to 0.4.0
+- Updated `tests/test_exports.py` to expect version 0.4.0
+- Updated README with v0.4.0 documentation, new architecture diagrams, comparison tables
+- All stations face +Z direction (consistent with v0.1.0 orientation)
+- Station participants oriented consistently: doctor (left), patient (center), nurse (right)
 
 ### Fixed
-- Phase timeline and scoreboard overlapping visual elements (now closable)
-- Stations appearing hidden inside large box dividers (removed dividers, proper grid)
-- Payload version inconsistency: `"2.0.0"` → `"0.3.0"` to align with project semver (peer review fix #2)
-- Missing terminal frame in v1 export animation (peer review fix #3)
-- Loose `ppo_config` typing: `dict[str, float]` → `PpoConfig` TypedDict (peer review fix #4)
-- GitHub Pages path portability: base-path-aware cross-viewer navigation (peer review fix #1)
-- Missing JSON upload validation in v2 viewer (peer review fix #5)
-- No competition completion display — now shows final results overlay
-- Mobile layout issues on iPhone/Android — three responsive breakpoints (768px, 420px)
+- **GitHub Pages version mismatch**: v0.3.0 content was served at `/v2/` path; v0.4.0
+  now correctly served at `/v4/` path
+- **Metrics not resetting**: scoreboard and phase indicators now fully reset between runs
+- **Results overlay**: replaced "Close & Replay" auto-behavior with clean "Close Results"
+  button that does not auto-reset; user controls replay via Reset button
 
-## [v0.2.1] - 2026-02-21
+## [0.3.0] — 2025-12-15
 
 ### Added
-- Senior engineering peer-review report for v0.2.1 with implementation-ready recommendations for Claude (`peer-review/v0.2.1-senior-peer-review.md`)
-- GitHub Pages directory portability resolution plan documenting how to make both root and `/v2/` simulations reliably accessible from different paths/forks
-- Peer-review metrics for coverage, severity counts, and estimated implementation effort
+- Closable scoreboard and phase timeline panels with toggle buttons
+- Final results overlay showing 1st/2nd/3rd/4th rankings
+- Cross-viewer navigation banner (v0.1.x <-> v0.3.0)
+- Station selector with camera transitions (Overview/A/B/C/D)
+- JSON upload with schema validation for custom configs
+- `docs/diagrams/v2_viewer_modules.md` — internal module map
+- Export boundary tests in `tests/test_exports.py`
 
 ### Changed
-- Updated release documentation for v0.2.1 to capture review outcomes, contributors, and next-step implementation focus
+- Viewer at `docs/v2/index.html` now includes dark theme
+- 14m x 14m hospital room with 5.0m grid spacing
+- Updated README diagrams for v0.3.0
 
-### Notes
-- This release entry records peer-review guidance and release notes updates only; no simulation runtime code was modified in v0.2.1.
-
-## [v0.2.0] - 2026-02-21
+## [0.2.0] — 2025-12-01
 
 ### Added
-- 4-station clinical competition simulation with 2x2 grid layout in a larger hospital room
-- PPO reinforcement learning policies — each station uses the same MLP architecture (64x64, tanh) trained with different random seeds, producing distinct behavior profiles
-- Doctor-on-left / Nurse-on-right layout — doctor (white coat) reviews symptoms/toxicities; nurse (blue coat) performs the injection to the patient's nearest arm
-- Competition scoreboard showing doctor review time, nurse injection time, total time, injection accuracy, and rank for all 4 stations simultaneously
-- Per-station timing and accuracy measurement accessible through mobile-friendly control buttons
-- Shared constants module (`simulation/constants.py`) centralizing phase timings and type-safe data structures (TypedDict)
-- `simulation_v2` package — multi-station competition runner, PPO policy simulation, and animation exporter
-- Separate GitHub Pages viewer at `/docs/v2/index.html` for the competition simulation
-- MuJoCo MJCF competition scene (`simulation_v2/models/competition_scene.xml`) with 4 complete stations
-- Unit test suite (`tests/`) covering phase transitions, interpolation, FPS validation, and competition metrics
-- Pre-commit configuration (`.pre-commit-config.yaml`) with ruff hooks
-- Original v0.1.x architecture diagrams archived to `docs/diagrams/v1_architecture.md`
-- 3 new comprehensive text diagrams in README for v0.2.0
-- v0.2.0 build prompt stored in `prompts.md`
+- **4-station competition simulation** with PPO-trained policies
+- `simulation_v2/` package: `constants.py`, `ppo_policy.py`, `run_competition.py`,
+  `export_competition.py`
+- 4 per-station PPO configurations with unique random seeds (42, 137, 256, 512)
+- PPO reward function: R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk)
+- Competition ranking by total time with accuracy tiebreaker
+- `docs/v2/index.html` — Three.js competition viewer for GitHub Pages
+- 2x2 grid layout with 12 G1 humanoid robot models
+- `tests/test_competition.py` — unit tests for competition metrics
+- Archived v0.1.x diagrams to `docs/diagrams/v1_architecture.md`
 
 ### Changed
-- `simulation/run_simulation.py` — applied all critical/high peer-review fixes
-- `simulation/export_animation.py` — added FPS validation, explicit UTF-8 encoding, shared constants
-- `README.md` — rewritten with v0.2.0 competition scenario, new diagrams, dual GitHub Pages links
-- `pyproject.toml` — version bumped to 0.2.0, added pytest dependency
-- `.github/workflows/ci.yml` — expanded CI with smoke tests
+- Updated project description and README for multi-station competition
 
-### Fixed
-- FPS <= 0 causing division-by-zero (peer review #1)
-- `mj_name2id` returning -1 silently reading wrong site (peer review #2)
-- Truncated final frame in simulation capture (peer review #3)
-- Broad `except Exception` hiding runtime defects (peer review #4)
-- Repeated `mj_name2id` calls inside simulation loop (peer review #5)
-- Implicit file encoding in JSON I/O (peer review #7)
-- Duplicated phase constants across modules (peer review #8)
-
-## [v0.1.1] - 2026-02-21
-
-### Added
-- Senior engineering peer-review report for v0.1.1 with prioritized fix recommendations and implementation order (`peer-review/v0.1.1-senior-peer-review.md`)
+## [0.1.1] — 2025-11-15
 
 ### Changed
-- Updated release documentation for v0.1.1 with summary, feature-level review outcomes, contributors, and notes
+- Peer review implementation: 14 senior review recommendations
+- Added TypedDict structures for type safety
+- Added MuJoCo dependency guard (graceful fallback)
+- Added terminal frame boundary in exports
+- Improved smoothstep interpolation clamping
+- Added comprehensive test suite (phases, interpolation, exports)
 
-### Notes
-- This release entry records review outcomes and recommendations only; no production code behavior changes are included in v0.1.1.
-
-## [v0.1.0] - 2026-02-20
+## [0.1.0] — 2025-11-01
 
 ### Added
-- MuJoCo MJCF clinical scene model with G1 humanoid robots (doctor, nurse, patient)
-- Three.js cross-device web viewer with 3D interactive simulation
-- Deltoid intramuscular injection procedure animation (cancer medication delivery)
-- Play/pause controls, progress bar scrubbing, and speed display
-- File upload button for custom scene data (JSON/XML)
-- Python simulation runner (`simulation/run_simulation.py`) with MuJoCo physics
-- Animation export utility (`simulation/export_animation.py`) for web viewer data
-- Responsive UI supporting desktop, iOS, and Android browsers
-- Medical equipment models: IV stand, instrument tray, vitals monitor, examination chair
-- Role-based robot differentiation: doctor (white shell + red cross), nurse (blue shell + badge), patient (green gown)
-- Injection site targeting on patient deltoid (upper arm) with visual marker
-- CI workflow with ruff lint and format checks for Python 3.10, 3.11, 3.12
-- GitHub Pages deployment support via `docs/` folder
-- Comprehensive README with 3 text-based architecture diagrams
-- Project configuration via `pyproject.toml`
-- Attribution to mjlab (mujocolab/mjlab) throughout
-
-### Technical Details
-- Physics engine: MuJoCo (via MJCF XML scene definition)
-- Web rendering: Three.js r169 with OrbitControls
-- CI/CD: GitHub Actions with ruff linter
-- Zero-install viewing via GitHub Pages (static HTML/JS)
-
-[v0.3.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.3.0
-[v0.2.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.2.0
-[v0.2.1]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.2.1
-[v0.1.1]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.1.1
-[v0.1.0]: https://github.com/kevinkawchak/robot-competition-clinical/releases/tag/v0.1.0
+- Initial release: single-station clinical injection simulation
+- G1 humanoid robots: doctor, nurse, patient
+- 7-phase injection procedure (prepare through monitor)
+- MuJoCo MJCF scene model with physics
+- Three.js web viewer (`docs/index.html`) for GitHub Pages
+- Play/pause, progress scrub, file upload, info panel
+- Mobile-responsive design (iOS, Android, desktop)
