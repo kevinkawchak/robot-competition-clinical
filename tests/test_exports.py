@@ -73,7 +73,7 @@ class TestV2ExportPayload:
 
     def test_version_is_project_aligned(self) -> None:
         data = generate_competition_animation(fps=10)
-        assert data["version"] == "0.4.0"
+        assert data["version"] == "0.5.0"
 
     def test_four_stations_exported(self) -> None:
         data = generate_competition_animation(fps=10)

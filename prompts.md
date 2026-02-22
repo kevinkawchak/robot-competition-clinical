@@ -1,5 +1,33 @@
 # Prompts
 
+## v0.5.0 Implementation Prompt
+
+Clone the most updated kevinkawchak/robot-competition-clinical repository. Move prior v0.4.0 docs and diagrams to a .md in docs/diagrams. Update Readme, diagrams, project structure, etc. to reflect your new v0.5.0. The new simulation should have links to v0.1.0 and v0.5.0 at the top (use only the versions IDs listed in this sentence). Keep the competition theme and light mode visualizations for v0.5.0. Remove the top off of the building to see through. Your latest simulation stations should be as detailed in robots and props and as correctly functional as in v0.1.0 (used as the template)(make sure v0.5.0 contains 4 of the exact stations and human robots used in v0.1.0). Test and run the simulation on your own. Provide results of the simulations you run. Keep the layout and buttons.
+
+Use maximum tokens and processing. Don't stall without updates during processing. Update all documentation, changelog, readme, text diagrams, etc. to state exactly how the simulation was performed (did each station have the same policy, did each station have a different state, what were the programmed rewards, were all the policies PPO reinforcement learning, how was time and accuracy measured, etc)?
+
+The new simulation should work out of the box. Store this exact prompt in prompts.md under main. Update changelog.md (v0.5.0) and other relevant files under main.
+
+Be sure to fix and address errors that would cause failed checks for the single pull request (such as Python environment issues to avoid the following error during final checks): "3 failing checks
+x Cl / lint-and-format (3.10) (pull...
+x Cl / lint-and-format (3.11) (pull...
+x Cl / lint-and-format (3.12) (pull... " When you are finished, provide a list of new additions and what changed from old to new files. The user will then review your lists prior to committing changes. Provide new release notes in the releases.md folder under main using the format shown below.
+
+"FORMAT"
+Release title
+v0.5.0 -
+
+## Summary
+
+## Features
+
+## Contributors
+@kevinkawchak
+@claude
+@codex
+
+## Notes
+
 ## v0.4.0 Implementation Prompt
 
 Clone the most updated kevinkawchak/robot-competition-clinical repository. Fix all GitHub pages links and versions issue (v0.3.0 link is v3 for GitHub.io) Move prior v0.2.0/v0.3.0 docs and diagrams to a .md in docs/diagrams. Update Readme, diagrams, project structure, etc. for your new v0.4.0. The new simulation should have links to both the stable v0.1.0 and the new v0.4.0 at the top. Use light mode visualizations for v0.4.0 to make zooming into each station easier to find. Your latest simulation took shortcuts regarding the simulated robots (degrees of freedom were reduced),  both hospital setting and props were simplified. Also you need to make sure the orientation of each participant in every station is pointing in the same direction as in v0.1.0. Each station should be as detailed and functional as in v0.1.0. Test and run the simulation on your own. Provide results of the simulations you run. Keep the layout and buttons, except for the metrics aren't resetting between runs, and instead of close and replay, it should just show results to close out of (and user can manually replay).
