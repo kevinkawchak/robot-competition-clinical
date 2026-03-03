@@ -2,6 +2,54 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] — 2026-03-03
+
+### Added
+- **v0.6.0 competition viewer** (`docs/v6/index.html`) with realistic Unitree G1 humanoid robots
+  (from unitreerobotics) as doctors and nurses, and a realistic human patient
+- **Realistic Unitree G1 robot models** — dark charcoal body panels, glossy black visor head,
+  metallic silver joints, three-fingered dexterous hands (Dex3-1), 23–43 DOF articulation,
+  matching the real G1's 1.32m height and compact industrial design
+- **Human patient model** — skin-colored human figure with proper anatomy (head with hair,
+  arms, legs), wearing green hospital gown, seated correctly facing forward in exam chair
+- **Doctor G1 robot** wears semi-transparent white medical coat overlay with red cross emblem,
+  firmly holds syringe in right dexterous hand with visible grip
+- **Nurse G1 robot** wears semi-transparent blue medical coat overlay with gold badge,
+  holds tablet/clipboard for monitoring
+- **Injection target on patient** — red pulsing marker placed directly on patient's right
+  deltoid (upper arm), not floating in space
+- **Smoother robot animations** — finer interpolation for more natural doctor arm movements
+  during 7-phase injection procedure
+- **Lowered station labels** — "Station A/B/C/D" labels positioned closer to robot heads
+  (y=2.4) instead of floating too high above (was y=3.2)
+- **Three-version nav banner** — clickable links to v0.1.0, v0.5.0, and v0.6.0 (current)
+- **v0.6.0 release notes** in `releases.md`
+- **v0.6.0 build prompt** in `prompts.md`
+- **v0.5.0 architecture diagrams** archived in `docs/diagrams/v5_architecture.md`
+
+### Changed
+- **Nav banner** now shows three versions: v0.1.0 | v0.5.0 | v0.6.0 (current)
+- Updated v0.1.0 viewer nav banner to link to v0.5.0 and v0.6.0
+- Updated v0.5.0 viewer nav banner to link to v0.1.0 and v0.6.0
+- Updated `pyproject.toml` version from 0.5.0 to 0.6.0
+- Updated `simulation_v2/run_competition.py` version string to 0.6.0
+- Updated `simulation_v2/export_competition.py` version string to 0.6.0
+- Updated `tests/test_exports.py` to expect version 0.6.0
+- Updated README with v0.6.0 documentation, version table with release links, new diagrams
+- Robot models upgraded from basic CapsuleGeometry humanoids to realistic Unitree G1 representation
+- Patient model changed from robot to realistic human figure
+
+### Fixed
+- **Patient orientation**: Patient now sits facing forward in the chair (was reversed in v0.5.0)
+- **Patient anatomy**: Patient now has arms that rest on armrests (was missing arms)
+- **Patient legs**: Legs hang correctly in front of chair (were extending through backrest)
+- **Injection target placement**: Red target marker now positioned on patient's actual right
+  deltoid arm surface (was floating detached from patient)
+- **Doctor holding needle**: Syringe firmly attached to doctor's dexterous hand with visible
+  grip (was loosely positioned)
+- **Station label height**: Labels lowered from y=3.2 to y=2.4, closer to station participants
+- **Robot movement quality**: Smoother, less coarse animations with additional interpolation steps
+
 ## [0.5.0] — 2026-02-22
 
 ### Added

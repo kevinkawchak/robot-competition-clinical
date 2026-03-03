@@ -1,13 +1,16 @@
 # Clinical Robot Competition
 
-MuJoCo-based clinical trial simulation with Unitree G1 humanoid robots competing
-across **four simultaneous stations** in a 2x2 grid. Each station replicates the
-**v0.1.0 single-station layout**: a **doctor** (white coat, right of patient) performs
-a 7-phase deltoid injection with syringe, while a **nurse** (blue coat, left of patient)
-monitors the procedure with a tablet. All stations are driven by **PPO reinforcement
+MuJoCo-based clinical trial simulation with **realistic Unitree G1 humanoid robots**
+(from [unitreerobotics](https://www.unitree.com/g1/)) competing across **four simultaneous
+stations** in a 2x2 grid. A **doctor G1 robot** (white medical coat, right of patient) performs
+a 7-phase deltoid injection with syringe, while a **nurse G1 robot** (blue medical coat, left
+of patient) monitors the procedure with a tablet. A **realistic human patient** sits correctly
+in the exam chair receiving the injection. All stations are driven by **PPO reinforcement
 learning** policies with distinct behavior profiles from different random seeds.
 
-The building ceiling is removed so viewers can see through the hospital room from above.
+The objective is to illustrate that having competitions across multiple autonomous robots is
+advantageous for making future fully autonomous physical AI oncology trials faster than current
+human trials.
 
 Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
 (mujocolab/mjlab), extending GPU-accelerated robot simulation into clinical
@@ -20,8 +23,9 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 **Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
-| Simulation | URL | Description |
+| Version | URL | Description |
 |---|---|---|
+| **v0.6.0 Competition (current)** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient |
 | **v0.5.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v5/](https://kevinkawchak.github.io/robot-competition-clinical/v5/) | 4-station PPO competition (light mode, open-top) |
 | **v0.1.0 Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection (stable) |
 
@@ -31,22 +35,25 @@ When all stations finish, a **Competition Results** overlay displays the final
 1st/2nd/3rd/4th ranking with times and accuracies. Close the overlay and use
 **Reset** to replay.
 
-## What This Simulates (v0.5.0)
+## What This Simulates (v0.6.0)
 
-Four identical stations compete simultaneously, each replicating the v0.1.0 single-station
-layout. Every station uses the same PPO policy architecture but with different random seed
-initialization, producing distinct timing and accuracy behavior.
+Four identical stations compete simultaneously. Each station features **realistic Unitree G1
+humanoid robots** (from unitreerobotics) as the doctor and nurse, with a **realistic human
+patient** seated in an exam chair. Every station uses the same PPO policy architecture but
+with different random seed initialization, producing distinct timing and accuracy behavior.
 
-### v0.5.0 Changes from v0.4.0
+### v0.6.0 Changes from v0.5.0
 
-| Aspect | v0.4.0 | v0.5.0 |
+| Aspect | v0.5.0 | v0.6.0 |
 |---|---|---|
-| Station layout | Doctor LEFT (tablet), Nurse RIGHT (syringe) | **Doctor RIGHT (syringe), Nurse LEFT (tablet)** — matches v0.1.0 |
-| Procedure | 4 doctor review + 6 nurse injection phases | **7 doctor injection phases** — matches v0.1.0 |
-| Building | Ceiling present | **No ceiling** — see through from above |
-| Humanoids | CylinderGeometry arms, simple groups | **CapsuleGeometry limbs, hierarchical joint groups** — v0.1.0 articulation |
-| Nav banner | v0.1.0, v0.3.0, v0.4.0 links | **v0.1.0 and v0.5.0 only** |
-| URL path | `/v4/` | **`/v5/`** |
+| Robot models | Basic CapsuleGeometry humanoids | **Realistic Unitree G1** — dark charcoal body, visor head, Dex3-1 hands |
+| Patient | Robot in green gown (reversed, no arms) | **Realistic human** — skin-colored, hair, arms on armrests, facing forward |
+| Injection target | Floating near patient | **On patient's right deltoid** — directly on upper arm surface |
+| Doctor grip | Syringe loosely near hand | **Firm dexterous hand grip** — syringe held in G1 three-fingered hand |
+| Station labels | Too high (y=3.2) | **Lowered (y=2.4)** — closer to participant heads |
+| Animations | Coarse movements | **Smoother interpolation** — finer, more natural motion |
+| Nav banner | v0.1.0 and v0.5.0 | **v0.1.0, v0.5.0, and v0.6.0 (current)** |
+| URL path | `/v5/` | **`/v6/`** |
 
 ### Station Layout (2x2 Grid)
 
@@ -57,13 +64,13 @@ initialization, producing distinct timing and accuracy behavior.
 | **C** | Back-left | 256 | 1.08x | Highest | Accuracy-focused |
 | **D** | Back-right | 512 | 0.95x | High | Cautious |
 
-### Role Assignments (v0.1.0 Layout)
+### Role Assignments (v0.6.0 — Unitree G1 Robots + Human Patient)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor | Right of patient | White coat, red cross | Syringe | Performs 7-phase injection |
-| Patient | Center (seated) | Green gown | Exam chair | Receives injection (right arm) |
-| Nurse | Left of patient | Blue coat, gold badge | Tablet | Monitors procedure |
+| Doctor (G1) | Right of patient | Dark charcoal G1 body, white medical coat overlay, red cross, visor head | Syringe in Dex3-1 hand | Performs 7-phase injection |
+| Patient (Human) | Center (seated) | Skin-colored human, dark hair, green hospital gown | Exam chair | Receives injection (right deltoid) |
+| Nurse (G1) | Left of patient | Dark charcoal G1 body, blue medical coat overlay, gold badge, visor head | Tablet in hand | Monitors procedure |
 
 ### 7-Phase Injection Procedure Per Station (v0.1.0)
 
@@ -106,7 +113,7 @@ objectives: speed (finish fast), accuracy (needle close to target), and smoothne
 - **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
 - **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
 
-### Simulation Results (v0.5.0)
+### Simulation Results (v0.6.0)
 
 Results from `python -m simulation_v2.run_competition`:
 
@@ -122,14 +129,16 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 
 ## Features
 
+- **Realistic Unitree G1 Robots** (v0.6.0): Doctor and nurse are G1 humanoid robots from unitreerobotics — dark charcoal body, glossy visor head, metallic joints, Dex3-1 three-fingered dexterous hands, 23–43 DOF
+- **Realistic Human Patient** (v0.6.0): Skin-colored human with hair, arms, legs, green gown — seated correctly facing forward with arms on armrests
+- **Injection Target on Patient** (v0.6.0): Red pulsing marker placed directly on patient's right deltoid
+- **Doctor Grips Syringe** (v0.6.0): Syringe firmly held in G1's dexterous three-fingered hand
+- **Smooth Animations** (v0.6.0): Finer interpolation for natural doctor/nurse movements
 - **4-Station Competition**: Simultaneous independent simulation across all stations
-- **v0.1.0 Station Layout**: Doctor (right, syringe) performs injection, nurse (left, tablet) monitors
 - **7-Phase Procedure**: Matching v0.1.0's exact injection procedure per station
 - **PPO RL Policies**: Distinct behavior from seeded policy training
 - **Open-Top Building**: No ceiling for unobstructed viewing from above
-- **Light-Mode Viewer** (v0.5.0): White/light theme for easy station inspection
-- **Articulated Humanoids**: CapsuleGeometry limbs, hierarchical joint groups (shoulder/elbow/wrist)
-- **Joint Detail**: Rings at every articulation, visors, role markers (red cross, gold badge)
+- **Light-Mode Viewer**: White/light theme for easy station inspection
 - **Full Medical Equipment**: IV stand, instrument tray, vitals monitor, exam chair per station
 - **Pulsing Injection Marker**: Red dot with animated ring on patient right deltoid
 - **Closable Scoreboard**: Toggle on/off — total time, accuracy, needle distance, rank
@@ -146,49 +155,50 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 
 ## Architecture Diagrams
 
-### Diagram 1: Multi-Station Competition Architecture (v0.5.0)
+### Diagram 1: Multi-Station Competition Architecture (v0.6.0)
 
 ```
 +----------------------------------------------------------------------+
-|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.5.0       |
-|  4-Station PPO Simulation — v0.1.0 Layout, Open-Top, Light-Mode     |
+|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.6.0       |
+|  Realistic Unitree G1 Robots + Human Patient, Open-Top, Light-Mode  |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |  MuJoCo Backend      |        |   Three.js Competition Viewer |   |
-|  |  (Python)            |        |   (HTML/JS - docs/v5/)        |   |
+|  |  (Python)            |        |   (HTML/JS - docs/v6/)        |   |
 |  |                      |        |                               |   |
 |  | +------------------+ |  JSON  | +---------------------------+ |   |
 |  | | competition_scene| | -----> | | 4-Station 3D Renderer    | |   |
 |  | | .xml (4 stations)| | export | | - 2x2 Grid (5.5m space)  | |   |
-|  | +------------------+ |        | | - 12 Articulated G1 Bots | |   |
-|  |        |             |        | | - CapsuleGeom + joints    | |   |
-|  |        v             |        | | - Role markers            | |   |
-|  | +------------------+ |        | | - Pulsing inject target   | |   |
-|  | | ppo_policy.py    | |        | | - 4x Full Equipment      | |   |
-|  | | - PPO MLP 64x64  | |        | | - NO ceiling (see thru)  | |   |
-|  | | - 4 seed configs | |        | +---------------------------+ |   |
-|  | | - Reward function| |        |          |                    |   |
-|  | +------------------+ |        |          v                    |   |
+|  | +------------------+ |        | | - 8 Unitree G1 Robots    | |   |
+|  |        |             |        | | - 4 Human Patients        | |   |
+|  |        v             |        | | - G1: dark body + visor   | |   |
+|  | +------------------+ |        | | - Dex3-1 hands + coats   | |   |
+|  | | ppo_policy.py    | |        | | - Target ON patient arm   | |   |
+|  | | - PPO MLP 64x64  | |        | | - 4x Full Equipment      | |   |
+|  | | - 4 seed configs | |        | | - NO ceiling (see thru)  | |   |
+|  | | - Reward function| |        | +---------------------------+ |   |
+|  | +------------------+ |        |          |                    |   |
+|  |        |             |        |          v                    |   |
+|  |        v             |        | +---------------------------+ |   |
+|  | +------------------+ |        | | Per-Station Animation    | |   |
+|  | | run_competition  | |        | | - 7 doctor phases (v0.1) | |   |
+|  | | .py              | |        | | - Smooth G1 arm motion   | |   |
+|  | | - 4 stations     | |        | | - Independent timing      | |   |
+|  | | - Metrics/rank   | |        | | - Dexterous hand grip    | |   |
+|  | +------------------+ |        | | - Finish-order tracking   | |   |
 |  |        |             |        | +---------------------------+ |   |
-|  |        v             |        | | Per-Station Animation    | |   |
-|  | +------------------+ |        | | - 7 doctor phases (v0.1) | |   |
-|  | | run_competition  | |        | | - Nurse monitors          | |   |
-|  | | .py              | |        | | - Independent timing      | |   |
-|  | | - 4 stations     | |        | | - Hierarchical arm anim   | |   |
-|  | | - Metrics/rank   | |        | | - Finish-order tracking   | |   |
-|  | +------------------+ |        | +---------------------------+ |   |
-|  |        |             |        |          |                    |   |
-|  |        v             |        |          v                    |   |
-|  | +------------------+ |        | +---------------------------+ |   |
-|  | | export_competitn | |        | | Light-Mode UI (v0.5.0)   | |   |
-|  | | .py              | |        | | - #e8ecf0 background      | |   |
-|  | | - Station frames | |        | | - Closable scoreboard     | |   |
-|  | | - JSON output    | |        | | - Closable phase timeline | |   |
-|  | | - Schema v0.5.0  | |        | | - Results overlay (close) | |   |
-|  | +------------------+ |        | | - Metrics reset on replay | |   |
-|  |                      |        | | - v0.1.0 + v0.5.0 banner  | |   |
-|  +----------------------+        | +---------------------------+ |   |
+|  |        v             |        |          |                    |   |
+|  | +------------------+ |        |          v                    |   |
+|  | | export_competitn | |        | +---------------------------+ |   |
+|  | | .py              | |        | | Light-Mode UI (v0.6.0)   | |   |
+|  | | - Station frames | |        | | - #e8ecf0 background      | |   |
+|  | | - JSON output    | |        | | - Closable scoreboard     | |   |
+|  | | - Schema v0.6.0  | |        | | - Closable phase timeline | |   |
+|  | +------------------+ |        | | - Results overlay (close) | |   |
+|  |                      |        | | - Metrics reset on replay | |   |
+|  +----------------------+        | | - v0.1/v0.5/v0.6 banner   | |   |
+|                                  | +---------------------------+ |   |
 |                                  +-------------------------------+   |
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
@@ -200,6 +210,7 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 |  +----------------------+        +-------------------------------+   |
 |                                                                      |
 |  Attribution: Inspired by mjlab (mujocolab/mjlab)                   |
+|  G1 Robots: Unitree Robotics (unitreerobotics)                      |
 +----------------------------------------------------------------------+
 ```
 
@@ -249,38 +260,41 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 3: v0.5.0 3D Layout and Technology Stack
+### Diagram 3: v0.6.0 3D Layout and Technology Stack
 
 ```
 +----------------------------------------------------------------------+
-|      3D LAYOUT & TECHNOLOGY STACK (v0.5.0 — Open-Top Building)       |
+|      3D LAYOUT & TECHNOLOGY STACK (v0.6.0 — G1 Robots + Human)      |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +---------- HOSPITAL ROOM (16m x 16m, NO CEILING) --------------+  |
 |  |                    (open top — see through)                    |  |
 |  |  +-- Station A --------+    +-- Station B --------+           |  |
-|  |  | [Nrs]  [Pat]  [Doc] |    | [Nrs]  [Pat]  [Doc] |           |  |
-|  |  |  (L)   chair   (R)  |    |  (L)   chair   (R)  |           |  |
-|  |  |  tab   IV+mon  syr  |    |  tab   IV+mon  syr  |           |  |
-|  |  |  +     [target]    X |    |  +     [target]    X |           |  |
+|  |  | [G1n]  [Hum]  [G1d] |    | [G1n]  [Hum]  [G1d] |          |  |
+|  |  | blue   chair  white  |    | blue   chair  white  |          |  |
+|  |  | tab    IV+mon  syr   |    | tab    IV+mon  syr   |          |  |
+|  |  |  +   [*deltoid*]  X  |    |  +   [*deltoid*]  X  |          |  |
 |  |  +----------------------+    +----------------------+           |  |
 |  |        5.5m spacing               5.5m spacing                 |  |
 |  |  +-- Station C --------+    +-- Station D --------+           |  |
-|  |  | [Nrs]  [Pat]  [Doc] |    | [Nrs]  [Pat]  [Doc] |           |  |
-|  |  |  (L)   chair   (R)  |    |  (L)   chair   (R)  |           |  |
-|  |  |  tab   IV+mon  syr  |    |  tab   IV+mon  syr  |           |  |
-|  |  |  +     [target]    X |    |  +     [target]    X |           |  |
+|  |  | [G1n]  [Hum]  [G1d] |    | [G1n]  [Hum]  [G1d] |          |  |
+|  |  | blue   chair  white  |    | blue   chair  white  |          |  |
+|  |  | tab    IV+mon  syr   |    | tab    IV+mon  syr   |          |  |
+|  |  |  +   [*deltoid*]  X  |    |  +   [*deltoid*]  X  |          |  |
 |  |  +----------------------+    +----------------------+           |  |
 |  |                                                                |  |
-|  |  Legend: X=Doctor(cross,syringe) +=Nurse(badge,tablet)         |  |
-|  |  Doc=Doctor(white,R) Pat=Patient(green) Nrs=Nurse(blue,L)     |  |
+|  |  Legend: G1d=Doctor G1(white coat,syringe,R)                   |  |
+|  |          Hum=Human Patient(skin,gown,seated)                   |  |
+|  |          G1n=Nurse G1(blue coat,tablet,L)                      |  |
+|  |          *deltoid*=Target ON patient right arm                 |  |
 |  +----------------------------------------------------------------+  |
 |                                                                      |
 |  LAYER 1: MuJoCo + PPO (Python backend)                             |
-|  LAYER 2: Three.js r169 (docs/v5/index.html)                        |
+|  LAYER 2: Three.js r169 (docs/v6/index.html)                        |
 |  LAYER 3: GitHub Pages (static hosting)                              |
 |                                                                      |
 |  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)  |
+|  ROBOTS: Unitree G1 (unitreerobotics) — unitree.com/g1/            |
 +----------------------------------------------------------------------+
 ```
 
@@ -298,7 +312,9 @@ robot-competition-clinical/
 │   │   ├── index.html                  # v0.4.0 Competition viewer (legacy)
 │   │   └── competition_data.json       # v0.4.0 animation data
 │   ├── v5/
-│   │   └── index.html                  # v0.5.0 Competition viewer (current)
+│   │   └── index.html                  # v0.5.0 Competition viewer (previous)
+│   ├── v6/
+│   │   └── index.html                  # v0.6.0 Competition viewer (current)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams
@@ -345,9 +361,9 @@ The Python backend is optional — the web viewers work independently.
 # Install dependencies
 pip install mujoco numpy
 
-# --- v0.5.0 Competition ---
+# --- v0.6.0 Competition ---
 python -m simulation_v2.run_competition
-python -m simulation_v2.export_competition --output docs/v5/competition_data.json
+python -m simulation_v2.export_competition --output docs/v6/competition_data.json
 
 # --- v0.1.0 Single Station ---
 python -m simulation.run_simulation --export output/animation.json

@@ -1,5 +1,29 @@
 # Prompts
 
+## v0.6.0 Implementation Prompt
+
+Your goal in robot-competition-clinical is to create a new v0.6.0 that represents a more visually accurate and appealing competition than v0.5.0 using realistic Unitree G1 robots as the doctors and nurses (from this exact GitHub author: unitreerobotics; not basic robots with limited DOFs), and a realistic human patient receiving the injection. The objective is to illustrate that having competitions like this across multiple robots is advantageous for making future fully autonomous physical ai oncology trials faster than current human trials. Respond "STOP" initially if you cannot implement the G1 robot before proceeding. Remove previous auto memories you have of this repo, and start fresh with this prompt and existing repo contents. Use the full Opus 4.6 1M context length to generate the fixes. Provide the exact number of tokens you used at the end; do not limit inference time or inference time compute.
+
+The prior v0.5.0 competition details regarding factors affecting how times and accuracies are scored appear correct. Refer to the prior version and main robot-competition-clinical if you need assistance with competition details and its PPO mechanics. Keep current functionality for iPhone (and other devices). The retractable menus, and user action buttons work. Abbreviate the top title to now say exactly "v0.1.0", "0.5.0", and now "v0.6.0 (current)" (all clickable which opens their respective version. The default view is v0.6.0 on the most right). Currently, issues in v0.5.0 include the patient has no arms, sits in the chair in reverse, their legs extend through the back of the chair; the red injection target is not on the patient, movements for doctors and nurses are coarse, the doctor isn't actually holding the needle, etc. The hospital equipment needs to stay. The "Station A" and for other stations above their heads is too high. Again, you will have to use your full 1M context length to be able to fix these errors, and provide a correct SOTA simulation.
+
+Make sure v0.6.0 updates show up prominently on Readme and other relevant documentation. Update the table with the new versions that includes the prior release links. Make sure to clone the current repo and utilize appropriate information regarding this pdf. Place the new release notes in releases.md under main using the format below.
+
+Provide an updated changelog (v0.6.0). Provide a copy of this prompt under the prompts.md. When you are finished, auto-push the update to GitHub on your own for my review. The user will then review your updates in GitHub prior to finalization.
+
+"FORMAT"
+Release title
+v0.6.0 -
+
+## Summary
+
+## Features
+
+## Contributors
+@kevinkawchak
+@claude
+
+## Notes
+
 ## v0.5.0 Implementation Prompt
 
 Clone the most updated kevinkawchak/robot-competition-clinical repository. Move prior v0.4.0 docs and diagrams to a .md in docs/diagrams. Update Readme, diagrams, project structure, etc. to reflect your new v0.5.0. The new simulation should have links to v0.1.0 and v0.5.0 at the top (use only the versions IDs listed in this sentence). Keep the competition theme and light mode visualizations for v0.5.0. Remove the top off of the building to see through. Your latest simulation stations should be as detailed in robots and props and as correctly functional as in v0.1.0 (used as the template)(make sure v0.5.0 contains 4 of the exact stations and human robots used in v0.1.0). Test and run the simulation on your own. Provide results of the simulations you run. Keep the layout and buttons.

@@ -1,5 +1,72 @@
 # Releases
 
+## Clinical Robot Competition — v0.6.0 Realistic Unitree G1 Robots & Human Patient
+
+v0.6.0 — 2026-03-03
+
+### Summary
+
+Major visual and accuracy upgrade introducing realistic Unitree G1 humanoid robots (from
+unitreerobotics) as the doctor and nurse at each competition station, paired with a realistic
+human patient model. The G1 robots feature dark charcoal body panels, glossy black visor heads,
+metallic silver joints, and three-fingered dexterous hands matching the real G1's industrial
+design (1.32m tall, 23–43 DOF). The patient is now a properly proportioned human figure with
+skin-colored anatomy, hair, arms resting on armrests, and correct forward-facing seated
+orientation. The injection target marker is placed directly on the patient's right deltoid.
+Doctor robot firmly grips the syringe in its dexterous hand. Station labels are lowered to
+appropriate height. All animations are smoother with finer interpolation. The objective is to
+illustrate that competitions across multiple autonomous robots can make future fully autonomous
+physical AI oncology trials faster than current human trials.
+
+### Features
+
+- Realistic Unitree G1 humanoid robot models (unitreerobotics) for doctors and nurses
+- G1 design: dark charcoal body, glossy black visor head, metallic silver joints, Dex3-1 hands
+- Doctor G1 wears semi-transparent white medical coat overlay + red cross emblem, holds syringe
+- Nurse G1 wears semi-transparent blue medical coat overlay + gold badge, holds tablet
+- Realistic human patient: skin-colored body, hair, arms, green hospital gown, proper posture
+- Patient seated correctly facing forward, arms on armrests, legs in front of chair
+- Injection target placed directly on patient's right deltoid (upper arm surface)
+- Smoother robot animations with finer interpolation throughout 7-phase procedure
+- Station labels lowered closer to participants (y=2.4 vs y=3.2)
+- Three-version nav banner: v0.1.0 | v0.5.0 | v0.6.0 (current)
+- All v0.5.0 competition mechanics preserved: PPO policies, 4 stations, same scoring
+- Light-mode theme with competition scoreboard, phase timeline, results overlay
+- Cross-device support: desktop, iPhone, Android, tablet
+- Archived v0.5.0 diagrams in docs/diagrams/v5_architecture.md
+
+### Contributors
+@kevinkawchak
+@claude
+
+### Notes
+
+- The v0.6.0 viewer is at `/v6/` on GitHub Pages
+- All four stations use the **same PPO policy architecture** (MLP 64x64, tanh activation)
+  but with **different random seeds** (42, 137, 256, 512), producing distinct timing profiles
+- **Same policy, different state**: Each station's 7-phase durations are jittered by its
+  unique seed. The PPO reward R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk) balances speed,
+  accuracy, and smoothness — all stations optimize the same reward but converge to different
+  local optima due to different initialization
+- **Time measurement**: Total elapsed seconds from the start of the prepare phase through
+  the end of the monitor phase (all 7 phases summed)
+- **Accuracy measurement**: Simulated Euclidean distance between needle tip and injection
+  target on patient's right deltoid. Accuracy score = 1/(1+distance*100)
+- **Ranking**: By total time (ascending), tiebroken by accuracy score (descending)
+- Simulation results (from `python -m simulation_v2.run_competition`):
+  - Station A: 13.810s, 43.6% accuracy, rank #3
+  - Station B: 12.514s, 32.8% accuracy, rank #1 (WINNER)
+  - Station C: 14.830s, 61.1% accuracy, rank #4
+  - Station D: 13.734s, 50.6% accuracy, rank #2
+- **Unitree G1 reference**: The G1 by unitreerobotics is a 1.32m tall, 35kg humanoid robot
+  with 23–43 DOF, dark body panels, visor head, and optional Dex3-1 three-fingered hands.
+  See https://www.unitree.com/g1/
+- **Why robot competitions for oncology**: Having multiple autonomous G1 robots compete
+  simultaneously on injection procedures demonstrates that parallel robot trials can
+  accelerate clinical workflows compared to sequential human trials
+
+---
+
 ## Clinical Robot Competition — v0.5.0 Open-Top 4-Station Competition
 
 v0.5.0 — 2026-02-22
