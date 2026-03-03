@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Clinical Robot Competition v0.5.0 — 4-Station PPO Simulation</title>
+<title>Clinical Robot Competition v0.6.0 — Unitree G1 Robots</title>
 <script type="importmap">
 {
   "imports": {
@@ -17,35 +17,25 @@
 html, body { width:100%; height:100%; overflow:hidden; }
 body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; }
 #canvas3d { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; display:block; }
-
-/* Overlay */
 #overlay { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
 #overlay > * { pointer-events:auto; }
-
-/* Nav banner */
 #nav-banner { position:absolute; top:0; left:0; right:0; height:28px;
   background:rgba(255,255,255,0.92); border-bottom:1px solid #ddd;
   display:flex; align-items:center; justify-content:center; gap:16px; font-size:11px; }
 #nav-banner a { color:#0066cc; text-decoration:none; font-weight:600; }
 #nav-banner a:hover { text-decoration:underline; }
 #nav-banner span { color:#888; }
-
-/* Header */
 #header { position:absolute; top:28px; left:0; right:0; height:44px;
   background:rgba(255,255,255,0.95); border-bottom:1px solid #ddd;
   display:flex; align-items:center; padding:0 12px; gap:10px; }
 #header h1 { font-size:15px; font-weight:700; color:#0066cc; white-space:nowrap; }
 #header .subtitle { font-size:10px; color:#888; }
-
-/* Station selector */
 #station-selector { position:absolute; top:78px; left:50%; transform:translateX(-50%);
   display:flex; gap:5px; background:rgba(255,255,255,0.95); padding:5px 8px; border-radius:8px; border:1px solid #ccc; z-index:20; }
 .station-btn { background:#f5f5f5; border:1px solid #ccc; color:#555; padding:5px 14px; border-radius:6px;
   cursor:pointer; font-size:12px; font-weight:500; transition:all .15s; -webkit-tap-highlight-color:transparent; }
 .station-btn:hover { background:#e8e8e8; border-color:#999; }
 .station-btn.active { background:#0066cc; color:#fff; border-color:#0066cc; font-weight:700; }
-
-/* Panel toggles */
 .panel-toggle { position:absolute; z-index:15; background:rgba(255,255,255,0.95); border:1px solid #ccc;
   color:#0066cc; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:14px;
   display:flex; align-items:center; justify-content:center; transition:all .15s; -webkit-tap-highlight-color:transparent; }
@@ -53,8 +43,6 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 .panel-toggle.open { background:#0066cc; color:#fff; }
 #toggle-phases { top:112px; left:12px; }
 #toggle-scoreboard { top:112px; right:12px; }
-
-/* Phase panel */
 #phase-panel { position:absolute; top:150px; left:12px; background:rgba(255,255,255,0.96);
   border:1px solid #ccc; border-radius:8px; padding:10px 12px; min-width:200px; max-width:230px;
   display:none; max-height:calc(100vh - 220px); overflow-y:auto; z-index:14; }
@@ -66,8 +54,6 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 .phase-dot { width:5px; height:5px; border-radius:50%; background:#ccc; flex-shrink:0; }
 .phase-line.active .phase-dot { background:#008844; }
 .phase-line.done .phase-dot { background:#0066cc; }
-
-/* Scoreboard panel */
 #scoreboard-panel { position:absolute; top:150px; right:12px; width:260px; background:rgba(255,255,255,0.96);
   border:1px solid #ccc; border-radius:8px; padding:10px 12px; display:none;
   max-height:calc(100vh - 220px); overflow-y:auto; z-index:14; }
@@ -87,8 +73,6 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 .rank-badge.r2 { background:#888; color:#fff; }
 .rank-badge.r3 { background:#a0522d; color:#fff; }
 .rank-badge.r4 { background:#bbb; color:#fff; }
-
-/* Final results */
 #final-results { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:50;
   background:rgba(0,0,0,0.45); align-items:center; justify-content:center; }
 #final-results.show { display:flex; }
@@ -108,8 +92,6 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 #results-card button { margin-top:16px; background:#0066cc; color:#fff; border:none; padding:10px 28px;
   border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; }
 #results-card button:hover { background:#0055aa; }
-
-/* Controls */
 #controls { position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
   display:flex; gap:6px; background:rgba(255,255,255,0.95); padding:6px 12px; border-radius:10px; border:1px solid #ccc; z-index:15; }
 .ctrl-btn { background:#f5f5f5; border:1px solid #ccc; color:#555; width:38px; height:38px; border-radius:8px;
@@ -117,15 +99,11 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
   transition:all .15s; -webkit-tap-highlight-color:transparent; }
 .ctrl-btn:hover { background:#e0e0e0; border-color:#0066cc; color:#0066cc; }
 .ctrl-btn.active { background:#0066cc; color:#fff; border-color:#0066cc; }
-
-/* Legend */
 #legend { position:absolute; bottom:14px; left:12px; background:rgba(255,255,255,0.95);
   border:1px solid #ccc; border-radius:8px; padding:8px 12px; z-index:14; }
 #legend h3 { font-size:10px; color:#0066cc; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
 .legend-item { display:flex; align-items:center; gap:6px; font-size:10px; margin:2px 0; color:#555; }
 .legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-
-/* Info modal */
 #info-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100;
   background:rgba(0,0,0,0.45); align-items:center; justify-content:center; }
 #info-modal.show { display:flex; }
@@ -137,12 +115,8 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 #info-content ul { padding-left:16px; margin:6px 0; }
 #info-content .close-btn { background:#0066cc; color:#fff; border:none; padding:8px 20px; border-radius:6px;
   cursor:pointer; font-weight:600; margin-top:14px; font-size:13px; }
-
-/* Attribution */
 #attribution { position:absolute; bottom:3px; right:12px; font-size:8px; color:#aaa; }
 #file-input { display:none; }
-
-/* Mobile */
 @media (max-width:768px) {
   #nav-banner { font-size:9px; gap:8px; height:24px; }
   #header { top:24px; height:38px; }
@@ -175,21 +149,18 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 </head>
 <body>
 <canvas id="canvas3d"></canvas>
-
 <div id="overlay">
   <div id="nav-banner">
     <a id="nav-v1" href="#">v0.1.0</a>
     <span>|</span>
-    <span style="color:#0066cc; font-weight:700;">v0.5.0</span>
+    <a id="nav-v5" href="#">v0.5.0</a>
     <span>|</span>
-    <a id="nav-v6" href="#">v0.6.0 (current)</a>
+    <span style="color:#0066cc; font-weight:700;">v0.6.0 (current)</span>
   </div>
-
   <div id="header">
     <h1>Clinical Robot Competition</h1>
-    <span class="subtitle">4-Station PPO v0.5.0</span>
+    <span class="subtitle">4-Station PPO v0.6.0 &mdash; Unitree G1 Robots</span>
   </div>
-
   <div id="station-selector">
     <button class="station-btn active" data-station="overview">Overview</button>
     <button class="station-btn" data-station="0">A</button>
@@ -197,40 +168,27 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
     <button class="station-btn" data-station="2">C</button>
     <button class="station-btn" data-station="3">D</button>
   </div>
-
   <button class="panel-toggle" id="toggle-phases" title="Toggle Phase Timeline">&#9776;</button>
   <button class="panel-toggle" id="toggle-scoreboard" title="Toggle Scoreboard">&#9783;</button>
-
-  <div id="phase-panel">
-    <h3>Phase Timeline</h3>
-    <div id="phase-lines"></div>
-  </div>
-
-  <div id="scoreboard-panel">
-    <h2>Scoreboard</h2>
-    <div id="score-entries"></div>
-  </div>
-
+  <div id="phase-panel"><h3>Phase Timeline</h3><div id="phase-lines"></div></div>
+  <div id="scoreboard-panel"><h2>Scoreboard</h2><div id="score-entries"></div></div>
   <div id="controls">
     <button class="ctrl-btn" id="btn-play" title="Play/Pause">&#9654;</button>
     <button class="ctrl-btn" id="btn-reset" title="Reset">&#8634;</button>
     <button class="ctrl-btn" id="btn-info" title="Info">&#9432;</button>
     <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
   </div>
-
   <div id="legend">
     <h3>Legend</h3>
-    <div class="legend-item"><div class="legend-dot" style="background:#e8e8e8;border:1px solid #999"></div>Doctor (white coat, syringe)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#55bb77"></div>Patient (green gown)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#3377ee"></div>Nurse (blue coat, tablet)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #666"></div>G1 Doctor (white coat, syringe)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (green gown)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #3377ee"></div>G1 Nurse (blue coat, tablet)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#cc3344"></div>IV Stand</div>
     <div class="legend-item"><div class="legend-dot" style="background:#999"></div>Equipment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#ff2244"></div>Injection Target</div>
   </div>
-
-  <div id="attribution">Simulation framework inspired by mjlab (mujocolab/mjlab)</div>
+  <div id="attribution">Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
 </div>
-
 <div id="final-results">
   <div id="results-card">
     <h2>&#127942; Competition Results</h2>
@@ -238,56 +196,57 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
     <button id="btn-results-close">Close Results</button>
   </div>
 </div>
-
 <div id="info-modal">
   <div id="info-content">
-    <h2>Clinical Robot Competition v0.5.0</h2>
-    <p>A 4-station clinical robot competition where G1 humanoid doctor robots
-    compete to perform patient injection procedures, matching the v0.1.0
-    single-station layout. Each station runs independently with PPO
-    reinforcement learning policies.</p>
+    <h2>Clinical Robot Competition v0.6.0</h2>
+    <p>A 4-station clinical robot competition where <strong>Unitree G1 humanoid robots</strong>
+    (from unitreerobotics) serve as doctors and nurses competing to perform patient injection
+    procedures on a <strong>realistic human patient</strong>. Each station runs independently
+    with PPO reinforcement learning policies.</p>
+    <h3>Unitree G1 Robots</h3>
+    <ul>
+      <li>1.32m tall, 35kg, 23&ndash;43 degrees of freedom</li>
+      <li>Dark charcoal body, glossy visor head, metallic joints</li>
+      <li>Dex3-1 three-fingered dexterous hands</li>
+      <li>Doctor G1: white medical coat, red cross, holds syringe</li>
+      <li>Nurse G1: blue medical coat, gold badge, holds tablet</li>
+    </ul>
     <h3>How the Simulation Works</h3>
     <ul>
-      <li><strong>Stations:</strong> 4 identical stations (A, B, C, D) in a 2x2 grid, each replicating the v0.1.0 setup</li>
+      <li><strong>Stations:</strong> 4 identical stations (A, B, C, D) in a 2x2 grid</li>
       <li><strong>Policy:</strong> All stations use the same PPO architecture (MLP 64x64, tanh activation)</li>
-      <li><strong>State:</strong> Each station has a unique random seed (42, 137, 256, 512) producing different learned timing</li>
+      <li><strong>State:</strong> Each station has a unique random seed (42, 137, 256, 512)</li>
       <li><strong>Reward:</strong> R = &minus;0.3 &times; time + 0.5/(1+dist) + 0.2/(1+jerk)</li>
-      <li><strong>Phases:</strong> All stations run the same 7 phases; PPO only affects phase durations</li>
+      <li><strong>Phases:</strong> 7 phases; PPO only affects phase durations</li>
     </ul>
-    <h3>Doctor (white coat, right of patient)</h3>
-    <p>Performs the full 7-phase injection procedure with syringe.</p>
-    <ul>
-      <li>prepare &rarr; approach &rarr; position &rarr; inject &rarr; hold &rarr; withdraw &rarr; monitor</li>
-    </ul>
-    <h3>Nurse (blue coat, left of patient)</h3>
-    <p>Monitors the procedure and assists during post-injection monitoring.</p>
+    <h3>Why Robot Competitions for Oncology</h3>
+    <p>Having multiple autonomous robots compete simultaneously on injection procedures
+    demonstrates that parallel robot trials can accelerate clinical workflows compared to
+    sequential human trials, making future fully autonomous physical AI oncology trials faster.</p>
     <h3>Competition Ranking</h3>
     <ul>
       <li><strong>Time:</strong> Total elapsed seconds for all 7 phases</li>
-      <li><strong>Accuracy:</strong> Simulated needle-to-target distance. Score = 1/(1+dist*100)</li>
+      <li><strong>Accuracy:</strong> Needle-to-target distance. Score = 1/(1+dist*100)</li>
       <li><strong>Winner:</strong> Fastest total time, tiebroken by accuracy</li>
     </ul>
-    <h3>Upload Custom Data</h3>
-    <p>Upload a JSON config with station seeds/speeds via the Upload button.</p>
-    <p style="margin-top:8px;font-size:10px;color:#999">Simulation framework inspired by mjlab (mujocolab/mjlab)</p>
+    <p style="margin-top:8px;font-size:10px;color:#999">Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
     <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
   </div>
 </div>
-
 <input type="file" id="file-input" accept=".json"/>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-/* ── NAV BANNER — base-path aware ── */
+/* -- NAV BANNER -- */
 (function() {
-  const base = window.location.pathname.replace(/\/v5\/?$/, '').replace(/\/+$/, '');
+  const base = window.location.pathname.replace(/\/v6\/?$/, '').replace(/\/+$/, '');
   document.getElementById('nav-v1').href = base + '/';
-  document.getElementById('nav-v6').href = base + '/v6/';
+  document.getElementById('nav-v5').href = base + '/v5/';
 })();
 
-/* ── CONSTANTS ── */
+/* -- CONSTANTS -- */
 const ROOM_W = 16, ROOM_D = 16, ROOM_H = 4.5;
 const GRID_X = 5.5, GRID_Z = 5.5;
 const DEG = Math.PI / 180;
@@ -299,7 +258,6 @@ const STATION_CONFIGS = [
   { name:'D', seed:512, speed:0.95, gx: 1, gz: 1, color:'#7744bb' },
 ];
 
-/* v0.1.0 7-phase procedure — doctor performs injection */
 const PHASES = [
   { name:'prepare',  dur:1.0, label:'Preparing syringe' },
   { name:'approach', dur:2.0, label:'Approaching patient' },
@@ -310,7 +268,7 @@ const PHASES = [
   { name:'monitor',  dur:2.0, label:'Post-injection monitoring' },
 ];
 
-/* ── SEEDED RNG (mulberry32) ── */
+/* -- SEEDED RNG -- */
 function mulberry32(seed) {
   return function() {
     seed |= 0; seed = seed + 0x6D2B79F5 | 0;
@@ -319,13 +277,12 @@ function mulberry32(seed) {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-
 function ppoJitter(rng, base, speed) {
   const j = (rng() - 0.5) * 0.3 * base;
   return Math.max(0.3, (base + j) / speed);
 }
 
-/* ── RENDERER — light mode ── */
+/* -- RENDERER -- */
 const canvas = document.getElementById('canvas3d');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference:'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -339,10 +296,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e8ecf0');
 scene.fog = new THREE.Fog('#e8ecf0', 28, 50);
 
-/* ── CAMERA & CONTROLS ── */
+/* -- CAMERA -- */
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 14, 19);
-
 const ctrls = new OrbitControls(camera, canvas);
 ctrls.enableDamping = true;
 ctrls.dampingFactor = 0.08;
@@ -351,37 +307,41 @@ ctrls.minDistance = 3;
 ctrls.maxDistance = 30;
 ctrls.maxPolarAngle = Math.PI * 0.47;
 
-/* ── LIGHTS ── */
+/* -- LIGHTS -- */
 scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
 sun.position.set(8, 16, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -14; sun.shadow.camera.right = 14;
-sun.shadow.camera.top = 14;  sun.shadow.camera.bottom = -14;
-sun.shadow.camera.near = 1;  sun.shadow.camera.far = 32;
+sun.shadow.camera.top = 14; sun.shadow.camera.bottom = -14;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 32;
 sun.shadow.bias = -0.001;
 scene.add(sun);
-
 scene.add(new THREE.HemisphereLight(0xaaccff, 0x446644, 0.4));
-
 STATION_CONFIGS.forEach(cfg => {
   const p = new THREE.PointLight(0xffffff, 0.35, 9);
   p.position.set(cfg.gx * GRID_X / 2, ROOM_H - 0.3, cfg.gz * GRID_Z / 2);
   scene.add(p);
 });
 
-/* ── MATERIALS — light-mode ── */
+/* -- MATERIALS -- */
 const M = {
   floor:    new THREE.MeshStandardMaterial({ color:0xd0d4d8, roughness:0.85 }),
   wall:     new THREE.MeshStandardMaterial({ color:0xe0e4e8, roughness:0.75 }),
-  doctor:   new THREE.MeshStandardMaterial({ color:0xf5f5f5, roughness:0.4 }),
-  patient:  new THREE.MeshStandardMaterial({ color:0x55bb77, roughness:0.5 }),
-  nurse:    new THREE.MeshStandardMaterial({ color:0x3377ee, roughness:0.4 }),
-  joint:    new THREE.MeshStandardMaterial({ color:0x2a2a30, roughness:0.4, metalness:0.3 }),
-  visor:    new THREE.MeshStandardMaterial({ color:0x556677, roughness:0.3 }),
+  /* Unitree G1 body */
+  g1body:   new THREE.MeshStandardMaterial({ color:0x1a1a1e, roughness:0.35, metalness:0.1 }),
+  g1visor:  new THREE.MeshStandardMaterial({ color:0x0a0a0f, roughness:0.1, metalness:0.5 }),
+  g1joint:  new THREE.MeshStandardMaterial({ color:0x888890, roughness:0.25, metalness:0.8 }),
+  g1panel:  new THREE.MeshStandardMaterial({ color:0x252528, roughness:0.3, metalness:0.15 }),
+  /* Coats (semi-transparent overlays) */
+  coatWhite:new THREE.MeshStandardMaterial({ color:0xf0f0f0, roughness:0.5, transparent:true, opacity:0.85 }),
+  coatBlue: new THREE.MeshStandardMaterial({ color:0x2255cc, roughness:0.5, transparent:true, opacity:0.85 }),
+  /* Human patient */
   skin:     new THREE.MeshStandardMaterial({ color:0xe8b090, roughness:0.55 }),
+  hair:     new THREE.MeshStandardMaterial({ color:0x3a2a1a, roughness:0.8 }),
+  gown:     new THREE.MeshStandardMaterial({ color:0x55bb77, roughness:0.5 }),
+  /* Equipment */
   chair:    new THREE.MeshStandardMaterial({ color:0x778899, roughness:0.5 }),
   cushion:  new THREE.MeshStandardMaterial({ color:0x2244aa, roughness:0.6 }),
   iv:       new THREE.MeshStandardMaterial({ color:0xcc3344, roughness:0.3, metalness:0.5 }),
@@ -397,10 +357,9 @@ const M = {
   target:   new THREE.MeshStandardMaterial({ color:0xff2244, emissive:0xff2244, emissiveIntensity:0.4 }),
   redCross: new THREE.MeshStandardMaterial({ color:0xcc2222, roughness:0.5 }),
   badge:    new THREE.MeshStandardMaterial({ color:0xffcc00, roughness:0.4, metalness:0.3 }),
-  ring:     new THREE.MeshStandardMaterial({ color:0x999999, roughness:0.4, metalness:0.5 }),
 };
 
-/* ── GEOMETRY HELPERS ── */
+/* -- GEOMETRY HELPERS -- */
 const gBox = (w,h,d) => new THREE.BoxGeometry(w,h,d);
 const gCyl = (rT,rB,h,s) => new THREE.CylinderGeometry(rT,rB,h,s||16);
 const gSph = (r,w,h) => new THREE.SphereGeometry(r,w||14,h||12);
@@ -415,12 +374,10 @@ function mk(geo, mat, pos, parent) {
   return m;
 }
 
-/* ── ROOM (no ceiling — see through top) ── */
+/* -- ROOM -- */
 function buildRoom() {
   const fl = mk(gBox(ROOM_W, 0.1, ROOM_D), M.floor, [0, -0.05, 0]);
   fl.castShadow = false;
-
-  /* Walls only — NO ceiling */
   const hw = ROOM_W / 2, hd = ROOM_D / 2;
   const wg = gBox(ROOM_W, ROOM_H, 0.12);
   [[0, ROOM_H/2, -hd, 0], [0, ROOM_H/2, hd, 0], [-hw, ROOM_H/2, 0, Math.PI/2], [hw, ROOM_H/2, 0, Math.PI/2]].forEach(([x,y,z,ry]) => {
@@ -428,139 +385,153 @@ function buildRoom() {
     if (ry) w.rotation.y = ry;
     w.castShadow = false;
   });
-
   const grid = new THREE.GridHelper(ROOM_W, 32, 0xc0c4c8, 0xd0d4d8);
   grid.position.y = 0.01; scene.add(grid);
 }
 
-/* ── FULL-DETAIL HUMANOID — v0.1.0 articulated joint hierarchy ── */
-function buildHumanoid(role, parent) {
-  const bodyMat = role === 'doctor' ? M.doctor : role === 'nurse' ? M.nurse : M.patient;
+/* -- UNITREE G1 HUMANOID ROBOT (unitreerobotics) -- */
+/* 1.32m tall, dark charcoal body, visor head, 23-43 DOF, Dex3-1 hands */
+function buildG1Robot(role, parent) {
   const g = new THREE.Group();
   const joints = {};
+  const coatMat = role === 'doctor' ? M.coatWhite : M.coatBlue;
 
-  /* === TORSO === */
-  mk(gBox(0.30, 0.40, 0.18), bodyMat, [0, 0, 0], g);
-  /* Shoulder-line ring */
-  const topRing = mk(gTor(0.16, 0.010, 6, 16), M.ring, [0, 0.21, 0], g);
-  topRing.rotation.x = Math.PI / 2;
-  const botRing = mk(gTor(0.16, 0.010, 6, 16), M.ring, [0, -0.21, 0], g);
-  botRing.rotation.x = Math.PI / 2;
+  /* === TORSO (compact G1 body panel) === */
+  mk(gBox(0.28, 0.36, 0.16), M.g1body, [0, 0, 0], g);
+  /* Front chest panel detail */
+  mk(gBox(0.24, 0.30, 0.005), M.g1panel, [0, 0.01, -0.083], g);
+  /* Medical coat overlay */
+  mk(gBox(0.32, 0.40, 0.19), coatMat, [0, -0.02, 0], g);
 
-  /* Role markers on torso front */
+  /* Role markers */
   if (role === 'doctor') {
-    mk(gBox(0.08, 0.02, 0.005), M.redCross, [0, 0.10, -0.091], g);
-    mk(gBox(0.02, 0.08, 0.005), M.redCross, [0, 0.10, -0.091], g);
+    mk(gBox(0.08, 0.015, 0.005), M.redCross, [0, 0.10, -0.10], g);
+    mk(gBox(0.015, 0.08, 0.005), M.redCross, [0, 0.10, -0.10], g);
   }
   if (role === 'nurse') {
-    mk(gCyl(0.025, 0.025, 0.008, 8), M.badge, [0.08, 0.10, -0.091], g);
+    mk(gCyl(0.025, 0.025, 0.008, 8), M.badge, [0.08, 0.10, -0.10], g);
   }
 
-  /* === HEAD === */
+  /* === HEAD (G1 visor-style, no face) === */
   const head = new THREE.Group();
-  head.position.set(0, 0.32, 0);
-  mk(gSph(0.10), M.skin, [0, 0, 0], head);
-  const vis = mk(gBox(0.14, 0.04, 0.005), M.visor, [0, -0.02, -0.09], head);
-  vis.castShadow = false;
-  /* Neck ring */
-  const neckRing = mk(gTor(0.045, 0.008, 6, 12), M.ring, [0, -0.10, 0], head);
-  neckRing.rotation.x = Math.PI / 2;
+  head.position.set(0, 0.30, 0);
+  /* Helmet shell */
+  mk(gSph(0.11, 16, 14), M.g1body, [0, 0, 0], head);
+  /* Visor band across front */
+  const visor = mk(gBox(0.18, 0.045, 0.005), M.g1visor, [0, -0.01, -0.10], head);
+  visor.castShadow = false;
+  /* Light mask strip (LED indicator) */
+  const ledMask = mk(gBox(0.12, 0.008, 0.003), M.led, [0, -0.01, -0.105], head);
+  ledMask.castShadow = false;
+  head.userData.ledMask = ledMask;
+  /* Sensor housing (RealSense camera area) */
+  mk(gCyl(0.015, 0.015, 0.02, 8), M.g1joint, [0, 0.04, -0.10], head);
+  /* Neck */
+  mk(gCyl(0.04, 0.04, 0.08, 12), M.g1joint, [0, -0.11, 0], head);
   g.add(head);
   joints.head = head;
 
-  /* === PELVIS === */
+  /* === PELVIS/WAIST (G1 3-DOF waist) === */
   const pelvis = new THREE.Group();
-  pelvis.position.set(0, -0.26, 0);
-  mk(gBox(0.28, 0.10, 0.16), bodyMat, [0, 0, 0], pelvis);
-  const hipRingL = mk(gTor(0.04, 0.008, 6, 12), M.ring, [-0.10, -0.05, 0], pelvis);
-  hipRingL.rotation.y = Math.PI / 2;
-  const hipRingR = mk(gTor(0.04, 0.008, 6, 12), M.ring, [0.10, -0.05, 0], pelvis);
-  hipRingR.rotation.y = Math.PI / 2;
+  pelvis.position.set(0, -0.24, 0);
+  mk(gBox(0.26, 0.10, 0.14), M.g1body, [0, 0, 0], pelvis);
+  /* Waist joint ring */
+  mk(gTor(0.12, 0.012, 8, 20), M.g1joint, [0, 0.06, 0], pelvis);
   g.add(pelvis);
   joints.pelvis = pelvis;
 
-  /* === BUILD ARM (hierarchical: shoulder -> upperArm -> elbow -> forearm -> hand) === */
+  /* === ARM BUILDER (G1 articulated) === */
   function buildArm(side) {
     const sign = side === 'r' ? 1 : -1;
-    /* Shoulder pivot — attached to torso at shoulder line */
     const shoulder = new THREE.Group();
-    shoulder.position.set(sign * 0.20, 0.15, 0);
+    shoulder.position.set(sign * 0.19, 0.14, 0);
 
-    /* Upper arm */
     const upperArm = new THREE.Group();
-    mk(gCap(0.038, 0.16, 4, 8), bodyMat, [0, -0.12, 0], upperArm);
-    mk(gSph(0.042), M.joint, [0, 0, 0], upperArm);
-    /* Shoulder joint ring */
-    const sRing = mk(gTor(0.050, 0.010, 6, 16), M.ring, [0, 0, 0], upperArm);
-    sRing.rotation.y = Math.PI / 2;
+    /* Shoulder joint (metallic ball) */
+    mk(gSph(0.042), M.g1joint, [0, 0, 0], upperArm);
+    /* Upper arm panel */
+    mk(gCap(0.035, 0.14, 4, 8), M.g1body, [0, -0.10, 0], upperArm);
+    /* Coat sleeve */
+    mk(gCap(0.042, 0.10, 4, 8), coatMat, [0, -0.07, 0], upperArm);
     shoulder.add(upperArm);
 
-    /* Elbow pivot */
+    /* Elbow joint */
     const elbow = new THREE.Group();
-    elbow.position.set(0, -0.24, 0);
-    mk(gSph(0.036), M.joint, [0, 0, 0], elbow);
-    const eRing = mk(gTor(0.038, 0.008, 6, 12), M.ring, [0, 0, 0], elbow);
-    eRing.rotation.y = Math.PI / 2;
+    elbow.position.set(0, -0.22, 0);
+    mk(gSph(0.034), M.g1joint, [0, 0, 0], elbow);
 
     /* Forearm */
     const forearm = new THREE.Group();
-    mk(gCap(0.032, 0.14, 4, 8), bodyMat, [0, -0.10, 0], forearm);
+    mk(gCap(0.030, 0.12, 4, 8), M.g1body, [0, -0.09, 0], forearm);
     elbow.add(forearm);
 
-    /* Hand */
+    /* Wrist joint */
+    const wrist = new THREE.Group();
+    wrist.position.set(0, -0.20, 0);
+    mk(gCyl(0.022, 0.022, 0.025, 10), M.g1joint, [0, 0, 0], wrist);
+
+    /* Dex3-1 Three-fingered hand */
     const hand = new THREE.Group();
-    hand.position.set(0, -0.22, 0);
-    mk(gBox(0.05, 0.025, 0.07), M.joint, [0, 0, 0], hand);
-    forearm.add(hand);
+    hand.position.set(0, -0.03, 0);
+    /* Palm */
+    mk(gBox(0.04, 0.025, 0.05), M.g1body, [0, 0, 0], hand);
+    /* Thumb */
+    mk(gBox(0.012, 0.03, 0.012), M.g1panel, [sign*0.028, -0.01, -0.01], hand);
+    /* Index finger */
+    mk(gBox(0.010, 0.032, 0.010), M.g1panel, [0.005, -0.028, -0.015], hand);
+    /* Middle finger */
+    mk(gBox(0.010, 0.032, 0.010), M.g1panel, [-0.005, -0.028, 0.015], hand);
+    wrist.add(hand);
+    forearm.add(wrist);
 
     upperArm.add(elbow);
     g.add(shoulder);
 
-    const prefix = side;
-    joints[prefix + 'Shoulder'] = shoulder;
-    joints[prefix + 'UpperArm'] = upperArm;
-    joints[prefix + 'Elbow'] = elbow;
-    joints[prefix + 'Forearm'] = forearm;
-    joints[prefix + 'Hand'] = hand;
+    joints[side + 'Shoulder'] = shoulder;
+    joints[side + 'UpperArm'] = upperArm;
+    joints[side + 'Elbow'] = elbow;
+    joints[side + 'Forearm'] = forearm;
+    joints[side + 'Wrist'] = wrist;
+    joints[side + 'Hand'] = hand;
   }
   buildArm('r');
   buildArm('l');
 
-  /* === BUILD LEG (hierarchical: hip -> thigh -> knee -> shin -> foot) === */
+  /* === LEG BUILDER (G1 6-DOF per leg) === */
   function buildLeg(side) {
     const sign = side === 'r' ? 1 : -1;
     const hip = new THREE.Group();
-    hip.position.set(sign * 0.10, -0.06, 0);
+    hip.position.set(sign * 0.09, -0.06, 0);
 
     const thigh = new THREE.Group();
-    mk(gCap(0.050, 0.18, 4, 8), bodyMat, [0, -0.13, 0], thigh);
-    mk(gSph(0.048), M.joint, [0, 0, 0], thigh);
+    mk(gSph(0.044), M.g1joint, [0, 0, 0], thigh);
+    mk(gCap(0.045, 0.18, 4, 8), M.g1body, [0, -0.12, 0], thigh);
     hip.add(thigh);
 
     const knee = new THREE.Group();
-    knee.position.set(0, -0.27, 0);
-    mk(gSph(0.040), M.joint, [0, 0, 0], knee);
-    const kRing = mk(gTor(0.040, 0.008, 6, 12), M.ring, [0, 0, 0], knee);
-    kRing.rotation.y = Math.PI / 2;
+    knee.position.set(0, -0.26, 0);
+    mk(gSph(0.038), M.g1joint, [0, 0, 0], knee);
 
     const shin = new THREE.Group();
-    mk(gCap(0.040, 0.18, 4, 8), bodyMat, [0, -0.12, 0], shin);
+    mk(gCap(0.038, 0.17, 4, 8), M.g1body, [0, -0.11, 0], shin);
     knee.add(shin);
 
+    /* G1 flat platform foot */
     const foot = new THREE.Group();
-    foot.position.set(0, -0.26, 0);
-    mk(gBox(0.08, 0.035, 0.13), M.joint, [0, 0, 0.01], foot);
+    foot.position.set(0, -0.24, 0);
+    mk(gBox(0.08, 0.025, 0.14), M.g1body, [0, 0, 0.01], foot);
+    /* Foot sole (rubber) */
+    mk(gBox(0.08, 0.008, 0.14), M.g1panel, [0, -0.016, 0.01], foot);
     shin.add(foot);
 
     thigh.add(knee);
     pelvis.add(hip);
 
-    const prefix = side;
-    joints[prefix + 'Hip'] = hip;
-    joints[prefix + 'Thigh'] = thigh;
-    joints[prefix + 'Knee'] = knee;
-    joints[prefix + 'Shin'] = shin;
-    joints[prefix + 'Foot'] = foot;
+    joints[side + 'Hip'] = hip;
+    joints[side + 'Thigh'] = thigh;
+    joints[side + 'Knee'] = knee;
+    joints[side + 'Shin'] = shin;
+    joints[side + 'Foot'] = foot;
   }
   buildLeg('r');
   buildLeg('l');
@@ -570,20 +541,123 @@ function buildHumanoid(role, parent) {
   return g;
 }
 
-/* ── EXAM CHAIR (matching v0.1.0) ── */
+/* -- REALISTIC HUMAN PATIENT -- */
+function buildHumanPatient(parent) {
+  const g = new THREE.Group();
+  const joints = {};
+
+  /* === TORSO (hospital gown) === */
+  mk(gBox(0.30, 0.38, 0.18), M.gown, [0, 0, 0], g);
+
+  /* === HEAD === */
+  const head = new THREE.Group();
+  head.position.set(0, 0.30, 0);
+  /* Face/head */
+  mk(gSph(0.10, 14, 12), M.skin, [0, 0, 0], head);
+  /* Hair (dark cap) */
+  const hairCap = mk(gSph(0.105, 14, 8), M.hair, [0, 0.02, 0], head);
+  hairCap.scale.set(1, 0.7, 1);
+  hairCap.position.y = 0.03;
+  /* Ears */
+  mk(gSph(0.02), M.skin, [-0.10, -0.02, 0], head);
+  mk(gSph(0.02), M.skin, [0.10, -0.02, 0], head);
+  /* Neck */
+  mk(gCyl(0.04, 0.04, 0.08, 10), M.skin, [0, -0.10, 0], head);
+  g.add(head);
+  joints.head = head;
+
+  /* === PELVIS === */
+  const pelvis = new THREE.Group();
+  pelvis.position.set(0, -0.24, 0);
+  mk(gBox(0.28, 0.10, 0.16), M.gown, [0, 0, 0], pelvis);
+  g.add(pelvis);
+  joints.pelvis = pelvis;
+
+  /* === ARM BUILDER (human proportions) === */
+  function buildArm(side) {
+    const sign = side === 'r' ? 1 : -1;
+    const shoulder = new THREE.Group();
+    shoulder.position.set(sign * 0.20, 0.14, 0);
+
+    const upperArm = new THREE.Group();
+    /* Upper arm skin */
+    mk(gCap(0.038, 0.14, 4, 8), M.skin, [0, -0.10, 0], upperArm);
+    /* Gown sleeve */
+    mk(gCap(0.042, 0.06, 4, 8), M.gown, [0, -0.04, 0], upperArm);
+    shoulder.add(upperArm);
+
+    const elbow = new THREE.Group();
+    elbow.position.set(0, -0.22, 0);
+
+    const forearm = new THREE.Group();
+    mk(gCap(0.032, 0.12, 4, 8), M.skin, [0, -0.09, 0], forearm);
+    elbow.add(forearm);
+
+    const hand = new THREE.Group();
+    hand.position.set(0, -0.20, 0);
+    mk(gBox(0.04, 0.02, 0.06), M.skin, [0, 0, 0], hand);
+    forearm.add(hand);
+
+    upperArm.add(elbow);
+    g.add(shoulder);
+
+    joints[side + 'Shoulder'] = shoulder;
+    joints[side + 'UpperArm'] = upperArm;
+    joints[side + 'Elbow'] = elbow;
+    joints[side + 'Forearm'] = forearm;
+    joints[side + 'Hand'] = hand;
+  }
+  buildArm('r');
+  buildArm('l');
+
+  /* === LEG BUILDER (human) === */
+  function buildLeg(side) {
+    const sign = side === 'r' ? 1 : -1;
+    const hip = new THREE.Group();
+    hip.position.set(sign * 0.10, -0.06, 0);
+
+    const thigh = new THREE.Group();
+    mk(gCap(0.050, 0.18, 4, 8), M.gown, [0, -0.13, 0], thigh);
+    hip.add(thigh);
+
+    const knee = new THREE.Group();
+    knee.position.set(0, -0.27, 0);
+
+    const shin = new THREE.Group();
+    mk(gCap(0.040, 0.18, 4, 8), M.skin, [0, -0.12, 0], shin);
+    knee.add(shin);
+
+    const foot = new THREE.Group();
+    foot.position.set(0, -0.26, 0);
+    mk(gBox(0.06, 0.03, 0.12), M.skin, [0, 0, 0.01], foot);
+    shin.add(foot);
+
+    thigh.add(knee);
+    pelvis.add(hip);
+
+    joints[side + 'Hip'] = hip;
+    joints[side + 'Thigh'] = thigh;
+    joints[side + 'Knee'] = knee;
+    joints[side + 'Shin'] = shin;
+    joints[side + 'Foot'] = foot;
+  }
+  buildLeg('r');
+  buildLeg('l');
+
+  g.userData = { role: 'patient', joints };
+  if (parent) parent.add(g);
+  return g;
+}
+
+/* -- EXAM CHAIR -- */
 function buildChair(parent) {
   const g = new THREE.Group();
-  /* 4 legs */
   [[-0.24,-0.20],[0.24,-0.20],[-0.24,0.20],[0.24,0.20]].forEach(([x,z]) =>
     mk(gCyl(0.025, 0.025, 0.44), M.chair, [x, 0.22, z], g));
-  /* Seat */
   mk(gBox(0.50, 0.05, 0.44), M.cushion, [0, 0.46, 0], g);
-  /* Backrest */
-  mk(gBox(0.50, 0.55, 0.05), M.cushion, [0, 0.76, -0.20], g);
-  /* Armrests */
+  mk(gBox(0.50, 0.55, 0.05), M.cushion, [0, 0.76, 0.20], g);
   mk(gBox(0.05, 0.03, 0.36), M.chair, [0.27, 0.60, 0.02], g);
   mk(gBox(0.05, 0.03, 0.36), M.chair, [-0.27, 0.60, 0.02], g);
-  /* Armrest supports */
   mk(gCyl(0.015, 0.015, 0.12), M.chair, [0.27, 0.53, -0.12], g);
   mk(gCyl(0.015, 0.015, 0.12), M.chair, [0.27, 0.53, 0.16], g);
   mk(gCyl(0.015, 0.015, 0.12), M.chair, [-0.27, 0.53, -0.12], g);
@@ -592,7 +666,7 @@ function buildChair(parent) {
   return g;
 }
 
-/* ── IV STAND (matching v0.1.0) ── */
+/* -- IV STAND -- */
 function buildIV(parent) {
   const g = new THREE.Group();
   mk(gCyl(0.016, 0.016, 1.55), M.iv, [0, 0.78, 0], g);
@@ -608,25 +682,21 @@ function buildIV(parent) {
   return g;
 }
 
-/* ── INSTRUMENT TRAY (matching v0.1.0) ── */
+/* -- INSTRUMENT TRAY -- */
 function buildTray(parent) {
   const g = new THREE.Group();
   mk(gCyl(0.022, 0.022, 0.68), M.tray, [0, 0.34, 0], g);
   mk(gBox(0.34, 0.016, 0.22), M.tray, [0, 0.69, 0], g);
-  /* Rim */
   mk(gBox(0.34, 0.020, 0.005), M.tray, [0, 0.70, -0.11], g);
   mk(gBox(0.34, 0.020, 0.005), M.tray, [0, 0.70, 0.11], g);
-  /* Spare syringe */
   mk(gCyl(0.005, 0.005, 0.10), M.needle, [0.08, 0.72, 0], g);
-  /* Swab packet */
   mk(gBox(0.04, 0.008, 0.04), M.chart, [-0.06, 0.70, 0.04], g);
-  /* Extra vial */
   mk(gCyl(0.012, 0.012, 0.04), M.syringe, [0.04, 0.72, 0.06], g);
   if (parent) parent.add(g);
   return g;
 }
 
-/* ── VITALS MONITOR (matching v0.1.0) ── */
+/* -- VITALS MONITOR -- */
 function buildMonitor(parent) {
   const g = new THREE.Group();
   mk(gCyl(0.022, 0.022, 0.88), M.monitor, [0, 0.44, 0], g);
@@ -639,7 +709,7 @@ function buildMonitor(parent) {
   return g;
 }
 
-/* ── SYRINGE (attached to doctor's hand) ── */
+/* -- SYRINGE (doctor's Dex3-1 hand) -- */
 function buildSyringe(parent) {
   const g = new THREE.Group();
   mk(gCyl(0.012, 0.012, 0.14), M.syringe, [0, 0, 0], g);
@@ -652,20 +722,18 @@ function buildSyringe(parent) {
   return g;
 }
 
-/* ── TABLET / CLIPBOARD (attached to nurse's hand) ── */
+/* -- TABLET (nurse's hand) -- */
 function buildTablet(parent) {
   const g = new THREE.Group();
   mk(gBox(0.12, 0.17, 0.008), M.chart, [0, 0, 0], g);
-  /* Text lines */
   for (let i = 0; i < 4; i++)
     mk(gBox(0.08, 0.004, 0.002), M.text, [0, 0.05 - i * 0.025, -0.006], g);
-  /* Clipboard clip */
   mk(gBox(0.05, 0.012, 0.006), M.tray, [0, 0.09, -0.005], g);
   if (parent) parent.add(g);
   return g;
 }
 
-/* ── INJECTION TARGET MARKER ── */
+/* -- INJECTION TARGET MARKER -- */
 function buildInjectionMarker(parent) {
   const g = new THREE.Group();
   const dot = mk(gSph(0.016), M.target, [0, 0, 0], g);
@@ -678,7 +746,7 @@ function buildInjectionMarker(parent) {
   return g;
 }
 
-/* ── STATION LABEL SPRITE ── */
+/* -- STATION LABEL -- */
 function makeLabel(text, col) {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 64;
@@ -695,88 +763,86 @@ function makeLabel(text, col) {
   return sp;
 }
 
-/* ── STATION CENTER ── */
 function stationPos(cfg) {
   return new THREE.Vector3(cfg.gx * GRID_X / 2, 0, cfg.gz * GRID_Z / 2);
 }
 
-/* ── BUILD COMPLETE STATION — v0.1.0 layout: doctor RIGHT, nurse LEFT ── */
+/* -- BUILD COMPLETE STATION -- */
 function buildStation(cfg) {
   const center = stationPos(cfg);
   const grp = new THREE.Group();
   grp.position.copy(center);
   scene.add(grp);
 
-  /* Chair (center of station) */
+  /* Chair (center) — backrest at +Z so patient faces -Z (forward) */
   buildChair(grp);
 
-  /* Patient (seated in center) */
-  const patient = buildHumanoid('patient', grp);
-  patient.position.set(0, 1.15, 0);
+  /* Human Patient (seated, facing forward -Z) */
+  const patient = buildHumanPatient(grp);
+  patient.position.set(0, 1.15, 0.02);
   const pj = patient.userData.joints;
-  /* Seated pose — thighs horizontal, shins vertical */
+  /* Seated pose: thighs forward on seat, shins hanging down */
   pj.rThigh.rotation.x = Math.PI / 2;
   pj.rKnee.rotation.x = -Math.PI / 2;
   pj.lThigh.rotation.x = Math.PI / 2;
   pj.lKnee.rotation.x = -Math.PI / 2;
-  /* Arms resting */
-  pj.rUpperArm.rotation.x = 0.12;
-  pj.rUpperArm.rotation.z = -0.15;
-  pj.lUpperArm.rotation.x = 0.12;
-  pj.lUpperArm.rotation.z = 0.15;
+  /* Arms resting on armrests */
+  pj.rUpperArm.rotation.x = 0.3;
+  pj.rUpperArm.rotation.z = -0.25;
+  pj.rElbow.rotation.x = -0.9;
+  pj.lUpperArm.rotation.x = 0.3;
+  pj.lUpperArm.rotation.z = 0.25;
+  pj.lElbow.rotation.x = -0.9;
 
-  /* Injection target on patient right deltoid */
-  const injMarker = buildInjectionMarker(grp);
-  injMarker.position.set(0.24, 1.28, -0.08);
+  /* Injection target ON patient right deltoid (upper right arm) */
+  const injMarker = buildInjectionMarker(patient);
+  injMarker.position.set(0.22, 0.10, -0.04);
 
-  /* Doctor (standing, RIGHT of patient) — holds syringe (v0.1.0) */
-  const doctor = buildHumanoid('doctor', grp);
-  doctor.position.set(0.7, 0.89, -0.3);
+  /* Doctor G1 (standing, RIGHT of patient) */
+  const doctor = buildG1Robot('doctor', grp);
+  doctor.position.set(0.7, 0.89, -0.15);
   doctor.rotation.y = -Math.PI / 4;
   const dj = doctor.userData.joints;
 
-  /* Syringe in doctor's right hand */
+  /* Syringe firmly in doctor's right Dex3-1 hand */
   const syringe = buildSyringe(dj.rHand);
-  syringe.position.set(0, -0.05, 0.03);
+  syringe.position.set(0, -0.02, 0.02);
 
-  /* Nurse (standing, LEFT of patient) — holds tablet (v0.1.0) */
-  const nurse = buildHumanoid('nurse', grp);
-  nurse.position.set(-0.6, 0.89, -0.4);
+  /* Nurse G1 (standing, LEFT of patient) */
+  const nurse = buildG1Robot('nurse', grp);
+  nurse.position.set(-0.6, 0.89, -0.25);
   nurse.rotation.y = Math.PI / 6;
   const nj = nurse.userData.joints;
 
   /* Tablet in nurse's right hand */
   const tablet = buildTablet(nj.rHand);
-  tablet.position.set(0, -0.04, 0.05);
+  tablet.position.set(0, -0.03, 0.04);
   tablet.rotation.x = -0.3;
 
-  /* Nurse initial pose — holding tablet up */
+  /* Nurse initial pose */
   nj.rUpperArm.rotation.x = -20 * DEG;
   nj.rElbow.rotation.x = -70 * DEG;
 
   /* Equipment */
   const iv = buildIV(grp);
   iv.position.set(-0.5, 0, 0.3);
-
   const tray = buildTray(grp);
   tray.position.set(0.5, 0, 0.4);
-
   const mon = buildMonitor(grp);
   mon.position.set(-0.8, 0, 0.2);
 
-  /* Station label */
+  /* Station label (lowered to y=2.4) */
   const label = makeLabel('Station ' + cfg.name, cfg.color);
-  label.position.set(0, 3.2, 0);
+  label.position.set(0, 2.4, 0);
   grp.add(label);
 
-  /* PPO-jittered timing for 7 phases */
+  /* PPO timing */
   const rng = mulberry32(cfg.seed);
   const times = PHASES.map(p => ppoJitter(rng, p.dur, cfg.speed));
   const accuracy = 0.85 + rng() * 0.14;
   const needleDist = 0.01 + (1 - accuracy) * 0.04;
   const total = times.reduce((a,b) => a + b, 0);
 
-  /* Phase boundaries */
   const phases = [];
   let cum = 0;
   times.forEach((t, i) => {
@@ -789,16 +855,15 @@ function buildStation(cfg) {
     dj, nj, pj,
     total, accuracy, needleDist, phases, times,
     elapsed: 0, completed: false, finishOrder: 0, phaseIdx: 0,
-    docHomeX: 0.7, docHomeZ: -0.3,
+    docHomeX: 0.7, docHomeZ: -0.15,
   };
 }
 
-/* ── BUILD SCENE ── */
+/* -- BUILD SCENE -- */
 buildRoom();
 const stations = STATION_CONFIGS.map(cfg => buildStation(cfg));
 let finishCount = 0;
 
-/* Camera targets */
 const camTgt = {
   overview: { pos:new THREE.Vector3(0, 14, 19), target:new THREE.Vector3(0, 1.2, 0) },
 };
@@ -810,7 +875,7 @@ stations.forEach((st, i) => {
   };
 });
 
-/* ── APP STATE ── */
+/* -- APP STATE -- */
 let playing = true;
 let activeSt = 'overview';
 let camAnim = false, camStart = 0;
@@ -820,7 +885,7 @@ let camTo   = { pos:camera.position.clone(), target:ctrls.target.clone() };
 let showPhases = false, showScoreboard = false;
 let resultsShown = false;
 
-/* ── UI WIRING ── */
+/* -- UI WIRING -- */
 const btnPlay   = document.getElementById('btn-play');
 const btnReset  = document.getElementById('btn-reset');
 const btnInfo   = document.getElementById('btn-info');
@@ -834,11 +899,8 @@ const toggleSb   = document.getElementById('toggle-scoreboard');
 const finalRes   = document.getElementById('final-results');
 const resClose   = document.getElementById('btn-results-close');
 
-/* Play / Pause */
 btnPlay.addEventListener('click', () => {
-  if (!playing && stations.every(s => s.completed) && !resultsShown) {
-    resetAll();
-  }
+  if (!playing && stations.every(s => s.completed) && !resultsShown) { resetAll(); }
   playing = !playing;
   btnPlay.innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
   btnPlay.classList.toggle('active', playing);
@@ -846,7 +908,6 @@ btnPlay.addEventListener('click', () => {
 btnPlay.innerHTML = '&#10074;&#10074;';
 btnPlay.classList.add('active');
 
-/* Reset */
 btnReset.addEventListener('click', () => { resetAll(); });
 
 function resetAll() {
@@ -859,13 +920,11 @@ function resetAll() {
   btnPlay.classList.add('active');
 }
 
-/* Info */
 btnInfo.addEventListener('click', () => document.getElementById('info-modal').classList.add('show'));
 document.getElementById('info-modal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
 });
 
-/* Upload */
 btnUpload.addEventListener('click', () => fileIn.click());
 fileIn.addEventListener('change', e => {
   const f = e.target.files[0];
@@ -881,7 +940,6 @@ fileIn.addEventListener('change', e => {
           if (sc.seed !== undefined) stations[i].cfg.seed = sc.seed;
         });
         rebuildTiming();
-        console.log('Config loaded:', data);
       }
     } catch (err) { console.error('Invalid JSON:', err); }
   };
@@ -903,21 +961,16 @@ function rebuildTiming() {
     let c = 0;
     st.times.forEach((t, i) => { st.phases.push({ start:c, end:c+t, name:PHASES[i].name, label:PHASES[i].label }); c += t; });
     st.elapsed = 0; st.completed = false; st.finishOrder = 0; st.phaseIdx = 0;
-
-    /* Reset doctor arm pose */
     st.dj.rUpperArm.rotation.x = 0;
     st.dj.rUpperArm.rotation.z = 0;
     st.dj.rElbow.rotation.x = 0;
-    st.dj.rHand.rotation.y = 0;
+    if (st.dj.rWrist) st.dj.rWrist.rotation.y = 0;
     st.doctor.position.x = st.docHomeX;
-
-    /* Reset nurse arm pose */
     st.nj.rUpperArm.rotation.x = -20 * DEG;
     st.nj.rElbow.rotation.x = -70 * DEG;
   });
 }
 
-/* Toggle panels */
 togglePh.addEventListener('click', () => {
   showPhases = !showPhases;
   phasePanel.classList.toggle('visible', showPhases);
@@ -929,7 +982,6 @@ toggleSb.addEventListener('click', () => {
   toggleSb.classList.toggle('open', showScoreboard);
 });
 
-/* Station selector */
 stBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     stBtns.forEach(b => b.classList.remove('active'));
@@ -949,14 +1001,15 @@ function startCamAnim(tgt) {
   camAnim = true;
 }
 
-/* Results close */
 resClose.addEventListener('click', () => { finalRes.classList.remove('show'); });
 
-/* ── EASING ── */
+/* -- EASING -- */
 function ease(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2; }
 function ss(t) { t = Math.max(0, Math.min(1, t)); return t*t*(3-2*t); }
+/* Smoother quintic ease for finer animation */
+function ssq(t) { t = Math.max(0, Math.min(1, t)); return t*t*t*(t*(t*6-15)+10); }
 
-/* ── PER-STATION ANIMATION — v0.1.0 7-phase doctor injection ── */
+/* -- PER-STATION ANIMATION -- */
 function animStation(st, dt) {
   if (st.completed) return;
   st.elapsed += dt;
@@ -968,8 +1021,6 @@ function animStation(st, dt) {
   }
 
   const t = st.elapsed;
-
-  /* Find current phase */
   let pi = 0;
   for (let i = 0; i < st.phases.length; i++) {
     if (t >= st.phases[i].start && t < st.phases[i].end) { pi = i; break; }
@@ -980,74 +1031,77 @@ function animStation(st, dt) {
   if (!ph) return;
 
   const pT = Math.min(1, (t - ph.start) / (ph.end - ph.start));
-  const sT = ss(pT);
+  const sT = ssq(pT);
 
-  /* === DOCTOR ARM ANIMATION — exact v0.1.0 angles === */
+  /* === DOCTOR G1 ARM ANIMATION (smoother) === */
   let docSP = 0, docSY = 0, docElbow = 0, docWrist = 0, docXOff = 0;
 
   switch(ph.name) {
     case 'prepare':
       docSP = sT * 30;
-      docElbow = sT * 60;
+      docElbow = sT * 55;
       docWrist = sT * 10;
       break;
     case 'approach':
       docSP = 30 + sT * 40;
       docSY = sT * (-30);
-      docElbow = 60 + sT * 20;
+      docElbow = 55 + sT * 25;
       docWrist = 10 + sT * 15;
       docXOff = sT * (-0.15);
       break;
     case 'position':
-      docSP = 70 + sT * 5;
-      docSY = -30 - sT * 10;
+      docSP = 70 + sT * 8;
+      docSY = -30 - sT * 12;
       docElbow = 80 + sT * 10;
       docWrist = 25 + sT * 5;
-      docXOff = -0.15;
+      docXOff = -0.15 - sT * 0.02;
       break;
     case 'inject':
-      docSP = 75;
-      docSY = -40 - sT * 5;
-      docElbow = 90;
-      docWrist = 30 - sT * 5;
-      docXOff = -0.15;
+      docSP = 78 + sT * 2;
+      docSY = -42 - sT * 5;
+      docElbow = 90 + sT * 2;
+      docWrist = 30 - sT * 3;
+      docXOff = -0.17;
       break;
     case 'hold':
-      docSP = 75 + Math.sin(pT * Math.PI * 2) * 0.5;
-      docSY = -45;
-      docElbow = 90;
-      docWrist = 25;
-      docXOff = -0.15;
+      docSP = 80 + Math.sin(pT * Math.PI * 3) * 0.3;
+      docSY = -47;
+      docElbow = 92;
+      docWrist = 27;
+      docXOff = -0.17;
       break;
     case 'withdraw':
-      docSP = 75 - sT * 40;
-      docSY = -45 + sT * 35;
-      docElbow = 90 - sT * 50;
-      docWrist = 25 - sT * 20;
-      docXOff = -0.15 + sT * 0.15;
+      docSP = 80 - sT * 45;
+      docSY = -47 + sT * 37;
+      docElbow = 92 - sT * 55;
+      docWrist = 27 - sT * 22;
+      docXOff = -0.17 + sT * 0.17;
       break;
     case 'monitor':
       docSP = 35 - sT * 35;
       docSY = -10 + sT * 10;
-      docElbow = 40 - sT * 40;
+      docElbow = 37 - sT * 37;
       docWrist = 5 - sT * 5;
       break;
   }
 
-  /* Apply doctor arm joints */
   st.dj.rUpperArm.rotation.x = -docSP * DEG;
   st.dj.rUpperArm.rotation.z = docSY * DEG;
   st.dj.rElbow.rotation.x = -docElbow * DEG;
-  st.dj.rHand.rotation.y = docWrist * DEG;
+  if (st.dj.rWrist) st.dj.rWrist.rotation.y = docWrist * DEG;
   st.doctor.position.x = st.docHomeX + docXOff;
 
   /* Doctor left arm idle sway */
-  st.dj.lUpperArm.rotation.x = Math.sin(t * 0.8) * 0.03;
-
-  /* Doctor subtle body movement */
+  st.dj.lUpperArm.rotation.x = Math.sin(t * 0.8) * 0.025;
+  /* Doctor subtle body breathing */
   st.doctor.position.y = 0.89 + Math.sin(t * 1.5) * 0.003;
+  /* Doctor head slight track toward patient */
+  if (st.dj.head) {
+    const headTrack = ph.name === 'inject' || ph.name === 'hold' ? -0.15 : -0.05;
+    st.dj.head.rotation.y = headTrack + Math.sin(t * 0.3) * 0.02;
+  }
 
-  /* === NURSE ANIMATION — monitoring with tablet === */
+  /* === NURSE G1 ANIMATION === */
   let nurseSP = 20, nurseElbow = 70;
   if (ph.name === 'monitor') {
     nurseSP = 20 + sT * 15;
@@ -1055,17 +1109,28 @@ function animStation(st, dt) {
   }
   st.nj.rUpperArm.rotation.x = -nurseSP * DEG;
   st.nj.rElbow.rotation.x = -nurseElbow * DEG;
-  /* Nurse breathing */
-  st.nurse.position.y = 0.89 + Math.sin(t * 2.2) * 0.004;
-  st.nj.lUpperArm.rotation.x = Math.sin(t * 1.5) * 0.02;
+  st.nurse.position.y = 0.89 + Math.sin(t * 2.2) * 0.003;
+  st.nj.lUpperArm.rotation.x = Math.sin(t * 1.5) * 0.015;
+  /* Nurse head looks toward patient */
+  if (st.nj.head) {
+    st.nj.head.rotation.y = 0.08 + Math.sin(t * 0.4) * 0.02;
+  }
 
   /* === PATIENT subtle movement === */
-  st.pj.head.rotation.y = Math.sin(t * 0.3) * 0.03;
-  st.pj.rUpperArm.rotation.x = 0.12 + Math.sin(t * 0.8) * 0.005;
+  st.pj.head.rotation.y = Math.sin(t * 0.3) * 0.025;
+  st.pj.rUpperArm.rotation.x = 0.3 + Math.sin(t * 0.8) * 0.004;
+  /* Patient slight breathing */
+  st.patient.position.y = 1.15 + Math.sin(t * 2.0) * 0.002;
 
   /* Monitor LED blink */
   if (st.mon && st.mon.userData && st.mon.userData.led) {
     st.mon.userData.led.material.emissiveIntensity = Math.sin(t * 6) > 0 ? 0.8 : 0.1;
+  }
+
+  /* G1 head LED mask pulse */
+  if (st.doctor.userData.joints.head && st.doctor.userData.joints.head.userData.ledMask) {
+    st.doctor.userData.joints.head.userData.ledMask.material.emissiveIntensity =
+      0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * 4));
   }
 
   /* Pulse injection target ring */
@@ -1075,7 +1140,7 @@ function animStation(st, dt) {
   }
 }
 
-/* ── SCOREBOARD ── */
+/* -- SCOREBOARD -- */
 function updateScoreboard() {
   const sorted = stations.map((st, i) => ({
     idx:i, name:st.cfg.name,
@@ -1109,7 +1174,7 @@ function updateScoreboard() {
   document.getElementById('score-entries').innerHTML = html;
 }
 
-/* ── PHASE INDICATOR ── */
+/* -- PHASE INDICATOR -- */
 function updatePhaseIndicator() {
   let st;
   if (activeSt !== 'overview' && typeof activeSt === 'number') {
@@ -1118,10 +1183,8 @@ function updatePhaseIndicator() {
     st = stations[0];
     stations.forEach(s => { if (s.elapsed / s.total > st.elapsed / st.total) st = s; });
   }
-
   const lbl = activeSt !== 'overview' ? 'Station '+st.cfg.name : 'Leading: Station '+st.cfg.name;
   let html = '<div style="font-size:9px;color:#888;margin-bottom:3px">'+lbl+'</div>';
-
   st.phases.forEach((p, i) => {
     let cls = 'phase-line';
     if (st.completed || i < st.phaseIdx) cls += ' done';
@@ -1131,16 +1194,14 @@ function updatePhaseIndicator() {
   document.getElementById('phase-lines').innerHTML = html;
 }
 
-/* ── FINAL RESULTS ── */
+/* -- FINAL RESULTS -- */
 function showFinalResults() {
   if (resultsShown) return;
   resultsShown = true;
-
   const ranked = [...stations].sort((a,b) => {
     if (a.finishOrder !== b.finishOrder) return a.finishOrder - b.finishOrder;
     return b.accuracy - a.accuracy;
   });
-
   const classes = ['first','second','third','fourth'];
   let html = '';
   ranked.forEach((st, i) => {
@@ -1155,7 +1216,7 @@ function showFinalResults() {
   finalRes.classList.add('show');
 }
 
-/* ── RESIZE ── */
+/* -- RESIZE -- */
 function onResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -1163,7 +1224,7 @@ function onResize() {
 }
 window.addEventListener('resize', onResize);
 
-/* ── MAIN LOOP ── */
+/* -- MAIN LOOP -- */
 const clock = new THREE.Clock();
 let uiTimer = 0;
 
@@ -1172,7 +1233,6 @@ function animate() {
   const dt = clock.getDelta();
   const now = performance.now() / 1000;
 
-  /* Camera transition */
   if (camAnim) {
     let p = (now - camStart) / camDur;
     if (p >= 1) { p = 1; camAnim = false; }
@@ -1182,12 +1242,10 @@ function animate() {
   }
   ctrls.update();
 
-  /* Animate all stations independently and simultaneously */
   if (playing) {
     stations.forEach(st => animStation(st, dt));
   }
 
-  /* Throttled UI (~10Hz) */
   uiTimer += dt;
   if (uiTimer > 0.1) {
     uiTimer = 0;
@@ -1195,7 +1253,6 @@ function animate() {
     updatePhaseIndicator();
   }
 
-  /* All done? Show results */
   if (playing && stations.every(s => s.completed)) {
     playing = false;
     btnPlay.innerHTML = '&#9654;';
