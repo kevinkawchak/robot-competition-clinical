@@ -23,6 +23,8 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 **Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
+Note: v0.7.0 has a ceiling with lighting.
+
 | Version | URL | Description |
 |---|---|---|
 | **v0.7.0 Competition (current)** | [https://kevinkawchak.github.io/robot-competition-clinical/v7/](https://kevinkawchak.github.io/robot-competition-clinical/v7/) | Enhanced visuals: ceiling lights, patient faces, active nurse |
