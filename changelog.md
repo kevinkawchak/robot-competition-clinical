@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Updated `tests/test_exports.py` to expect version 0.7.0
 - Updated README with v0.7.0 documentation and version table
 - Increased tone mapping exposure from 1.4 to 1.5 for enhanced lighting
+- @kevinkawchak made a note in main README that v0.7.0 has a roof. 2026-03-04
 
 ## [0.6.0] — 2026-03-03
 
