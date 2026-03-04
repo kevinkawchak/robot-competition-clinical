@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - `simulation_v2/export_competition.py` version string to 0.8.0
 - `tests/test_exports.py` to expect version 0.8.0
 - README updated with v0.8.0 documentation and version table
+- @kevinkawchak: Note v0.8.0/v0.7.0 have roofs in main README - 2026-03-04.
 
 ## [0.7.0] — 2026-03-04
 
