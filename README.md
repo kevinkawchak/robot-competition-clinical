@@ -23,6 +23,7 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 **Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
+**Note: Top Roofs for v0.8.0 & v0.7.0**
 | Version | URL | Description |
 |---|---|---|
 | **v0.8.0 Competition (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
