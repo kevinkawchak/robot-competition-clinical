@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Clinical Robot Competition v0.8.0 — SOTA G1 Robots</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body { background:#0d1117; color:#c9d1d9; font-family:"Segoe UI",system-ui,-apple-system,sans-serif; }
+#canvas3d { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; display:block; }
+#overlay { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+#overlay > * { pointer-events:auto; }
+#nav-banner { position:absolute; top:0; left:0; right:0; height:28px;
+  background:rgba(13,17,23,0.92); border-bottom:1px solid rgba(0,212,255,0.2);
+  display:flex; align-items:center; justify-content:center; gap:16px; font-size:11px;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+#nav-banner a { color:#00d4ff; text-decoration:none; font-weight:600; }
+#nav-banner a:hover { text-decoration:underline; color:#40e0ff; }
+#nav-banner span { color:#484f58; }
+#header { position:absolute; top:28px; left:0; right:0; height:44px;
+  background:rgba(13,17,23,0.88); border-bottom:1px solid rgba(0,212,255,0.15);
+  display:flex; align-items:center; padding:0 12px; gap:10px;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+#header h1 { font-size:15px; font-weight:700; color:#00d4ff; white-space:nowrap; }
+#header .subtitle { font-size:10px; color:#8b949e; }
+#station-selector { position:absolute; top:78px; left:50%; transform:translateX(-50%);
+  display:flex; gap:5px; background:rgba(13,17,23,0.85); padding:5px 8px; border-radius:8px;
+  border:1px solid rgba(0,212,255,0.2); z-index:20;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.station-btn { background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2); color:#8b949e;
+  padding:5px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;
+  transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.station-btn:hover { background:rgba(0,212,255,0.15); border-color:rgba(0,212,255,0.4); color:#c9d1d9; }
+.station-btn.active { background:rgba(0,212,255,0.25); color:#00d4ff; border-color:#00d4ff; font-weight:700; }
+.panel-toggle { position:absolute; z-index:15; background:rgba(13,17,23,0.85); border:1px solid rgba(0,212,255,0.2);
+  color:#00d4ff; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+  -webkit-tap-highlight-color:transparent; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.panel-toggle:hover { background:rgba(0,212,255,0.15); border-color:#00d4ff; }
+.panel-toggle.open { background:rgba(0,212,255,0.25); color:#fff; }
+#toggle-phases { top:112px; left:12px; }
+#toggle-scoreboard { top:112px; right:12px; }
+#phase-panel { position:absolute; top:150px; left:12px; background:rgba(13,17,23,0.92);
+  border:1px solid rgba(0,212,255,0.2); border-radius:8px; padding:10px 12px; min-width:200px; max-width:230px;
+  display:none; max-height:calc(100vh - 220px); overflow-y:auto; z-index:14;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+#phase-panel.visible { display:block; }
+#phase-panel h3 { font-size:11px; color:#00d4ff; margin-bottom:5px; letter-spacing:0.5px; text-transform:uppercase; }
+.phase-line { font-size:10px; margin:2px 0; color:#6e7681; display:flex; align-items:center; gap:5px; }
+.phase-line.active { color:#00d4ff; font-weight:600; }
+.phase-line.done { color:#3fb950; }
+.phase-dot { width:5px; height:5px; border-radius:50%; background:#484f58; flex-shrink:0; }
+.phase-line.active .phase-dot { background:#00d4ff; box-shadow:0 0 4px #00d4ff; }
+.phase-line.done .phase-dot { background:#3fb950; }
+#scoreboard-panel { position:absolute; top:150px; right:12px; width:260px; background:rgba(13,17,23,0.92);
+  border:1px solid rgba(0,212,255,0.2); border-radius:8px; padding:10px 12px; display:none;
+  max-height:calc(100vh - 220px); overflow-y:auto; z-index:14;
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+#scoreboard-panel.visible { display:block; }
+#scoreboard-panel h2 { font-size:12px; color:#00d4ff; margin-bottom:6px; text-align:center;
+  border-bottom:1px solid rgba(0,212,255,0.15); padding-bottom:5px; letter-spacing:0.5px; text-transform:uppercase; }
+.score-station { margin-bottom:8px; padding:7px 8px; background:rgba(0,212,255,0.04); border-radius:6px; border-left:3px solid #484f58; }
+.score-station.rank1 { border-left-color:#ffd700; }
+.score-station.rank2 { border-left-color:#aaa; }
+.score-station.rank3 { border-left-color:#cd7f32; }
+.score-station.rank4 { border-left-color:#484f58; }
+.station-label { font-weight:700; font-size:12px; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; color:#c9d1d9; }
+.score-row { display:flex; justify-content:space-between; font-size:10px; color:#6e7681; padding:1px 0; }
+.score-row span:last-child { color:#c9d1d9; font-weight:500; }
+.rank-badge { font-size:10px; padding:1px 6px; border-radius:3px; font-weight:700; }
+.rank-badge.r1 { background:#ffd700; color:#000; }
+.rank-badge.r2 { background:#aaa; color:#000; }
+.rank-badge.r3 { background:#cd7f32; color:#fff; }
+.rank-badge.r4 { background:#484f58; color:#c9d1d9; }
+#final-results { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:50;
+  background:rgba(0,0,0,0.65); align-items:center; justify-content:center;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+#final-results.show { display:flex; }
+#results-card { background:rgba(13,17,23,0.95); border:2px solid #ffd700; border-radius:14px;
+  padding:24px; max-width:440px; width:90%; text-align:center;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(255,215,0,0.1); }
+#results-card h2 { color:#ffd700; font-size:20px; margin-bottom:14px; }
+.result-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px;
+  margin:4px 0; border-radius:6px; font-size:13px; }
+.result-row.first { background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.4); }
+.result-row.second { background:rgba(170,170,170,0.08); border:1px solid rgba(170,170,170,0.3); }
+.result-row.third { background:rgba(205,127,50,0.08); border:1px solid rgba(205,127,50,0.3); }
+.result-row.fourth { background:rgba(72,79,88,0.08); border:1px solid rgba(72,79,88,0.3); }
+.result-rank { font-weight:700; width:30px; color:#ffd700; }
+.result-name { font-weight:600; color:#00d4ff; width:70px; }
+.result-time { color:#c9d1d9; }
+.result-acc { color:#3fb950; }
+#results-card button { margin-top:16px; background:#00d4ff; color:#0d1117; border:none; padding:10px 28px;
+  border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; }
+#results-card button:hover { background:#40e0ff; }
+#controls { position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; background:rgba(13,17,23,0.88); padding:6px 12px; border-radius:10px;
+  border:1px solid rgba(0,212,255,0.2); z-index:15;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.ctrl-btn { background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.2); color:#8b949e;
+  width:38px; height:38px; border-radius:8px; cursor:pointer; font-size:17px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+  -webkit-tap-highlight-color:transparent; }
+.ctrl-btn:hover { background:rgba(0,212,255,0.15); border-color:#00d4ff; color:#00d4ff; }
+.ctrl-btn.active { background:rgba(0,212,255,0.25); color:#00d4ff; border-color:#00d4ff; }
+#legend { position:absolute; bottom:14px; left:12px; background:rgba(13,17,23,0.88);
+  border:1px solid rgba(0,212,255,0.2); border-radius:8px; padding:8px 12px; z-index:14;
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+#legend h3 { font-size:10px; color:#00d4ff; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:10px; margin:2px 0; color:#8b949e; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+#info-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100;
+  background:rgba(0,0,0,0.65); align-items:center; justify-content:center;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+#info-modal.show { display:flex; }
+#info-content { background:rgba(13,17,23,0.96); border:1px solid rgba(0,212,255,0.3); border-radius:12px;
+  padding:22px; max-width:500px; width:92%; max-height:80vh; overflow-y:auto; color:#c9d1d9; }
+#info-content h2 { color:#00d4ff; margin-bottom:10px; font-size:18px; }
+#info-content h3 { color:#00d4ff; margin:10px 0 5px; font-size:13px; }
+#info-content p, #info-content li { font-size:12px; line-height:1.5; color:#8b949e; }
+#info-content ul { padding-left:16px; margin:6px 0; }
+#info-content .close-btn { background:#00d4ff; color:#0d1117; border:none; padding:8px 20px; border-radius:6px;
+  cursor:pointer; font-weight:600; margin-top:14px; font-size:13px; }
+#attribution { position:absolute; bottom:3px; right:12px; font-size:8px; color:#484f58; }
+#file-input { display:none; }
+@media (max-width:768px) {
+  #nav-banner { font-size:9px; gap:8px; height:24px; }
+  #header { top:24px; height:38px; }
+  #header h1 { font-size:13px; }
+  #station-selector { top:66px; gap:3px; padding:4px 6px; }
+  .station-btn { padding:4px 9px; font-size:10px; }
+  #toggle-phases { top:98px; left:6px; width:28px; height:28px; font-size:12px; }
+  #toggle-scoreboard { top:98px; right:6px; width:28px; height:28px; font-size:12px; }
+  #phase-panel { top:132px; left:6px; min-width:160px; max-width:180px; padding:7px 9px; }
+  #scoreboard-panel { top:132px; right:6px; width:180px; padding:7px 9px; }
+  #scoreboard-panel h2 { font-size:10px; }
+  .score-station { padding:5px 6px; }
+  .station-label { font-size:10px; }
+  .score-row { font-size:9px; }
+  .rank-badge { font-size:8px; padding:1px 4px; }
+  #legend { display:none; }
+  .ctrl-btn { width:34px; height:34px; font-size:15px; }
+  #controls { bottom:10px; }
+  #final-results { z-index:60; }
+  #results-card { padding:16px; }
+  #results-card h2 { font-size:16px; }
+  .result-row { font-size:11px; padding:6px 8px; }
+}
+@media (max-width:420px) {
+  #scoreboard-panel { width:150px; }
+  #phase-panel { max-width:150px; min-width:130px; }
+  .station-btn { padding:3px 7px; font-size:9px; }
+}
+</style>
+</head>
+<body>
+<canvas id="canvas3d"></canvas>
+<div id="overlay">
+  <div id="nav-banner">
+    <a id="nav-v1" href="#">v0.1.0</a>
+    <span>|</span>
+    <a id="nav-v5" href="#">v0.5.0</a>
+    <span>|</span>
+    <a id="nav-v6" href="#">v0.6.0</a>
+    <span>|</span>
+    <a id="nav-v7" href="#">v0.7.0</a>
+    <span>|</span>
+    <span style="color:#00d4ff; font-weight:700;">v0.8.0 (new)</span>
+  </div>
+  <div id="header">
+    <h1>Clinical Robot Competition</h1>
+    <span class="subtitle">4-Station PPO v0.8.0 &mdash; SOTA G1 Robots &amp; Realistic Patients</span>
+  </div>
+  <div id="station-selector">
+    <button class="station-btn active" data-station="overview">Overview</button>
+    <button class="station-btn" data-station="0">A</button>
+    <button class="station-btn" data-station="1">B</button>
+    <button class="station-btn" data-station="2">C</button>
+    <button class="station-btn" data-station="3">D</button>
+  </div>
+  <button class="panel-toggle" id="toggle-phases" title="Toggle Phase Timeline">&#9776;</button>
+  <button class="panel-toggle" id="toggle-scoreboard" title="Toggle Scoreboard">&#9783;</button>
+  <div id="phase-panel"><h3>Phase Timeline</h3><div id="phase-lines"></div></div>
+  <div id="scoreboard-panel"><h2>Scoreboard</h2><div id="score-entries"></div></div>
+  <div id="controls">
+    <button class="ctrl-btn" id="btn-play" title="Play/Pause">&#9654;</button>
+    <button class="ctrl-btn" id="btn-reset" title="Reset">&#8634;</button>
+    <button class="ctrl-btn" id="btn-info" title="Info">&#9432;</button>
+    <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
+  </div>
+  <div id="legend">
+    <h3>Legend</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #00d4ff"></div>G1 Doctor (white coat, syringe + swab)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (gown, wristband, oximeter)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #3377ee"></div>G1 Nurse (blue coat, tablet, stethoscope)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#cc3344"></div>IV Stand &amp; Equipment</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff2244"></div>Injection Target</div>
+  </div>
+  <div id="attribution">v0.8.0 | Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
+</div>
+<div id="final-results">
+  <div id="results-card">
+    <h2>&#127942; Competition Results</h2>
+    <div id="results-rows"></div>
+    <button id="btn-results-close">Close Results</button>
+  </div>
+</div>
+<div id="info-modal">
+  <div id="info-content">
+    <h2>Clinical Robot Competition v0.8.0</h2>
+    <p>A 4-station clinical robot competition where <strong>SOTA Unitree G1 humanoid robots</strong>
+    (from unitreerobotics) serve as doctors and nurses competing to perform patient injection
+    procedures on <strong>realistic human patients</strong>. Premium dark theme with PBR-style
+    materials, surgical overhead spotlights, glass observation window, medical curtain
+    dividers, and animated vital signs. Each station runs independently with PPO RL policies.</p>
+    <h3>SOTA Unitree G1 Robots</h3>
+    <ul>
+      <li>1.32m tall, 35kg, 23&ndash;43 degrees of freedom</li>
+      <li>Dark charcoal body, glossy visor head, metallic joints</li>
+      <li>Dex3-1 hands with articulated finger segments</li>
+      <li>Battery pack on back, spine LED strip, ankle actuators</li>
+      <li>Doctor G1: white coat, red cross, syringe + alcohol swab</li>
+      <li>Nurse G1: blue coat, gold badge, tablet, stethoscope</li>
+    </ul>
+    <h3>Realistic Human Patients</h3>
+    <ul>
+      <li>Skin-colored body with facial features (eyes, nose, mouth)</li>
+      <li>Hospital wristband, pulse oximeter on finger</li>
+      <li>Visible veins on injection arm</li>
+      <li>Green hospital gown, proper seated posture</li>
+    </ul>
+    <h3>Competition Ranking</h3>
+    <ul>
+      <li><strong>Time:</strong> Total elapsed seconds for all 7 phases</li>
+      <li><strong>Accuracy:</strong> Needle-to-target distance. Score = 1/(1+dist*100)</li>
+      <li><strong>Winner:</strong> Fastest total time, tiebroken by accuracy</li>
+    </ul>
+    <h3>Why Robot Competitions for Oncology</h3>
+    <p>Having multiple autonomous robots compete simultaneously on injection procedures
+    demonstrates that parallel robot trials can accelerate clinical workflows compared to
+    sequential human trials, making future fully autonomous physical AI oncology trials faster.</p>
+    <p style="margin-top:8px;font-size:10px;color:#484f58">v0.8.0 | Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
+    <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+<input type="file" id="file-input" accept=".json"/>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* -- NAV BANNER -- */
+(function() {
+  const base = window.location.pathname.replace(/\/v8\/?$/, '').replace(/\/+$/, '');
+  document.getElementById('nav-v1').href = base + '/';
+  document.getElementById('nav-v5').href = base + '/v5/';
+  document.getElementById('nav-v6').href = base + '/v6/';
+  document.getElementById('nav-v7').href = base + '/v7/';
+})();
+
+const ROOM_W = 18, ROOM_D = 18, ROOM_H = 5.0;
+const GRID_X = 6.0, GRID_Z = 6.0;
+const DEG = Math.PI / 180;
+
+const STATION_CONFIGS = [
+  { name:'A', seed:42,  speed:1.00, gx:-1, gz:-1, color:'#ffd700' },
+  { name:'B', seed:137, speed:0.88, gx: 1, gz:-1, color:'#00d4ff' },
+  { name:'C', seed:256, speed:1.08, gx:-1, gz: 1, color:'#ff6644' },
+  { name:'D', seed:512, speed:0.95, gx: 1, gz: 1, color:'#a855f7' },
+];
+
+const PHASES = [
+  { name:'prepare',  dur:1.0, label:'Preparing syringe' },
+  { name:'approach', dur:2.0, label:'Approaching patient' },
+  { name:'position', dur:1.5, label:'Positioning at deltoid' },
+  { name:'inject',   dur:2.0, label:'Administering injection' },
+  { name:'hold',     dur:1.5, label:'Holding steady' },
+  { name:'withdraw', dur:1.5, label:'Withdrawing syringe' },
+  { name:'monitor',  dur:2.0, label:'Post-injection monitoring' },
+];
+
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function ppoJitter(rng, base, speed) {
+  const j = (rng() - 0.5) * 0.3 * base;
+  return Math.max(0.3, (base + j) / speed);
+}
+
+/* -- RENDERER -- */
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.6;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0d1117');
+scene.fog = new THREE.Fog('#0d1117', 30, 55);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 15, 21);
+const ctrls = new OrbitControls(camera, canvas);
+ctrls.enableDamping = true; ctrls.dampingFactor = 0.08;
+ctrls.target.set(0, 1.2, 0);
+ctrls.minDistance = 3; ctrls.maxDistance = 35;
+ctrls.maxPolarAngle = Math.PI * 0.47;
+
+/* -- LIGHTS -- */
+scene.add(new THREE.AmbientLight(0x334466, 0.5));
+const sun = new THREE.DirectionalLight(0xaaccff, 0.8);
+sun.position.set(8, 18, 10); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -16; sun.shadow.camera.right = 16;
+sun.shadow.camera.top = 16; sun.shadow.camera.bottom = -16;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 36; sun.shadow.bias = -0.001;
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(0x334466, 0x111122, 0.3));
+
+STATION_CONFIGS.forEach(cfg => {
+  const spot = new THREE.SpotLight(0xffffff, 1.2, 12, Math.PI/5, 0.6, 1);
+  spot.position.set(cfg.gx*GRID_X/2, ROOM_H-0.2, cfg.gz*GRID_Z/2);
+  spot.target.position.set(cfg.gx*GRID_X/2, 0.5, cfg.gz*GRID_Z/2);
+  spot.castShadow = true; spot.shadow.mapSize.set(512,512);
+  scene.add(spot); scene.add(spot.target);
+});
+
+/* -- MATERIALS (PBR) -- */
+const M = {
+  floor:new THREE.MeshStandardMaterial({color:0x1a1e24,roughness:0.7,metalness:0.1}),
+  floorTile:new THREE.MeshStandardMaterial({color:0x222830,roughness:0.65,metalness:0.1}),
+  wall:new THREE.MeshStandardMaterial({color:0x252a32,roughness:0.6}),
+  glass:new THREE.MeshStandardMaterial({color:0x88ccee,roughness:0.05,metalness:0.1,transparent:true,opacity:0.15}),
+  ceiling:new THREE.MeshStandardMaterial({color:0x1e2228,roughness:0.7}),
+  g1body:new THREE.MeshStandardMaterial({color:0x1a1a1e,roughness:0.25,metalness:0.15}),
+  g1visor:new THREE.MeshStandardMaterial({color:0x0a0a0f,roughness:0.05,metalness:0.6}),
+  g1joint:new THREE.MeshStandardMaterial({color:0x888890,roughness:0.2,metalness:0.85}),
+  g1panel:new THREE.MeshStandardMaterial({color:0x252528,roughness:0.25,metalness:0.2}),
+  coatWhite:new THREE.MeshStandardMaterial({color:0xf0f0f0,roughness:0.45,transparent:true,opacity:0.88}),
+  coatBlue:new THREE.MeshStandardMaterial({color:0x2255cc,roughness:0.45,transparent:true,opacity:0.88}),
+  skin:new THREE.MeshStandardMaterial({color:0xe8b090,roughness:0.5}),
+  hair:new THREE.MeshStandardMaterial({color:0x3a2a1a,roughness:0.75}),
+  gown:new THREE.MeshStandardMaterial({color:0x55bb77,roughness:0.45}),
+  vein:new THREE.MeshStandardMaterial({color:0x5577aa,roughness:0.6,transparent:true,opacity:0.3}),
+  wristband:new THREE.MeshStandardMaterial({color:0xeeeeee,roughness:0.5}),
+  oximeter:new THREE.MeshStandardMaterial({color:0xcc2222,emissive:0xcc2222,emissiveIntensity:0.3,roughness:0.3}),
+  chair:new THREE.MeshStandardMaterial({color:0x556677,roughness:0.4,metalness:0.3}),
+  cushion:new THREE.MeshStandardMaterial({color:0x1a3355,roughness:0.55}),
+  iv:new THREE.MeshStandardMaterial({color:0xcc3344,roughness:0.25,metalness:0.5}),
+  ivBag:new THREE.MeshStandardMaterial({color:0x88bbee,transparent:true,opacity:0.4,roughness:0.1}),
+  tray:new THREE.MeshStandardMaterial({color:0x999999,roughness:0.2,metalness:0.75}),
+  monitor:new THREE.MeshStandardMaterial({color:0x333344,roughness:0.35}),
+  screen:new THREE.MeshStandardMaterial({color:0x22dd66,emissive:0x22dd66,emissiveIntensity:0.3}),
+  syringe:new THREE.MeshStandardMaterial({color:0xdddddd,roughness:0.1,metalness:0.9}),
+  needle:new THREE.MeshStandardMaterial({color:0xeeeeee,roughness:0.05,metalness:1.0}),
+  swab:new THREE.MeshStandardMaterial({color:0xf5f5f5,roughness:0.7}),
+  chart:new THREE.MeshStandardMaterial({color:0xf5f0e0,roughness:0.6}),
+  text:new THREE.MeshStandardMaterial({color:0x555555}),
+  led:new THREE.MeshStandardMaterial({color:0x00ee44,emissive:0x00ee44,emissiveIntensity:0.8}),
+  ledCyan:new THREE.MeshStandardMaterial({color:0x00d4ff,emissive:0x00d4ff,emissiveIntensity:0.6}),
+  target:new THREE.MeshStandardMaterial({color:0xff2244,emissive:0xff2244,emissiveIntensity:0.5}),
+  redCross:new THREE.MeshStandardMaterial({color:0xcc2222,roughness:0.4}),
+  badge:new THREE.MeshStandardMaterial({color:0xffcc00,roughness:0.3,metalness:0.4}),
+  curtain:new THREE.MeshStandardMaterial({color:0x445566,roughness:0.7,transparent:true,opacity:0.35,side:THREE.DoubleSide}),
+  exitSign:new THREE.MeshStandardMaterial({color:0x22cc44,emissive:0x22cc44,emissiveIntensity:0.5}),
+  sanitizer:new THREE.MeshStandardMaterial({color:0xcccccc,roughness:0.3,metalness:0.4}),
+  stethTube:new THREE.MeshStandardMaterial({color:0x222222,roughness:0.5}),
+  stethHead:new THREE.MeshStandardMaterial({color:0x999999,roughness:0.2,metalness:0.8}),
+  lightFix:new THREE.MeshStandardMaterial({color:0x888888,roughness:0.3,metalness:0.5}),
+  lightGlow:new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffee,emissiveIntensity:0.8}),
+  baseboard:new THREE.MeshStandardMaterial({color:0x444450,roughness:0.4}),
+  doorWood:new THREE.MeshStandardMaterial({color:0x5a4a3a,roughness:0.55}),
+  doorFrame:new THREE.MeshStandardMaterial({color:0x555555,roughness:0.35}),
+};
+
+/* -- GEOMETRY HELPERS -- */
+const gBox=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+const gCyl=(rT,rB,h,s)=>new THREE.CylinderGeometry(rT,rB,h,s||16);
+const gSph=(r,w,h)=>new THREE.SphereGeometry(r,w||14,h||12);
+const gCap=(r,l,cs,rs)=>new THREE.CapsuleGeometry(r,l,cs||4,rs||8);
+const gTor=(r,t,rs,ts)=>new THREE.TorusGeometry(r,t,rs||8,ts||24);
+
+function mk(geo,mat,pos,parent){
+  const m=new THREE.Mesh(geo,mat);
+  if(pos) m.position.set(pos[0],pos[1],pos[2]);
+  m.castShadow=true; m.receiveShadow=true;
+  (parent||scene).add(m); return m;
+}
+
+/* -- ROOM -- */
+function buildRoom(){
+  const fl=mk(gBox(ROOM_W,0.1,ROOM_D),M.floor,[0,-0.05,0]); fl.castShadow=false;
+  /* Checkerboard tiles */
+  for(let x=-ROOM_W/2+0.5;x<ROOM_W/2;x+=1.0)
+    for(let z=-ROOM_D/2+0.5;z<ROOM_D/2;z+=1.0)
+      if((Math.round(x)+Math.round(z))%2===0){
+        const t=mk(gBox(0.98,0.005,0.98),M.floorTile,[x,0.005,z]); t.castShadow=false;
+      }
+  const hw=ROOM_W/2, hd=ROOM_D/2;
+  const wg=gBox(ROOM_W,ROOM_H,0.12);
+  [[0,ROOM_H/2,-hd,0],[0,ROOM_H/2,hd,0],[-hw,ROOM_H/2,0,Math.PI/2],[hw,ROOM_H/2,0,Math.PI/2]].forEach(([x,y,z,ry])=>{
+    const w=mk(wg,M.wall,[x,y,z]); if(ry)w.rotation.y=ry; w.castShadow=false;
+  });
+  /* Ceiling */
+  const ceil=mk(gBox(ROOM_W,0.08,ROOM_D),M.ceiling,[0,ROOM_H,0]); ceil.castShadow=false;
+  /* Glass observation window */
+  const gp=mk(gBox(0.02,2.5,5.0),M.glass,[hw-0.04,2.5,0]); gp.castShadow=false;
+  mk(gBox(0.06,0.06,5.0),M.doorFrame,[hw-0.04,1.25,0]);
+  mk(gBox(0.06,0.06,5.0),M.doorFrame,[hw-0.04,3.75,0]);
+  mk(gBox(0.06,2.5,0.06),M.doorFrame,[hw-0.04,2.5,2.5]);
+  mk(gBox(0.06,2.5,0.06),M.doorFrame,[hw-0.04,2.5,-2.5]);
+  /* Baseboards */
+  [[0,0.06,-hd+0.06,0,ROOM_W],[0,0.06,hd-0.06,0,ROOM_W],
+   [-hw+0.06,0.06,0,Math.PI/2,ROOM_D],[hw-0.06,0.06,0,Math.PI/2,ROOM_D]].forEach(([x,y,z,ry,len])=>{
+    const bb=mk(gBox(len,0.12,0.04),M.baseboard,[x,y,z]); if(ry)bb.rotation.y=ry; bb.castShadow=false;
+  });
+  /* Surgical light fixtures per station */
+  STATION_CONFIGS.forEach(cfg=>{
+    const lx=cfg.gx*GRID_X/2, lz=cfg.gz*GRID_Z/2;
+    mk(gCyl(0.3,0.3,0.06,12),M.lightFix,[lx,ROOM_H-0.06,lz]);
+    mk(gCyl(0.02,0.02,0.3,8),M.lightFix,[lx,ROOM_H-0.18,lz]);
+    mk(gBox(0.6,0.04,0.04),M.lightFix,[lx,ROOM_H-0.35,lz]);
+    mk(gCyl(0.25,0.28,0.05,16),M.lightFix,[lx,ROOM_H-0.40,lz]);
+    const gl=mk(gCyl(0.22,0.22,0.01,16),M.lightGlow,[lx,ROOM_H-0.44,lz]); gl.castShadow=false;
+  });
+  /* Curtain dividers */
+  mk(gBox(0.02,3.0,ROOM_D*0.4),M.curtain,[0,1.8,-GRID_Z/4]);
+  mk(gBox(0.02,3.0,ROOM_D*0.4),M.curtain,[0,1.8,GRID_Z/4]);
+  mk(gBox(ROOM_W*0.4,3.0,0.02),M.curtain,[-GRID_X/4,1.8,0]);
+  mk(gBox(ROOM_W*0.4,3.0,0.02),M.curtain,[GRID_X/4,1.8,0]);
+  /* Door */
+  mk(gBox(0.9,2.2,0.06),M.doorWood,[3,1.1,-hd+0.08]);
+  mk(gBox(1.0,0.06,0.08),M.doorFrame,[3,2.22,-hd+0.08]);
+  mk(gBox(0.06,2.2,0.08),M.doorFrame,[2.5,1.1,-hd+0.08]);
+  mk(gBox(0.06,2.2,0.08),M.doorFrame,[3.5,1.1,-hd+0.08]);
+  mk(gCyl(0.02,0.02,0.08,8),M.doorFrame,[3.35,1.05,-hd+0.13]);
+  /* Exit sign */
+  mk(gBox(0.4,0.15,0.04),M.exitSign,[-3,2.8,-hd+0.1]);
+  /* Sanitizer dispensers */
+  [[-hw+0.1,1.3,-3],[-hw+0.1,1.3,3]].forEach(p=>{
+    mk(gBox(0.08,0.16,0.06),M.sanitizer,p);
+    mk(gBox(0.04,0.03,0.04),M.wall,[p[0],p[1]-0.10,p[2]]);
+  });
+  /* Grid */
+  const grid=new THREE.GridHelper(ROOM_W,36,0x1a2030,0x1e2430);
+  grid.position.y=0.01; scene.add(grid);
+}
+
+/* -- UNITREE G1 HUMANOID ROBOT (SOTA) -- */
+function buildG1Robot(role,parent){
+  const g=new THREE.Group();
+  const joints={};
+  const coatMat=role==='doctor'?M.coatWhite:M.coatBlue;
+  /* Torso */
+  mk(gBox(0.28,0.20,0.16),M.g1body,[0,0.08,0],g);
+  mk(gBox(0.26,0.16,0.14),M.g1body,[0,-0.10,0],g);
+  mk(gBox(0.24,0.16,0.005),M.g1panel,[0,0.08,-0.083],g);
+  mk(gBox(0.22,0.10,0.005),M.g1panel,[0,-0.10,-0.073],g);
+  mk(gBox(0.27,0.012,0.17),M.g1joint,[0,-0.01,0],g);
+  mk(gBox(0.32,0.40,0.19),coatMat,[0,-0.02,0],g);
+  /* Battery pack */
+  mk(gBox(0.12,0.10,0.04),M.g1panel,[0,-0.02,0.10],g);
+  mk(gBox(0.08,0.06,0.005),M.ledCyan,[0,-0.02,0.122],g);
+  /* Spine LEDs */
+  for(let i=0;i<5;i++){const l=mk(gBox(0.008,0.008,0.005),M.ledCyan,[0,0.14-i*0.06,0.085],g);l.castShadow=false;}
+  /* Role markers */
+  if(role==='doctor'){
+    mk(gBox(0.08,0.015,0.005),M.redCross,[0,0.10,-0.10],g);
+    mk(gBox(0.015,0.08,0.005),M.redCross,[0,0.10,-0.10],g);
+  }
+  if(role==='nurse'){
+    mk(gCyl(0.025,0.025,0.008,8),M.badge,[0.08,0.10,-0.10],g);
+    mk(gCyl(0.004,0.004,0.06,6),M.g1panel,[0.10,0.02,-0.10],g);
+  }
+  /* Head */
+  const head=new THREE.Group(); head.position.set(0,0.30,0);
+  mk(gSph(0.11,16,14),M.g1body,[0,0,0],head);
+  const vis=mk(gBox(0.18,0.045,0.005),M.g1visor,[0,-0.01,-0.10],head); vis.castShadow=false;
+  const ledMask=mk(gBox(0.12,0.008,0.003),M.led,[0,-0.01,-0.105],head); ledMask.castShadow=false;
+  head.userData.ledMask=ledMask;
+  mk(gCyl(0.015,0.015,0.02,8),M.g1joint,[0,0.04,-0.10],head);
+  mk(gCyl(0.04,0.04,0.08,12),M.g1joint,[0,-0.11,0],head);
+  g.add(head); joints.head=head;
+  /* Stethoscope for nurse */
+  if(role==='nurse'){
+    mk(gTor(0.08,0.005,8,16),M.stethTube,[0,-0.08,-0.06],head);
+    mk(gCyl(0.02,0.02,0.01,8),M.stethHead,[0,-0.16,-0.06],head);
+  }
+  /* Pelvis */
+  const pelvis=new THREE.Group(); pelvis.position.set(0,-0.24,0);
+  mk(gBox(0.26,0.10,0.14),M.g1body,[0,0,0],pelvis);
+  mk(gTor(0.12,0.012,8,20),M.g1joint,[0,0.06,0],pelvis);
+  g.add(pelvis); joints.pelvis=pelvis;
+  /* Arm builder */
+  function buildArm(side){
+    const sign=side==='r'?1:-1;
+    const shoulder=new THREE.Group(); shoulder.position.set(sign*0.19,0.14,0);
+    const upperArm=new THREE.Group();
+    mk(gCyl(0.048,0.042,0.02,10),M.g1joint,[0,0,0],upperArm);
+    mk(gSph(0.042),M.g1joint,[0,0,0],upperArm);
+    mk(gCap(0.035,0.14,4,8),M.g1body,[0,-0.10,0],upperArm);
+    mk(gCap(0.042,0.10,4,8),coatMat,[0,-0.07,0],upperArm);
+    shoulder.add(upperArm);
+    const elbow=new THREE.Group(); elbow.position.set(0,-0.22,0);
+    mk(gSph(0.034),M.g1joint,[0,0,0],elbow);
+    const forearm=new THREE.Group();
+    mk(gCap(0.030,0.12,4,8),M.g1body,[0,-0.09,0],forearm);
+    elbow.add(forearm);
+    const wrist=new THREE.Group(); wrist.position.set(0,-0.20,0);
+    mk(gCyl(0.022,0.022,0.025,10),M.g1joint,[0,0,0],wrist);
+    /* Dex3-1 hand with articulated fingers */
+    const hand=new THREE.Group(); hand.position.set(0,-0.03,0);
+    mk(gBox(0.04,0.025,0.05),M.g1body,[0,0,0],hand);
+    mk(gBox(0.012,0.018,0.012),M.g1panel,[sign*0.028,-0.005,-0.01],hand);
+    mk(gBox(0.010,0.014,0.010),M.g1panel,[sign*0.028,-0.022,-0.01],hand);
+    mk(gBox(0.010,0.020,0.010),M.g1panel,[0.005,-0.022,-0.015],hand);
+    mk(gBox(0.008,0.016,0.008),M.g1panel,[0.005,-0.042,-0.015],hand);
+    mk(gBox(0.010,0.020,0.010),M.g1panel,[-0.005,-0.022,0.015],hand);
+    mk(gBox(0.008,0.016,0.008),M.g1panel,[-0.005,-0.042,0.015],hand);
+    wrist.add(hand); forearm.add(wrist); upperArm.add(elbow); g.add(shoulder);
+    joints[side+'Shoulder']=shoulder; joints[side+'UpperArm']=upperArm;
+    joints[side+'Elbow']=elbow; joints[side+'Forearm']=forearm;
+    joints[side+'Wrist']=wrist; joints[side+'Hand']=hand;
+  }
+  buildArm('r'); buildArm('l');
+  /* Leg builder */
+  function buildLeg(side){
+    const sign=side==='r'?1:-1;
+    const hip=new THREE.Group(); hip.position.set(sign*0.09,-0.06,0);
+    const thigh=new THREE.Group();
+    mk(gCyl(0.050,0.044,0.02,10),M.g1joint,[0,0,0],thigh);
+    mk(gSph(0.044),M.g1joint,[0,0,0],thigh);
+    mk(gCap(0.045,0.18,4,8),M.g1body,[0,-0.12,0],thigh);
+    hip.add(thigh);
+    const knee=new THREE.Group(); knee.position.set(0,-0.26,0);
+    mk(gSph(0.038),M.g1joint,[0,0,0],knee);
+    const shin=new THREE.Group();
+    mk(gCap(0.038,0.17,4,8),M.g1body,[0,-0.11,0],shin);
+    knee.add(shin);
+    const foot=new THREE.Group(); foot.position.set(0,-0.24,0);
+    mk(gBox(0.08,0.025,0.14),M.g1body,[0,0,0.01],foot);
+    mk(gBox(0.08,0.008,0.14),M.g1panel,[0,-0.016,0.01],foot);
+    mk(gCyl(0.025,0.025,0.015,8),M.g1joint,[0,0.02,-0.02],foot);
+    shin.add(foot); thigh.add(knee); pelvis.add(hip);
+    joints[side+'Hip']=hip; joints[side+'Thigh']=thigh;
+    joints[side+'Knee']=knee; joints[side+'Shin']=shin; joints[side+'Foot']=foot;
+  }
+  buildLeg('r'); buildLeg('l');
+  g.userData={role,joints}; if(parent)parent.add(g); return g;
+}
+
+/* -- REALISTIC HUMAN PATIENT -- */
+function buildHumanPatient(parent){
+  const g=new THREE.Group(); const joints={};
+  mk(gBox(0.30,0.38,0.18),M.gown,[0,0,0],g);
+  /* Head */
+  const head=new THREE.Group(); head.position.set(0,0.30,0);
+  mk(gSph(0.10,14,12),M.skin,[0,0,0],head);
+  const hc=mk(gSph(0.105,14,8),M.hair,[0,0.02,0],head); hc.scale.set(1,0.7,1); hc.position.y=0.03;
+  mk(gSph(0.02),M.skin,[-0.10,-0.02,0],head); mk(gSph(0.02),M.skin,[0.10,-0.02,0],head);
+  const eyeM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.2});
+  const pupM=new THREE.MeshStandardMaterial({color:0x2a1a0a,roughness:0.3});
+  mk(gSph(0.018,8,8),eyeM,[-0.035,0.01,-0.085],head); mk(gSph(0.018,8,8),eyeM,[0.035,0.01,-0.085],head);
+  mk(gSph(0.009,6,6),pupM,[-0.035,0.01,-0.10],head); mk(gSph(0.009,6,6),pupM,[0.035,0.01,-0.10],head);
+  const browM=new THREE.MeshStandardMaterial({color:0x3a2a1a,roughness:0.7});
+  mk(gBox(0.03,0.005,0.008),browM,[-0.035,0.035,-0.09],head); mk(gBox(0.03,0.005,0.008),browM,[0.035,0.035,-0.09],head);
+  mk(gBox(0.01,0.018,0.012),M.skin,[0,-0.01,-0.10],head);
+  const mouthM=new THREE.MeshStandardMaterial({color:0xcc8877,roughness:0.5});
+  mk(gBox(0.025,0.005,0.006),mouthM,[0,-0.04,-0.095],head);
+  mk(gCyl(0.04,0.04,0.08,10),M.skin,[0,-0.10,0],head);
+  g.add(head); joints.head=head;
+  /* Pelvis */
+  const pelvis=new THREE.Group(); pelvis.position.set(0,-0.24,0);
+  mk(gBox(0.28,0.10,0.16),M.gown,[0,0,0],pelvis);
+  g.add(pelvis); joints.pelvis=pelvis;
+  /* Arms */
+  function buildArm(side){
+    const sign=side==='r'?1:-1;
+    const shoulder=new THREE.Group(); shoulder.position.set(sign*0.20,0.14,0);
+    const upperArm=new THREE.Group();
+    mk(gCap(0.038,0.14,4,8),M.skin,[0,-0.10,0],upperArm);
+    mk(gCap(0.042,0.06,4,8),M.gown,[0,-0.04,0],upperArm);
+    /* Veins on right arm */
+    if(side==='r'){
+      mk(gCyl(0.003,0.003,0.08,4),M.vein,[0.02,-0.08,0.02],upperArm);
+      mk(gCyl(0.002,0.002,0.06,4),M.vein,[0.01,-0.10,-0.01],upperArm);
+    }
+    shoulder.add(upperArm);
+    const elbow=new THREE.Group(); elbow.position.set(0,-0.22,0);
+    const forearm=new THREE.Group();
+    mk(gCap(0.032,0.12,4,8),M.skin,[0,-0.09,0],forearm);
+    elbow.add(forearm);
+    const hand=new THREE.Group(); hand.position.set(0,-0.20,0);
+    mk(gBox(0.04,0.02,0.06),M.skin,[0,0,0],hand);
+    /* Fingers */
+    for(let f=0;f<4;f++) mk(gBox(0.008,0.02,0.008),M.skin,[-0.015+f*0.010,-0.018,0.02],hand);
+    mk(gBox(0.008,0.016,0.008),M.skin,[sign*0.024,-0.005,-0.01],hand);
+    /* Hospital wristband */
+    mk(gTor(0.025,0.004,6,12),M.wristband,[0,0.01,0],hand);
+    /* Pulse oximeter on index finger */
+    if(side==='l') mk(gBox(0.012,0.015,0.012),M.oximeter,[-0.005,-0.018,0.02],hand);
+    forearm.add(hand); upperArm.add(elbow); g.add(shoulder);
+    joints[side+'Shoulder']=shoulder; joints[side+'UpperArm']=upperArm;
+    joints[side+'Elbow']=elbow; joints[side+'Forearm']=forearm; joints[side+'Hand']=hand;
+  }
+  buildArm('r'); buildArm('l');
+  /* Legs */
+  function buildLeg(side){
+    const sign=side==='r'?1:-1;
+    const hip=new THREE.Group(); hip.position.set(sign*0.10,-0.06,0);
+    const thigh=new THREE.Group();
+    mk(gCap(0.050,0.18,4,8),M.gown,[0,-0.13,0],thigh); hip.add(thigh);
+    const knee=new THREE.Group(); knee.position.set(0,-0.27,0);
+    const shin=new THREE.Group();
+    mk(gCap(0.040,0.18,4,8),M.skin,[0,-0.12,0],shin); knee.add(shin);
+    const foot=new THREE.Group(); foot.position.set(0,-0.26,0);
+    mk(gBox(0.06,0.03,0.12),M.skin,[0,0,0.01],foot); shin.add(foot);
+    thigh.add(knee); pelvis.add(hip);
+    joints[side+'Hip']=hip; joints[side+'Thigh']=thigh;
+    joints[side+'Knee']=knee; joints[side+'Shin']=shin; joints[side+'Foot']=foot;
+  }
+  buildLeg('r'); buildLeg('l');
+  g.userData={role:'patient',joints}; if(parent)parent.add(g); return g;
+}
+
+/* -- EQUIPMENT BUILDERS -- */
+function buildChair(parent){
+  const g=new THREE.Group();
+  [[-0.24,-0.20],[0.24,-0.20],[-0.24,0.20],[0.24,0.20]].forEach(([x,z])=>
+    mk(gCyl(0.025,0.025,0.44),M.chair,[x,0.22,z],g));
+  mk(gBox(0.50,0.05,0.44),M.cushion,[0,0.46,0],g);
+  mk(gBox(0.50,0.55,0.05),M.cushion,[0,0.76,0.20],g);
+  mk(gBox(0.05,0.03,0.36),M.chair,[0.27,0.60,0.02],g);
+  mk(gBox(0.05,0.03,0.36),M.chair,[-0.27,0.60,0.02],g);
+  mk(gCyl(0.015,0.015,0.12),M.chair,[0.27,0.53,-0.12],g);
+  mk(gCyl(0.015,0.015,0.12),M.chair,[0.27,0.53,0.16],g);
+  mk(gCyl(0.015,0.015,0.12),M.chair,[-0.27,0.53,-0.12],g);
+  mk(gCyl(0.015,0.015,0.12),M.chair,[-0.27,0.53,0.16],g);
+  /* Headrest */
+  mk(gBox(0.20,0.12,0.04),M.cushion,[0,1.10,0.22],g);
+  if(parent)parent.add(g); return g;
+}
+function buildIV(parent){
+  const g=new THREE.Group();
+  mk(gCyl(0.016,0.016,1.55),M.iv,[0,0.78,0],g);
+  for(let i=0;i<3;i++){const a=mk(gBox(0.18,0.02,0.025),M.iv,[0,0.015,0],g);a.rotation.y=(i*Math.PI*2)/3;}
+  const hk=mk(gTor(0.025,0.005,6,12),M.iv,[0,1.56,0],g); hk.rotation.x=Math.PI/2;
+  mk(gBox(0.06,0.12,0.03),M.ivBag,[0,1.48,0],g);
+  /* Fluid level line inside bag */
+  mk(gBox(0.05,0.001,0.025),new THREE.MeshStandardMaterial({color:0xaaddff,transparent:true,opacity:0.5}),[0,1.44,0],g);
+  mk(gCyl(0.003,0.003,0.60),M.iv,[0,1.10,0],g);
+  if(parent)parent.add(g); return g;
+}
+function buildTray(parent){
+  const g=new THREE.Group();
+  mk(gCyl(0.022,0.022,0.68),M.tray,[0,0.34,0],g);
+  mk(gBox(0.34,0.016,0.22),M.tray,[0,0.69,0],g);
+  mk(gBox(0.34,0.020,0.005),M.tray,[0,0.70,-0.11],g);
+  mk(gBox(0.34,0.020,0.005),M.tray,[0,0.70,0.11],g);
+  mk(gCyl(0.005,0.005,0.10),M.needle,[0.08,0.72,0],g);
+  mk(gBox(0.04,0.008,0.04),M.chart,[-0.06,0.70,0.04],g);
+  mk(gCyl(0.012,0.012,0.04),M.syringe,[0.04,0.72,0.06],g);
+  /* Extra vial */
+  mk(gCyl(0.008,0.008,0.03),M.ivBag,[-0.10,0.71,0],g);
+  if(parent)parent.add(g); return g;
+}
+function buildMonitor(parent){
+  const g=new THREE.Group();
+  mk(gCyl(0.022,0.022,0.88),M.monitor,[0,0.44,0],g);
+  mk(gCyl(0.08,0.08,0.02),M.monitor,[0,0.01,0],g);
+  mk(gBox(0.30,0.22,0.025),M.monitor,[0,1.02,0],g);
+  mk(gBox(0.26,0.18,0.004),M.screen,[0,1.02,0.016],g);
+  const led=mk(gSph(0.008),M.led,[0.13,0.90,0.018],g);
+  g.userData.led=led;
+  if(parent)parent.add(g); return g;
+}
+function buildSyringe(parent){
+  const g=new THREE.Group();
+  mk(gCyl(0.012,0.012,0.14),M.syringe,[0,0,0],g);
+  mk(gCyl(0.008,0.008,0.06),M.tray,[0,0.10,0],g);
+  mk(gCyl(0.018,0.018,0.01),M.syringe,[0,0.075,0],g);
+  mk(gCyl(0.008,0.004,0.02),M.syringe,[0,-0.08,0],g);
+  mk(gCyl(0.0018,0.0018,0.06),M.needle,[0,-0.12,0],g);
+  g.rotation.x=Math.PI/2;
+  if(parent)parent.add(g); return g;
+}
+function buildSwab(parent){
+  const g=new THREE.Group();
+  mk(gBox(0.03,0.03,0.005),M.swab,[0,0,0],g);
+  if(parent)parent.add(g); return g;
+}
+function buildTablet(parent){
+  const g=new THREE.Group();
+  mk(gBox(0.12,0.17,0.008),M.chart,[0,0,0],g);
+  for(let i=0;i<4;i++) mk(gBox(0.08,0.004,0.002),M.text,[0,0.05-i*0.025,-0.006],g);
+  mk(gBox(0.05,0.012,0.006),M.tray,[0,0.09,-0.005],g);
+  if(parent)parent.add(g); return g;
+}
+function buildInjectionMarker(parent){
+  const g=new THREE.Group();
+  const dot=mk(gSph(0.016),M.target,[0,0,0],g); dot.castShadow=false;
+  const ring=mk(gTor(0.028,0.004,8,24),M.target,[0,0,0],g);
+  ring.castShadow=false; ring.rotation.x=Math.PI/8;
+  g.userData.ring=ring;
+  if(parent)parent.add(g); return g;
+}
+function makeLabel(text,col){
+  const c=document.createElement('canvas'); c.width=256; c.height=64;
+  const ctx=c.getContext('2d'); ctx.fillStyle=col||'#00d4ff';
+  ctx.font='bold 32px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text,128,32);
+  const tex=new THREE.CanvasTexture(c);
+  const sm=new THREE.SpriteMaterial({map:tex,transparent:true});
+  const sp=new THREE.Sprite(sm); sp.scale.set(1.0,0.25,1); return sp;
+}
+function stationPos(cfg){ return new THREE.Vector3(cfg.gx*GRID_X/2,0,cfg.gz*GRID_Z/2); }
+
+/* -- BUILD COMPLETE STATION -- */
+function buildStation(cfg){
+  const center=stationPos(cfg);
+  const grp=new THREE.Group(); grp.position.copy(center); scene.add(grp);
+  buildChair(grp);
+  /* Human Patient (seated) */
+  const patient=buildHumanPatient(grp);
+  patient.position.set(0,1.15,0.02);
+  const pj=patient.userData.joints;
+  pj.rThigh.rotation.x=Math.PI/2; pj.rKnee.rotation.x=-Math.PI/2;
+  pj.lThigh.rotation.x=Math.PI/2; pj.lKnee.rotation.x=-Math.PI/2;
+  pj.rUpperArm.rotation.x=0.3; pj.rUpperArm.rotation.z=-0.25; pj.rElbow.rotation.x=-0.9;
+  pj.lUpperArm.rotation.x=0.3; pj.lUpperArm.rotation.z=0.25; pj.lElbow.rotation.x=-0.9;
+  /* Injection marker on patient right deltoid */
+  const injMarker=buildInjectionMarker(patient);
+  injMarker.position.set(0.22,0.10,-0.04);
+  /* Doctor G1 (standing, right of patient) */
+  const doctor=buildG1Robot('doctor',grp);
+  doctor.position.set(0.7,0.89,-0.15); doctor.rotation.y=-Math.PI/4;
+  const dj=doctor.userData.joints;
+  const syringe=buildSyringe(dj.rHand);
+  syringe.position.set(0,-0.02,0.02);
+  /* Alcohol swab in left hand */
+  const swab=buildSwab(dj.lHand);
+  swab.position.set(0,-0.02,0);
+  /* Nurse G1 (standing, left of patient) */
+  const nurse=buildG1Robot('nurse',grp);
+  nurse.position.set(-0.6,0.89,-0.25); nurse.rotation.y=Math.PI/6;
+  const nj=nurse.userData.joints;
+  const tablet=buildTablet(nj.rHand);
+  tablet.position.set(0,-0.03,0.04); tablet.rotation.x=-0.3;
+  nj.rUpperArm.rotation.x=-20*DEG; nj.rElbow.rotation.x=-70*DEG;
+  /* Equipment */
+  const iv=buildIV(grp); iv.position.set(-0.5,0,0.3);
+  const tray=buildTray(grp); tray.position.set(0.5,0,0.4);
+  const mon=buildMonitor(grp); mon.position.set(-0.8,0,0.2);
+  /* Station label */
+  const label=makeLabel('Station '+cfg.name,cfg.color);
+  label.position.set(0,2.6,0); grp.add(label);
+  /* PPO timing */
+  const rng=mulberry32(cfg.seed);
+  const times=PHASES.map(p=>ppoJitter(rng,p.dur,cfg.speed));
+  const accuracy=0.85+rng()*0.14;
+  const needleDist=0.01+(1-accuracy)*0.04;
+  const total=times.reduce((a,b)=>a+b,0);
+  const phases=[]; let cum=0;
+  times.forEach((t,i)=>{phases.push({start:cum,end:cum+t,name:PHASES[i].name,label:PHASES[i].label});cum+=t;});
+  return {
+    cfg,grp,doctor,nurse,patient,syringe,swab,injMarker,mon,
+    dj,nj,pj,total,accuracy,needleDist,phases,times,
+    elapsed:0,completed:false,finishOrder:0,phaseIdx:0,
+    docHomeX:0.7,docHomeZ:-0.15,
+  };
+}
+
+/* -- BUILD SCENE -- */
+buildRoom();
+const stations=STATION_CONFIGS.map(cfg=>buildStation(cfg));
+let finishCount=0;
+
+const camTgt={overview:{pos:new THREE.Vector3(0,15,21),target:new THREE.Vector3(0,1.2,0)}};
+stations.forEach((st,i)=>{
+  const c=stationPos(st.cfg);
+  camTgt[i]={pos:new THREE.Vector3(c.x+2.5,4.5,c.z+5.5),target:new THREE.Vector3(c.x,1,c.z)};
+});
+
+/* -- APP STATE -- */
+let playing=true;
+let activeSt='overview';
+let camAnim=false, camStart=0;
+const camDur=0.7;
+let camFrom={pos:camera.position.clone(),target:ctrls.target.clone()};
+let camTo={pos:camera.position.clone(),target:ctrls.target.clone()};
+let showPhases=false, showScoreboard=false;
+let resultsShown=false;
+
+/* -- UI WIRING -- */
+const btnPlay=document.getElementById('btn-play');
+const btnReset=document.getElementById('btn-reset');
+const btnInfo=document.getElementById('btn-info');
+const btnUpload=document.getElementById('btn-upload');
+const fileIn=document.getElementById('file-input');
+const stBtns=document.querySelectorAll('.station-btn');
+const phasePanel=document.getElementById('phase-panel');
+const sbPanel=document.getElementById('scoreboard-panel');
+const togglePh=document.getElementById('toggle-phases');
+const toggleSb=document.getElementById('toggle-scoreboard');
+const finalRes=document.getElementById('final-results');
+const resClose=document.getElementById('btn-results-close');
+
+btnPlay.addEventListener('click',()=>{
+  if(!playing&&stations.every(s=>s.completed)&&!resultsShown){resetAll();}
+  playing=!playing;
+  btnPlay.innerHTML=playing?'&#10074;&#10074;':'&#9654;';
+  btnPlay.classList.toggle('active',playing);
+});
+btnPlay.innerHTML='&#10074;&#10074;'; btnPlay.classList.add('active');
+
+btnReset.addEventListener('click',()=>{resetAll();});
+
+function resetAll(){
+  finishCount=0; resultsShown=false;
+  finalRes.classList.remove('show');
+  rebuildTiming();
+  playing=true;
+  btnPlay.innerHTML='&#10074;&#10074;'; btnPlay.classList.add('active');
+}
+
+btnInfo.addEventListener('click',()=>document.getElementById('info-modal').classList.add('show'));
+document.getElementById('info-modal').addEventListener('click',e=>{
+  if(e.target===e.currentTarget)e.currentTarget.classList.remove('show');
+});
+
+btnUpload.addEventListener('click',()=>fileIn.click());
+fileIn.addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const rdr=new FileReader();
+  rdr.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data&&data.stations&&Array.isArray(data.stations)){
+        data.stations.forEach((sc,i)=>{
+          if(i>=stations.length)return;
+          if(sc.speed!==undefined)stations[i].cfg.speed=sc.speed;
+          if(sc.seed!==undefined)stations[i].cfg.seed=sc.seed;
+        });
+        rebuildTiming();
+      }
+    }catch(err){console.error('Invalid JSON:',err);}
+  };
+  rdr.readAsText(f); fileIn.value='';
+});
+
+function rebuildTiming(){
+  finishCount=0; resultsShown=false; finalRes.classList.remove('show');
+  stations.forEach(st=>{
+    const rng=mulberry32(st.cfg.seed);
+    st.times=PHASES.map(p=>ppoJitter(rng,p.dur,st.cfg.speed));
+    st.accuracy=0.85+rng()*0.14;
+    st.needleDist=0.01+(1-st.accuracy)*0.04;
+    st.total=st.times.reduce((a,b)=>a+b,0);
+    st.phases=[]; let c=0;
+    st.times.forEach((t,i)=>{st.phases.push({start:c,end:c+t,name:PHASES[i].name,label:PHASES[i].label});c+=t;});
+    st.elapsed=0; st.completed=false; st.finishOrder=0; st.phaseIdx=0;
+    st.dj.rUpperArm.rotation.x=0; st.dj.rUpperArm.rotation.z=0;
+    st.dj.rElbow.rotation.x=0; if(st.dj.rWrist)st.dj.rWrist.rotation.y=0;
+    st.doctor.position.x=st.docHomeX;
+    st.nj.rUpperArm.rotation.x=-20*DEG; st.nj.rElbow.rotation.x=-70*DEG;
+  });
+}
+
+togglePh.addEventListener('click',()=>{
+  showPhases=!showPhases; phasePanel.classList.toggle('visible',showPhases);
+  togglePh.classList.toggle('open',showPhases);
+});
+toggleSb.addEventListener('click',()=>{
+  showScoreboard=!showScoreboard; sbPanel.classList.toggle('visible',showScoreboard);
+  toggleSb.classList.toggle('open',showScoreboard);
+});
+stBtns.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    stBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    const v=btn.dataset.station;
+    activeSt=v==='overview'?'overview':parseInt(v);
+    startCamAnim(camTgt[activeSt]);
+  });
+});
+function startCamAnim(tgt){
+  camFrom.pos=camera.position.clone(); camFrom.target=ctrls.target.clone();
+  camTo.pos=tgt.pos.clone(); camTo.target=tgt.target.clone();
+  camStart=performance.now()/1000; camAnim=true;
+}
+resClose.addEventListener('click',()=>{finalRes.classList.remove('show');});
+
+/* -- EASING -- */
+function ease(t){return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function ss(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);}
+function ssq(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
+
+/* -- PER-STATION ANIMATION -- */
+function animStation(st,dt){
+  if(st.completed)return;
+  st.elapsed+=dt;
+  if(st.elapsed>=st.total){st.elapsed=st.total;st.completed=true;finishCount++;st.finishOrder=finishCount;}
+  const t=st.elapsed;
+  let pi=0;
+  for(let i=0;i<st.phases.length;i++){
+    if(t>=st.phases[i].start&&t<st.phases[i].end){pi=i;break;}
+    if(t>=st.phases[i].end)pi=i+1;
+  }
+  st.phaseIdx=Math.min(pi,st.phases.length-1);
+  const ph=st.phases[st.phaseIdx]; if(!ph)return;
+  const pT=Math.min(1,(t-ph.start)/(ph.end-ph.start));
+  const sT=ssq(pT);
+
+  /* Doctor arm animation */
+  let docSP=0,docSY=0,docElbow=0,docWrist=0,docXOff=0;
+  switch(ph.name){
+    case 'prepare':
+      docSP=sT*30; docElbow=sT*55; docWrist=sT*10; break;
+    case 'approach':
+      docSP=30+sT*40; docSY=sT*(-30); docElbow=55+sT*25;
+      docWrist=10+sT*15; docXOff=sT*(-0.15); break;
+    case 'position':
+      docSP=70+sT*8; docSY=-30-sT*12; docElbow=80+sT*10;
+      docWrist=25+sT*5; docXOff=-0.15-sT*0.02; break;
+    case 'inject':
+      docSP=78+sT*2; docSY=-42-sT*5; docElbow=90+sT*2;
+      docWrist=30-sT*3; docXOff=-0.17; break;
+    case 'hold':
+      docSP=80+Math.sin(pT*Math.PI*3)*0.3; docSY=-47; docElbow=92;
+      docWrist=27; docXOff=-0.17; break;
+    case 'withdraw':
+      docSP=80-sT*45; docSY=-47+sT*37; docElbow=92-sT*55;
+      docWrist=27-sT*22; docXOff=-0.17+sT*0.17; break;
+    case 'monitor':
+      docSP=35-sT*35; docSY=-10+sT*10; docElbow=37-sT*37;
+      docWrist=5-sT*5; break;
+  }
+  st.dj.rUpperArm.rotation.x=-docSP*DEG;
+  st.dj.rUpperArm.rotation.z=docSY*DEG;
+  st.dj.rElbow.rotation.x=-docElbow*DEG;
+  if(st.dj.rWrist)st.dj.rWrist.rotation.y=docWrist*DEG;
+  st.doctor.position.x=st.docHomeX+docXOff;
+
+  /* Doctor left arm (swab) movement during prepare */
+  if(ph.name==='prepare'){
+    st.dj.lUpperArm.rotation.x=-sT*15*DEG;
+    st.dj.lElbow.rotation.x=-sT*40*DEG;
+  }else{
+    st.dj.lUpperArm.rotation.x=Math.sin(t*0.8)*0.025;
+    st.dj.lElbow.rotation.x=0;
+  }
+  st.doctor.position.y=0.89+Math.sin(t*1.5)*0.003;
+  if(st.dj.head){
+    const ht=ph.name==='inject'||ph.name==='hold'?-0.15:-0.05;
+    st.dj.head.rotation.y=ht+Math.sin(t*0.3)*0.02;
+  }
+
+  /* Nurse animation (active throughout) */
+  let nurseSP=20,nurseElbow=70,nurseLeftSP=0;
+  switch(ph.name){
+    case 'prepare': nurseSP=20+sT*10; nurseElbow=70-sT*10; nurseLeftSP=sT*5; break;
+    case 'approach': nurseSP=30+sT*5; nurseElbow=60-sT*5; nurseLeftSP=5+sT*3; break;
+    case 'position': nurseSP=35; nurseElbow=55; nurseLeftSP=8+Math.sin(pT*Math.PI)*3; break;
+    case 'inject': nurseSP=35+sT*10; nurseElbow=55-sT*10; nurseLeftSP=10; break;
+    case 'hold': nurseSP=45+Math.sin(pT*Math.PI*2)*2; nurseElbow=45; nurseLeftSP=10+Math.sin(pT*Math.PI)*2; break;
+    case 'withdraw': nurseSP=45-sT*15; nurseElbow=45+sT*15; nurseLeftSP=10-sT*5; break;
+    case 'monitor': nurseSP=30+sT*15; nurseElbow=60-sT*20; nurseLeftSP=5-sT*5; break;
+  }
+  st.nj.rUpperArm.rotation.x=-nurseSP*DEG;
+  st.nj.rElbow.rotation.x=-nurseElbow*DEG;
+  st.nj.lUpperArm.rotation.x=-nurseLeftSP*DEG+Math.sin(t*1.5)*0.015;
+  st.nurse.position.y=0.89+Math.sin(t*2.2)*0.003;
+  if(st.nj.head){
+    const nht=(ph.name==='inject'||ph.name==='hold')?0.15:0.08;
+    st.nj.head.rotation.y=nht+Math.sin(t*0.4)*0.03;
+    st.nj.head.rotation.x=(ph.name==='inject'||ph.name==='hold')?-0.05:0;
+  }
+
+  /* Patient reactive animation */
+  st.pj.head.rotation.y=Math.sin(t*0.3)*0.025;
+  st.pj.rUpperArm.rotation.x=0.3+Math.sin(t*0.8)*0.004;
+  st.patient.position.y=1.15+Math.sin(t*2.0)*0.002;
+  if(ph.name==='inject'||ph.name==='hold'){
+    st.pj.head.rotation.y=0.06+Math.sin(t*0.5)*0.015;
+    st.pj.head.rotation.x=-0.03;
+  }else{st.pj.head.rotation.x=Math.sin(t*0.4)*0.01;}
+  if(ph.name==='inject'){st.pj.lElbow.rotation.x=-0.9-sT*0.05;}
+  else if(ph.name==='hold'){st.pj.lElbow.rotation.x=-0.95+sT*0.05;}
+
+  /* Monitor LED blink */
+  if(st.mon&&st.mon.userData&&st.mon.userData.led)
+    st.mon.userData.led.material.emissiveIntensity=Math.sin(t*6)>0?0.8:0.1;
+
+  /* G1 head LED mask pulse */
+  if(st.doctor.userData.joints.head&&st.doctor.userData.joints.head.userData.ledMask)
+    st.doctor.userData.joints.head.userData.ledMask.material.emissiveIntensity=0.3+0.5*(0.5+0.5*Math.sin(t*4));
+  if(st.nurse.userData.joints.head&&st.nurse.userData.joints.head.userData.ledMask)
+    st.nurse.userData.joints.head.userData.ledMask.material.emissiveIntensity=0.3+0.5*(0.5+0.5*Math.sin(t*3.5+1.2));
+
+  /* Injection marker pulse */
+  if(st.injMarker&&st.injMarker.userData.ring){
+    const pulse=1.0+0.15*Math.sin(t*4);
+    st.injMarker.userData.ring.scale.set(pulse,pulse,pulse);
+  }
+}
+
+/* -- SCOREBOARD -- */
+function updateScoreboard(){
+  const sorted=stations.map((st,i)=>({
+    idx:i,name:st.cfg.name,total:st.total,accuracy:st.accuracy,needleDist:st.needleDist,
+    elapsed:st.elapsed,completed:st.completed,finishOrder:st.finishOrder,
+    progress:Math.min(1,st.elapsed/st.total),
+  })).sort((a,b)=>{
+    if(a.completed&&!b.completed)return -1;
+    if(!a.completed&&b.completed)return 1;
+    if(a.completed&&b.completed)return a.finishOrder-b.finishOrder;
+    return b.progress-a.progress;
+  });
+  let html='';
+  sorted.forEach((s,rank)=>{
+    const rc=rank===0?'rank1':rank===1?'rank2':rank===2?'rank3':'rank4';
+    const rb=rank===0?'r1':rank===1?'r2':rank===2?'r3':'r4';
+    const status=s.completed?'<span style="color:#3fb950">DONE</span>'
+      :'<span style="color:#d29922">'+(s.progress*100).toFixed(0)+'%</span>';
+    const finish=s.completed?' (#'+s.finishOrder+')':'';
+    html+='<div class="score-station '+rc+'">'
+      +'<div class="station-label"><span>Station '+s.name+finish+'</span>'
+      +'<span class="rank-badge '+rb+'">#'+(rank+1)+'</span></div>'
+      +'<div class="score-row"><span>Total time</span><span>'+s.total.toFixed(2)+'s</span></div>'
+      +'<div class="score-row"><span>Accuracy</span><span>'+(s.accuracy*100).toFixed(1)+'%</span></div>'
+      +'<div class="score-row"><span>Needle dist</span><span>'+s.needleDist.toFixed(4)+'m</span></div>'
+      +'<div class="score-row"><span>Status</span><span>'+status+'</span></div>'
+      +'</div>';
+  });
+  document.getElementById('score-entries').innerHTML=html;
+}
+
+/* -- PHASE INDICATOR -- */
+function updatePhaseIndicator(){
+  let st;
+  if(activeSt!=='overview'&&typeof activeSt==='number'){st=stations[activeSt];}
+  else{st=stations[0];stations.forEach(s=>{if(s.elapsed/s.total>st.elapsed/st.total)st=s;});}
+  const lbl=activeSt!=='overview'?'Station '+st.cfg.name:'Leading: Station '+st.cfg.name;
+  let html='<div style="font-size:9px;color:#484f58;margin-bottom:3px">'+lbl+'</div>';
+  st.phases.forEach((p,i)=>{
+    let cls='phase-line';
+    if(st.completed||i<st.phaseIdx)cls+=' done';
+    else if(i===st.phaseIdx&&!st.completed)cls+=' active';
+    html+='<div class="'+cls+'"><span class="phase-dot"></span>'+p.name+'</div>';
+  });
+  document.getElementById('phase-lines').innerHTML=html;
+}
+
+/* -- FINAL RESULTS -- */
+function showFinalResults(){
+  if(resultsShown)return; resultsShown=true;
+  const ranked=[...stations].sort((a,b)=>{
+    if(a.finishOrder!==b.finishOrder)return a.finishOrder-b.finishOrder;
+    return b.accuracy-a.accuracy;
+  });
+  const classes=['first','second','third','fourth'];
+  let html='';
+  ranked.forEach((st,i)=>{
+    html+='<div class="result-row '+classes[i]+'">'
+      +'<span class="result-rank">#'+(i+1)+'</span>'
+      +'<span class="result-name">Station '+st.cfg.name+'</span>'
+      +'<span class="result-time">'+st.total.toFixed(2)+'s</span>'
+      +'<span class="result-acc">'+(st.accuracy*100).toFixed(1)+'%</span>'
+      +'</div>';
+  });
+  document.getElementById('results-rows').innerHTML=html;
+  finalRes.classList.add('show');
+}
+
+/* -- RESIZE -- */
+function onResize(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+window.addEventListener('resize',onResize);
+
+/* -- MAIN LOOP -- */
+const clock=new THREE.Clock();
+let uiTimer=0;
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta();
+  const now=performance.now()/1000;
+  if(camAnim){
+    let p=(now-camStart)/camDur;
+    if(p>=1){p=1;camAnim=false;}
+    const e=ease(p);
+    camera.position.lerpVectors(camFrom.pos,camTo.pos,e);
+    ctrls.target.lerpVectors(camFrom.target,camTo.target,e);
+  }
+  ctrls.update();
+  if(playing){stations.forEach(st=>animStation(st,dt));}
+  uiTimer+=dt;
+  if(uiTimer>0.1){uiTimer=0;updateScoreboard();updatePhaseIndicator();}
+  if(playing&&stations.every(s=>s.completed)){
+    playing=false;
+    btnPlay.innerHTML='&#9654;'; btnPlay.classList.remove('active');
+    setTimeout(showFinalResults,400);
+  }
+  renderer.render(scene,camera);
+}
+updateScoreboard(); updatePhaseIndicator(); animate();
+</script>
+</body>
+</html>

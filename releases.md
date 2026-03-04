@@ -1,5 +1,51 @@
 # Releases
 
+## Clinical Robot Competition — v0.8.0 SOTA G1 Robots & Realistic Patients
+
+v0.8.0 — 2026-03-04
+
+### Summary
+
+Complete visual overhaul introducing a premium dark theme with SOTA Unitree G1 humanoid robots
+and highly realistic human patients. The simulation is redesigned from the ground up with a deep
+navy/charcoal gradient background (#0d1117), frosted glass UI panels, neon cyan (#00d4ff) accent
+colors, and PBR-style materials. The hospital environment now features surgical overhead spotlights
+with visible glow cones per station, a glass observation window, medical curtain dividers between
+station pairs, emergency exit sign, and wall-mounted hand sanitizer dispensers. G1 robots gain
+articulated finger segments (3 fingers with 2 joints each), battery pack on back, spine LED strip,
+and ankle actuator housings. Human patients now have hospital wristbands, pulse oximeters, visible
+arm veins on the injection arm, and individual finger geometry. The doctor holds an alcohol swab in
+the other hand during the preparation phase. The nurse wears a stethoscope draped around the neck
+with a pen in the coat pocket. The room is expanded to 18m x 18m with 6.0m grid spacing.
+
+### Features
+
+- Premium dark theme (#0d1117 gradient) with frosted glass UI panels and neon cyan accents
+- PBR-style materials: specular highlights on G1 bodies, translucent IV bags with fluid level
+- Enhanced G1 robots: articulated finger segments, battery pack, spine LED strip, ankle actuators
+- Realistic human patients: hospital wristband, pulse oximeter, visible arm veins, individual fingers
+- Surgical overhead spotlights with visible glow cones per station quadrant
+- Glass observation window on one wall, curtain dividers between station pairs
+- Emergency exit sign, wall-mounted hand sanitizer dispensers
+- Doctor holds alcohol swab in left hand during preparation phase
+- Nurse wears stethoscope around neck, pen in coat pocket
+- 18m x 18m room with 6.0m grid spacing (expanded from 16m/5.5m)
+- Five-version nav banner: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 (new)
+- Cross-device support: desktop, iPhone, Android, tablet
+
+### Contributors
+@kevinkawchak
+@claude
+
+### Notes
+
+- All competition mechanics, scoring, and PPO policies unchanged from v0.7.0
+- v0.7.0 and all prior viewers preserved and accessible via nav banner
+- Completely new visual design — does not look or behave like any prior version
+- Dark premium theme chosen for immersive surgical environment atmosphere
+
+---
+
 ## Clinical Robot Competition — v0.7.0 Enhanced Hospital Visuals
 
 v0.7.0 — 2026-03-04
