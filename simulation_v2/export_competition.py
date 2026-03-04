@@ -148,7 +148,7 @@ def generate_competition_animation(fps: int = 30) -> dict:
         station["rank"] = rank
 
     return {
-        "version": "0.6.0",
+        "version": "0.7.0",
         "simulation": "clinical_competition",
         "description": (
             "4-station clinical robot competition. Each station has a "

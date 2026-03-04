@@ -1,5 +1,9 @@
 # Prompts
 
+## v0.7.0 Implementation Prompt
+
+Improve competition visuals for robot-competition-clinical v0.7.0 building on v0.6.0. Enhancements: (1) Hospital environment — add ceiling with light fixtures over each station quadrant, baseboards along walls, wooden door with frame and handle. (2) Patient facial features — eyes with pupils, eyebrows, nose, mouth on the human patient model. (3) G1 robot torso segmentation — split into chest and abdomen with metallic seam joint. (4) Active nurse animation — nurse G1 should animate throughout all 7 phases, not just monitoring. (5) Patient reactions — head turns toward doctor during injection, hand grip tightens. (6) Nurse LED visor pulse. (7) Updated 4-version nav banner across all viewers. Update all version strings, README, changelog, releases, and prompts. Push to GitHub for review.
+
 ## v0.6.0 Implementation Prompt
 
 Your goal in robot-competition-clinical is to create a new v0.6.0 that represents a more visually accurate and appealing competition than v0.5.0 using realistic Unitree G1 robots as the doctors and nurses (from this exact GitHub author: unitreerobotics; not basic robots with limited DOFs), and a realistic human patient receiving the injection. The objective is to illustrate that having competitions like this across multiple robots is advantageous for making future fully autonomous physical ai oncology trials faster than current human trials. Respond "STOP" initially if you cannot implement the G1 robot before proceeding. Remove previous auto memories you have of this repo, and start fresh with this prompt and existing repo contents. Use the full Opus 4.6 1M context length to generate the fixes. Provide the exact number of tokens you used at the end; do not limit inference time or inference time compute.

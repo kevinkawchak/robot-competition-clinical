@@ -25,7 +25,8 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 | Version | URL | Description |
 |---|---|---|
-| **v0.6.0 Competition (current)** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient |
+| **v0.7.0 Competition (current)** | [https://kevinkawchak.github.io/robot-competition-clinical/v7/](https://kevinkawchak.github.io/robot-competition-clinical/v7/) | Enhanced visuals: ceiling lights, patient faces, active nurse |
+| **v0.6.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient |
 | **v0.5.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v5/](https://kevinkawchak.github.io/robot-competition-clinical/v5/) | 4-station PPO competition (light mode, open-top) |
 | **v0.1.0 Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection (stable) |
 
@@ -35,25 +36,28 @@ When all stations finish, a **Competition Results** overlay displays the final
 1st/2nd/3rd/4th ranking with times and accuracies. Close the overlay and use
 **Reset** to replay.
 
-## What This Simulates (v0.6.0)
+## What This Simulates (v0.7.0)
 
 Four identical stations compete simultaneously. Each station features **realistic Unitree G1
 humanoid robots** (from unitreerobotics) as the doctor and nurse, with a **realistic human
-patient** seated in an exam chair. Every station uses the same PPO policy architecture but
-with different random seed initialization, producing distinct timing and accuracy behavior.
+patient** (with facial features) seated in an exam chair. The hospital environment includes
+ceiling light fixtures, baseboards, and a door. Every station uses the same PPO policy
+architecture but with different random seed initialization, producing distinct timing and
+accuracy behavior.
 
-### v0.6.0 Changes from v0.5.0
+### v0.7.0 Changes from v0.6.0
 
-| Aspect | v0.5.0 | v0.6.0 |
+| Aspect | v0.6.0 | v0.7.0 |
 |---|---|---|
-| Robot models | Basic CapsuleGeometry humanoids | **Realistic Unitree G1** — dark charcoal body, visor head, Dex3-1 hands |
-| Patient | Robot in green gown (reversed, no arms) | **Realistic human** — skin-colored, hair, arms on armrests, facing forward |
-| Injection target | Floating near patient | **On patient's right deltoid** — directly on upper arm surface |
-| Doctor grip | Syringe loosely near hand | **Firm dexterous hand grip** — syringe held in G1 three-fingered hand |
-| Station labels | Too high (y=3.2) | **Lowered (y=2.4)** — closer to participant heads |
-| Animations | Coarse movements | **Smoother interpolation** — finer, more natural motion |
-| Nav banner | v0.1.0 and v0.5.0 | **v0.1.0, v0.5.0, and v0.6.0 (current)** |
-| URL path | `/v5/` | **`/v6/`** |
+| Hospital environment | Walls, floor, grid | **Ceiling, light fixtures, baseboards, door** — fuller room |
+| Patient face | Blank sphere head | **Eyes, eyebrows, nose, mouth** — recognizable facial features |
+| G1 torso | Single box torso | **Segmented chest/abdomen** with metallic seam joint |
+| Nurse animation | Active only in monitor phase | **Active throughout all 7 phases** — tablet checking, head tracking |
+| Patient reactions | Minimal subtle movement | **Reactive during injection** — head turn, hand grip |
+| Nurse LED | No LED pulse | **Nurse G1 LED mask pulses** (offset from doctor) |
+| Lighting | Exposure 1.4 | **Exposure 1.5** with ceiling light glow panels |
+| Nav banner | v0.1.0, v0.5.0, v0.6.0 | **v0.1.0, v0.5.0, v0.6.0, v0.7.0 (current)** |
+| URL path | `/v6/` | **`/v7/`** |
 
 ### Station Layout (2x2 Grid)
 
@@ -64,7 +68,7 @@ with different random seed initialization, producing distinct timing and accurac
 | **C** | Back-left | 256 | 1.08x | Highest | Accuracy-focused |
 | **D** | Back-right | 512 | 0.95x | High | Cautious |
 
-### Role Assignments (v0.6.0 — Unitree G1 Robots + Human Patient)
+### Role Assignments (v0.7.0 — Unitree G1 Robots + Human Patient)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
@@ -113,7 +117,7 @@ objectives: speed (finish fast), accuracy (needle close to target), and smoothne
 - **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
 - **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
 
-### Simulation Results (v0.6.0)
+### Simulation Results (v0.7.0)
 
 Results from `python -m simulation_v2.run_competition`:
 

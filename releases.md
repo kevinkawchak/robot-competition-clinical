@@ -1,5 +1,48 @@
 # Releases
 
+## Clinical Robot Competition — v0.7.0 Enhanced Hospital Visuals
+
+v0.7.0 — 2026-03-04
+
+### Summary
+
+Visual and environment upgrade building on v0.6.0's realistic Unitree G1 robots and human patient.
+The hospital environment now features a ceiling with light fixtures over each station quadrant,
+baseboards along all walls, and a wooden door with frame and handle. The human patient gains
+facial features (eyes with pupils, eyebrows, nose, mouth). The G1 robot torso is segmented into
+chest and abdomen sections with a metallic seam joint. The nurse G1 robot is now animated
+throughout all 7 phases (not just monitoring) with tablet checking, head tracking, and arm
+movement. The patient reacts during injection by turning toward the doctor and gripping the
+armrest. Both doctor and nurse G1 robots have pulsing LED visor masks. Tone mapping exposure
+increased for improved lighting with ceiling glow panels. The objective is to illustrate that
+competitions across multiple autonomous robots can make future fully autonomous physical AI
+oncology trials faster than current human trials.
+
+### Features
+
+- Enhanced hospital environment: ceiling, light fixtures per quadrant, baseboards, wooden door
+- Patient facial features: eyes, pupils, eyebrows, nose, mouth
+- G1 torso segmentation: chest/abdomen split with metallic seam joint
+- Active nurse animation throughout all 7 injection phases
+- Patient reactive animation during injection (head turn, hand grip)
+- Nurse G1 LED visor mask pulse (offset frequency from doctor)
+- Increased tone mapping exposure (1.5) with ceiling light glow panels
+- Four-version nav banner: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 (current)
+- All v0.6.0 competition mechanics preserved: PPO policies, 4 stations, same scoring
+- Cross-device support: desktop, iPhone, Android, tablet
+
+### Contributors
+@kevinkawchak
+@claude
+
+### Notes
+
+- All competition mechanics, scoring, and PPO policies unchanged from v0.6.0
+- v0.6.0 viewer preserved and accessible via nav banner
+- Hospital environment additions are lightweight (minimal geometry count impact)
+
+---
+
 ## Clinical Robot Competition — v0.6.0 Realistic Unitree G1 Robots & Human Patient
 
 v0.6.0 — 2026-03-03

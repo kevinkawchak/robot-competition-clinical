@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Clinical Robot Competition v0.6.0 — Unitree G1 Robots</title>
+<title>Clinical Robot Competition v0.7.0 — Enhanced Visuals</title>
 <script type="importmap">
 {
   "imports": {
@@ -155,13 +155,13 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
     <span>|</span>
     <a id="nav-v5" href="#">v0.5.0</a>
     <span>|</span>
-    <span style="color:#0066cc; font-weight:700;">v0.6.0</span>
+    <a id="nav-v6" href="#">v0.6.0</a>
     <span>|</span>
-    <a id="nav-v7" href="#">v0.7.0 (current)</a>
+    <span style="color:#0066cc; font-weight:700;">v0.7.0 (current)</span>
   </div>
   <div id="header">
     <h1>Clinical Robot Competition</h1>
-    <span class="subtitle">4-Station PPO v0.6.0 &mdash; Unitree G1 Robots</span>
+    <span class="subtitle">4-Station PPO v0.7.0 &mdash; Enhanced Visuals</span>
   </div>
   <div id="station-selector">
     <button class="station-btn active" data-station="overview">Overview</button>
@@ -183,13 +183,13 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
   <div id="legend">
     <h3>Legend</h3>
     <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #666"></div>G1 Doctor (white coat, syringe)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (green gown)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (green gown, facial features)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #3377ee"></div>G1 Nurse (blue coat, tablet)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#cc3344"></div>IV Stand</div>
     <div class="legend-item"><div class="legend-dot" style="background:#999"></div>Equipment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#ff2244"></div>Injection Target</div>
   </div>
-  <div id="attribution">Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
+  <div id="attribution">v0.7.0 | Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
 </div>
 <div id="final-results">
   <div id="results-card">
@@ -200,11 +200,12 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 </div>
 <div id="info-modal">
   <div id="info-content">
-    <h2>Clinical Robot Competition v0.6.0</h2>
+    <h2>Clinical Robot Competition v0.7.0</h2>
     <p>A 4-station clinical robot competition where <strong>Unitree G1 humanoid robots</strong>
     (from unitreerobotics) serve as doctors and nurses competing to perform patient injection
-    procedures on a <strong>realistic human patient</strong>. Each station runs independently
-    with PPO reinforcement learning policies.</p>
+    procedures on a <strong>realistic human patient</strong>. Enhanced hospital environment
+    with ceiling lights, baseboards, door, patient facial features, and more active nurse
+    animations. Each station runs independently with PPO reinforcement learning policies.</p>
     <h3>Unitree G1 Robots</h3>
     <ul>
       <li>1.32m tall, 35kg, 23&ndash;43 degrees of freedom</li>
@@ -231,7 +232,7 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
       <li><strong>Accuracy:</strong> Needle-to-target distance. Score = 1/(1+dist*100)</li>
       <li><strong>Winner:</strong> Fastest total time, tiebroken by accuracy</li>
     </ul>
-    <p style="margin-top:8px;font-size:10px;color:#999">Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
+    <p style="margin-top:8px;font-size:10px;color:#999">v0.7.0 | Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
     <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
   </div>
 </div>
@@ -243,10 +244,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* -- NAV BANNER -- */
 (function() {
-  const base = window.location.pathname.replace(/\/v6\/?$/, '').replace(/\/+$/, '');
+  const base = window.location.pathname.replace(/\/v7\/?$/, '').replace(/\/+$/, '');
   document.getElementById('nav-v1').href = base + '/';
   document.getElementById('nav-v5').href = base + '/v5/';
-  document.getElementById('nav-v7').href = base + '/v7/';
+  document.getElementById('nav-v6').href = base + '/v6/';
 })();
 
 /* -- CONSTANTS -- */
@@ -293,7 +294,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.4;
+renderer.toneMappingExposure = 1.5;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e8ecf0');
@@ -390,6 +391,38 @@ function buildRoom() {
   });
   const grid = new THREE.GridHelper(ROOM_W, 32, 0xc0c4c8, 0xd0d4d8);
   grid.position.y = 0.01; scene.add(grid);
+
+  /* Ceiling */
+  const ceil = mk(gBox(ROOM_W, 0.08, ROOM_D), M.wall, [0, ROOM_H, 0]);
+  ceil.castShadow = false; ceil.receiveShadow = true;
+
+  /* Baseboards along walls */
+  const bbMat = new THREE.MeshStandardMaterial({ color:0x888890, roughness:0.4 });
+  [[0, 0.06, -hd+0.06, 0, ROOM_W], [0, 0.06, hd-0.06, 0, ROOM_W],
+   [-hw+0.06, 0.06, 0, Math.PI/2, ROOM_D], [hw-0.06, 0.06, 0, Math.PI/2, ROOM_D]].forEach(([x,y,z,ry,len]) => {
+    const bb = mk(gBox(len, 0.12, 0.04), bbMat, [x, y, z]);
+    if (ry) bb.rotation.y = ry;
+    bb.castShadow = false;
+  });
+
+  /* Ceiling light fixtures (one per station quadrant) */
+  const lightFixMat = new THREE.MeshStandardMaterial({ color:0xeeeeee, roughness:0.3, metalness:0.2 });
+  const lightGlowMat = new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xffffee, emissiveIntensity:0.6 });
+  STATION_CONFIGS.forEach(cfg => {
+    const lx = cfg.gx * GRID_X / 2, lz = cfg.gz * GRID_Z / 2;
+    mk(gBox(0.8, 0.04, 0.3), lightFixMat, [lx, ROOM_H - 0.06, lz]);
+    mk(gBox(0.7, 0.01, 0.22), lightGlowMat, [lx, ROOM_H - 0.09, lz]);
+  });
+
+  /* Door on back wall */
+  const doorMat = new THREE.MeshStandardMaterial({ color:0x8B7355, roughness:0.6 });
+  const doorFrameMat = new THREE.MeshStandardMaterial({ color:0x666666, roughness:0.4 });
+  mk(gBox(0.9, 2.2, 0.06), doorMat, [0, 1.1, -hd+0.08]);
+  mk(gBox(1.0, 0.06, 0.08), doorFrameMat, [0, 2.22, -hd+0.08]);
+  mk(gBox(0.06, 2.2, 0.08), doorFrameMat, [-0.5, 1.1, -hd+0.08]);
+  mk(gBox(0.06, 2.2, 0.08), doorFrameMat, [0.5, 1.1, -hd+0.08]);
+  /* Door handle */
+  mk(gCyl(0.02, 0.02, 0.08, 8), doorFrameMat, [0.35, 1.05, -hd+0.13]);
 }
 
 /* -- UNITREE G1 HUMANOID ROBOT (unitreerobotics) -- */
@@ -399,10 +432,17 @@ function buildG1Robot(role, parent) {
   const joints = {};
   const coatMat = role === 'doctor' ? M.coatWhite : M.coatBlue;
 
-  /* === TORSO (compact G1 body panel) === */
-  mk(gBox(0.28, 0.36, 0.16), M.g1body, [0, 0, 0], g);
+  /* === TORSO (G1 segmented chest + abdomen) === */
+  /* Upper chest */
+  mk(gBox(0.28, 0.20, 0.16), M.g1body, [0, 0.08, 0], g);
+  /* Lower abdomen */
+  mk(gBox(0.26, 0.16, 0.14), M.g1body, [0, -0.10, 0], g);
   /* Front chest panel detail */
-  mk(gBox(0.24, 0.30, 0.005), M.g1panel, [0, 0.01, -0.083], g);
+  mk(gBox(0.24, 0.16, 0.005), M.g1panel, [0, 0.08, -0.083], g);
+  /* Abdomen panel */
+  mk(gBox(0.22, 0.10, 0.005), M.g1panel, [0, -0.10, -0.073], g);
+  /* Chest-abdomen seam ring */
+  mk(gBox(0.27, 0.012, 0.17), M.g1joint, [0, -0.01, 0], g);
   /* Medical coat overlay */
   mk(gBox(0.32, 0.40, 0.19), coatMat, [0, -0.02, 0], g);
 
@@ -564,6 +604,22 @@ function buildHumanPatient(parent) {
   /* Ears */
   mk(gSph(0.02), M.skin, [-0.10, -0.02, 0], head);
   mk(gSph(0.02), M.skin, [0.10, -0.02, 0], head);
+  /* Eyes */
+  const eyeMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.2 });
+  const pupilMat = new THREE.MeshStandardMaterial({ color:0x2a1a0a, roughness:0.3 });
+  mk(gSph(0.018, 8, 8), eyeMat, [-0.035, 0.01, -0.085], head);
+  mk(gSph(0.018, 8, 8), eyeMat, [0.035, 0.01, -0.085], head);
+  mk(gSph(0.009, 6, 6), pupilMat, [-0.035, 0.01, -0.10], head);
+  mk(gSph(0.009, 6, 6), pupilMat, [0.035, 0.01, -0.10], head);
+  /* Eyebrows */
+  const browMat = new THREE.MeshStandardMaterial({ color:0x3a2a1a, roughness:0.7 });
+  mk(gBox(0.03, 0.005, 0.008), browMat, [-0.035, 0.035, -0.09], head);
+  mk(gBox(0.03, 0.005, 0.008), browMat, [0.035, 0.035, -0.09], head);
+  /* Nose */
+  mk(gBox(0.01, 0.018, 0.012), M.skin, [0, -0.01, -0.10], head);
+  /* Mouth */
+  const mouthMat = new THREE.MeshStandardMaterial({ color:0xcc8877, roughness:0.5 });
+  mk(gBox(0.025, 0.005, 0.006), mouthMat, [0, -0.04, -0.095], head);
   /* Neck */
   mk(gCyl(0.04, 0.04, 0.08, 10), M.skin, [0, -0.10, 0], head);
   g.add(head);
@@ -1104,36 +1160,96 @@ function animStation(st, dt) {
     st.dj.head.rotation.y = headTrack + Math.sin(t * 0.3) * 0.02;
   }
 
-  /* === NURSE G1 ANIMATION === */
-  let nurseSP = 20, nurseElbow = 70;
-  if (ph.name === 'monitor') {
-    nurseSP = 20 + sT * 15;
-    nurseElbow = 70 - sT * 20;
+  /* === NURSE G1 ANIMATION (active throughout) === */
+  let nurseSP = 20, nurseElbow = 70, nurseLeftSP = 0;
+  switch(ph.name) {
+    case 'prepare':
+      /* Nurse checks tablet during preparation */
+      nurseSP = 20 + sT * 10;
+      nurseElbow = 70 - sT * 10;
+      nurseLeftSP = sT * 5;
+      break;
+    case 'approach':
+      /* Nurse steps slightly closer, raises tablet */
+      nurseSP = 30 + sT * 5;
+      nurseElbow = 60 - sT * 5;
+      nurseLeftSP = 5 + sT * 3;
+      break;
+    case 'position':
+      /* Nurse watches positioning intently */
+      nurseSP = 35;
+      nurseElbow = 55;
+      nurseLeftSP = 8 + Math.sin(pT * Math.PI) * 3;
+      break;
+    case 'inject':
+      /* Nurse holds tablet up to record */
+      nurseSP = 35 + sT * 10;
+      nurseElbow = 55 - sT * 10;
+      nurseLeftSP = 10;
+      break;
+    case 'hold':
+      /* Nurse steadily observes */
+      nurseSP = 45 + Math.sin(pT * Math.PI * 2) * 2;
+      nurseElbow = 45;
+      nurseLeftSP = 10 + Math.sin(pT * Math.PI) * 2;
+      break;
+    case 'withdraw':
+      /* Nurse lowers tablet slightly */
+      nurseSP = 45 - sT * 15;
+      nurseElbow = 45 + sT * 15;
+      nurseLeftSP = 10 - sT * 5;
+      break;
+    case 'monitor':
+      /* Nurse raises tablet for final check */
+      nurseSP = 30 + sT * 15;
+      nurseElbow = 60 - sT * 20;
+      nurseLeftSP = 5 - sT * 5;
+      break;
   }
   st.nj.rUpperArm.rotation.x = -nurseSP * DEG;
   st.nj.rElbow.rotation.x = -nurseElbow * DEG;
+  st.nj.lUpperArm.rotation.x = -nurseLeftSP * DEG + Math.sin(t * 1.5) * 0.015;
   st.nurse.position.y = 0.89 + Math.sin(t * 2.2) * 0.003;
-  st.nj.lUpperArm.rotation.x = Math.sin(t * 1.5) * 0.015;
-  /* Nurse head looks toward patient */
+  /* Nurse head tracks toward patient more actively */
   if (st.nj.head) {
-    st.nj.head.rotation.y = 0.08 + Math.sin(t * 0.4) * 0.02;
+    const nurseHeadTrack = (ph.name === 'inject' || ph.name === 'hold') ? 0.15 : 0.08;
+    st.nj.head.rotation.y = nurseHeadTrack + Math.sin(t * 0.4) * 0.03;
+    st.nj.head.rotation.x = (ph.name === 'inject' || ph.name === 'hold') ? -0.05 : 0;
   }
 
-  /* === PATIENT subtle movement === */
+  /* === PATIENT animation (reactive) === */
   st.pj.head.rotation.y = Math.sin(t * 0.3) * 0.025;
   st.pj.rUpperArm.rotation.x = 0.3 + Math.sin(t * 0.8) * 0.004;
   /* Patient slight breathing */
   st.patient.position.y = 1.15 + Math.sin(t * 2.0) * 0.002;
+  /* Patient looks toward doctor during injection */
+  if (ph.name === 'inject' || ph.name === 'hold') {
+    st.pj.head.rotation.y = 0.06 + Math.sin(t * 0.5) * 0.015;
+    st.pj.head.rotation.x = -0.03;
+  } else {
+    st.pj.head.rotation.x = Math.sin(t * 0.4) * 0.01;
+  }
+  /* Patient left hand slight grip during injection */
+  if (ph.name === 'inject') {
+    st.pj.lElbow.rotation.x = -0.9 - sT * 0.05;
+  } else if (ph.name === 'hold') {
+    st.pj.lElbow.rotation.x = -0.95 + sT * 0.05;
+  }
 
   /* Monitor LED blink */
   if (st.mon && st.mon.userData && st.mon.userData.led) {
     st.mon.userData.led.material.emissiveIntensity = Math.sin(t * 6) > 0 ? 0.8 : 0.1;
   }
 
-  /* G1 head LED mask pulse */
+  /* G1 head LED mask pulse (doctor) */
   if (st.doctor.userData.joints.head && st.doctor.userData.joints.head.userData.ledMask) {
     st.doctor.userData.joints.head.userData.ledMask.material.emissiveIntensity =
       0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * 4));
+  }
+  /* G1 head LED mask pulse (nurse) */
+  if (st.nurse.userData.joints.head && st.nurse.userData.joints.head.userData.ledMask) {
+    st.nurse.userData.joints.head.userData.ledMask.material.emissiveIntensity =
+      0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * 3.5 + 1.2));
   }
 
   /* Pulse injection target ring */
