@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] — 2026-03-04
+
+### Added
+- **v0.7.0 competition viewer** (`docs/v7/index.html`) with enhanced hospital visuals
+- **Hospital environment details** — ceiling with light fixtures per station quadrant, baseboards
+  along all walls, wooden door with frame and handle on back wall
+- **Patient facial features** — eyes with pupils, eyebrows, nose, and mouth on human patient model
+- **G1 torso segmentation** — chest and abdomen split with metallic seam joint, separate front panels
+- **Active nurse animation** — nurse G1 animates throughout all 7 phases (not just monitoring),
+  with tablet checking, head tracking toward patient, and left arm movement
+- **Patient reactive animation** — patient turns head toward doctor during injection, left hand
+  grip tightens during inject phase
+- **Nurse G1 LED mask pulse** — nurse visor LED pulses at offset frequency from doctor
+- **Four-version nav banner** — clickable links to v0.1.0, v0.5.0, v0.6.0, and v0.7.0 (current)
+
+### Changed
+- Nav banner now shows four versions: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 (current)
+- Updated v0.1.0, v0.5.0, v0.6.0 viewer nav banners to include v0.7.0 link
+- Updated `pyproject.toml` version from 0.6.0 to 0.7.0
+- Updated `simulation_v2/run_competition.py` version string to 0.7.0
+- Updated `simulation_v2/export_competition.py` version string to 0.7.0
+- Updated `tests/test_exports.py` to expect version 0.7.0
+- Updated README with v0.7.0 documentation and version table
+- Increased tone mapping exposure from 1.4 to 1.5 for enhanced lighting
+
 ## [0.6.0] — 2026-03-03
 
 ### Added
