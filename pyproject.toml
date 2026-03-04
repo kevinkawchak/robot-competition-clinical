@@ -1,7 +1,7 @@
 [project]
 name = "robot-competition-clinical"
-version = "0.7.0"
-description = "Clinical trial robot competition simulation with realistic Unitree G1 humanoid robots (unitreerobotics) — 4-station PPO-driven injection procedure race with human patient, enhanced hospital visuals, built on MuJoCo physics"
+version = "0.8.0"
+description = "Clinical trial robot competition simulation with SOTA Unitree G1 humanoid robots (unitreerobotics) — 4-station PPO-driven injection procedure race with realistic human patients, premium dark theme, PBR materials, built on MuJoCo physics"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"

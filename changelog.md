@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] — 2026-03-04
+
+### Added
+- v0.8.0 competition viewer (`docs/v8/index.html`) — complete visual overhaul
+- Premium dark theme (#0d1117 gradient) with frosted glass UI panels and neon cyan accents
+- PBR-style materials: specular highlights on G1 bodies, translucent IV bags with fluid level
+- Enhanced G1 robots: articulated finger segments, battery pack, spine LED strip, ankle actuators
+- Realistic human patients: hospital wristband, pulse oximeter, visible arm veins, individual fingers
+- Surgical overhead spotlights with visible glow cones per station quadrant
+- Glass observation window, curtain dividers between station pairs
+- Emergency exit sign, wall-mounted hand sanitizer dispensers
+- Doctor holds alcohol swab in left hand during preparation phase
+- Nurse wears stethoscope around neck, pen in coat pocket
+- 18m x 18m room with 6.0m grid spacing
+- Five-version nav banner: v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0 (new)
+- v0.8.0 release notes in `releases.md`
+- v0.8.0 build prompt in `prompts.md`
+
+### Changed
+- Nav banners in v0.1.0, v0.5.0, v0.6.0, v0.7.0 updated to include v0.8.0 link
+- `pyproject.toml` version from 0.7.0 to 0.8.0
+- `simulation_v2/run_competition.py` version string to 0.8.0
+- `simulation_v2/export_competition.py` version string to 0.8.0
+- `tests/test_exports.py` to expect version 0.8.0
+- README updated with v0.8.0 documentation and version table
+
 ## [0.7.0] — 2026-03-04
 
 ### Added
