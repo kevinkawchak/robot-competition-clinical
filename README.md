@@ -9,7 +9,7 @@ in the exam chair receiving the injection. All stations are driven by **PPO rein
 learning** policies with distinct behavior profiles from different random seeds.
 
 The objective is to illustrate that having competitions across multiple autonomous robots is
-advantageous for making future fully autonomous physical AI oncology trials faster than current
+advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
 human trials.
 
 Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
