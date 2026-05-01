@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] — 2026-05-01
+
+### Added
+- **v0.9.0 competition viewer** (`docs/v9/index.html`) — targeted-fix release built on the
+  strong-performing v0.6.0 base
+- **Patient facial features** — eyes (whites + pupils), eyebrows, nose, mouth, chin,
+  hair cap with fringe so the head front is unambiguous
+- **Close-zoom camera** — `minDistance` 3.0 → 0.4, near plane 0.10 → 0.05, fog start
+  28 m → 38 m, per-station camera presets pulled in to (+1.4, 1.6, −2.0)
+- **Shoulder-cap geometry** on G1 robot torsos to hide the body-box top edge
+- **Z-fight elimination** — opaque coat materials with `polygonOffset:-1`, enlarged coat
+  box (0.36 × 0.44 × 0.22) and sleeve capsule (0.052r × 0.16L)
+- **Realistic adult leg proportions** for the human patient — thigh & shin lengthened to
+  0.42 m each so feet rest on the floor when seated
+- **Cross-body inject pose** — shoulder yaw −83°, elbow bend 100°, doctor XOff −0.30,
+  ZOff +0.10 so the syringe needle contacts the patient's right deltoid
+- **Longer syringe needle** — 0.06 m → 0.10 m for visible contact
+- **Brighter injection-target highlight** during inject/hold — emissive intensity 0.4 → 0.9,
+  pulse amplitude 0.15 → 0.25, double frequency
+- **Six-version nav banner** — clickable links across v0.1.0, v0.5.0, v0.6.0, v0.7.0,
+  v0.8.0, v0.9.0 (current)
+- **v0.9.0 release notes** in `releases.md`
+- **v0.9.0 build prompt** in `prompts.md`
+
+### Changed
+- Nav banner in v0.1.0, v0.5.0, v0.6.0, v0.7.0, and v0.8.0 viewers updated to include
+  v0.9.0 link
+- `pyproject.toml` version from 0.8.0 to 0.9.0
+- `simulation_v2/run_competition.py` version string from 0.8.0 to 0.9.0
+- `simulation_v2/export_competition.py` version string from 0.8.0 to 0.9.0
+- `tests/test_exports.py` to expect version 0.9.0
+- README updated with v0.9.0 documentation, version table, and architecture diagrams
+- Patient root y lowered 1.15 → 0.775 so the pelvis rests on the cushion
+- Patient root z pushed back 0.02 → 0.10 so the torso rests near the backrest
+- Patient arm rest pose softened (UpperArm.x 0.30 → 0.18, Elbow.x −0.90 → −1.05)
+- Doctor/nurse home y lowered 0.89 → 0.80 so feet stand on the floor
+- Station label y lowered 2.4 → 2.0 so it reads well on close-zoom
+
+### Fixed
+- **Patient seating (issue #1)**: Patients no longer float above the chair with feet on
+  the cushion — pelvis rests on the cushion, feet hit the floor
+- **Patient head orientation + facial features (issue #2)**: Head is explicitly
+  forward-facing, with eyes/eyebrows/nose/mouth/chin/hair fringe added to disambiguate
+- **Close-zoom (issue #3)**: Each station can now be inspected at near-touching range
+  via mouse wheel / pinch zoom
+- **Shoulder Z-fighting (issue #4)**: Coat overlays use opaque materials with
+  `polygonOffset` and fully enclose the body box; the shoulder seam no longer flickers
+- **Needle contact (issue #5)**: Doctor's cross-body inject pose plus a longer needle
+  ensures the syringe tip contacts the patient's right deltoid during inject and hold
+
 ## [0.8.0] — 2026-03-04
 
 ### Added
