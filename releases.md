@@ -1,5 +1,61 @@
 # Releases
 
+## Clinical Robot Competition — v0.9.0 Refined Patients, Close-Zoom & Needle Contact
+
+v0.9.0 — 2026-05-01
+
+### Summary
+
+Targeted-fix release built on top of the strong-performing v0.6.0 base. v0.9.0 addresses
+the five most-reported issues from v0.6.0: (1) patients now sit *on* the chair with their
+feet on the floor instead of floating with their feet on the cushion, (2) patient heads
+are explicitly forward-facing with prominent facial features (eyes with pupils, eyebrows,
+nose, mouth, chin) and a hair fringe so orientation is unambiguous, (3) the camera supports
+close-zoom on each station (`minDistance` reduced from 3.0m to 0.4m, near plane to 0.05,
+fog pushed back), (4) the doctor and nurse coats no longer Z-fight at the shoulder seam
+(opaque coat materials with `polygonOffset:-1`, enlarged geometry, dedicated shoulder pad),
+and (5) during the inject and hold phases the syringe needle visibly contacts the patient's
+right deltoid (cross-body shoulder yaw of −83°, 100° elbow bend, doctor approaches further,
+needle lengthened from 6 cm to 10 cm, target ring brightens 1.6× and pulses at double speed
+on contact). All competition mechanics, scoring, PPO policies, and station configurations
+are unchanged from v0.6.0.
+
+### Features
+
+- Patient pelvis rests on the cushion (root y lowered 1.15 → 0.775); feet hit the floor
+  with anatomically realistic 0.42 m thigh + 0.42 m shin segments
+- Forward-facing patient head with eyes (whites + pupils), eyebrows, nose, mouth, chin,
+  and a back/top hair cap with a fringe — the front of the head is unambiguous
+- Camera close-zoom support: `minDistance` 3.0 → 0.4, near plane 0.10 → 0.05, fog start
+  28 m → 38 m, per-station camera presets pulled in from (+2.5, 4.5, +5.0) to (+1.4, 1.6, −2.0)
+- Z-fight-free coat overlays: opaque materials with `polygonOffset:-1`, enlarged coat box
+  (0.36 × 0.44 × 0.22 vs 0.32 × 0.40 × 0.19), shoulder pad cap, enlarged sleeve capsule
+- Needle contacts the deltoid: cross-body shoulder pose (SP 45°, SY −83°), 100° elbow bend,
+  doctor docks at XOff −0.30 / ZOff +0.10, needle lengthened 0.06 m → 0.10 m
+- Brighter injection-target ring during inject/hold (emissive intensity 0.4 → 0.9, pulse
+  amplitude 0.15 → 0.25, pulse frequency doubled)
+- Six-version nav banner: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 (new)
+- Cross-device support: desktop, iPhone, Android, tablet
+- Light-mode theme retained from v0.6.0 (the proven base)
+
+### Contributors
+@kevinkawchak
+@claude
+
+### Notes
+
+- The v0.9.0 viewer is at `/v9/` on GitHub Pages
+- All four stations still use the **same PPO policy architecture** (MLP 64x64, tanh) with
+  **different random seeds** (42, 137, 256, 512); reward, ranking, and timing rules are
+  identical to v0.6.0
+- v0.6.0, v0.7.0, and v0.8.0 viewers preserved and accessible via the nav banner
+- v0.9.0 was authored as targeted fixes against v0.6.0 because v0.6.0 was the
+  best-performing prior competition viewer
+- Simulation results are unchanged from v0.6.0: Station B wins (12.514s, 32.8% accuracy),
+  Station D #2 (13.734s, 50.6%), Station A #3 (13.810s, 43.6%), Station C #4 (14.830s, 61.1%)
+
+---
+
 ## Clinical Robot Competition — v0.8.0 SOTA G1 Robots & Realistic Patients
 
 v0.8.0 — 2026-03-04

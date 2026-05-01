@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Clinical Robot Competition v0.7.0 — Enhanced Visuals</title>
+<title>Clinical Robot Competition v0.9.0 — Refined Patients & Close-Zoom</title>
 <script type="importmap">
 {
   "imports": {
@@ -157,15 +157,15 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
     <span>|</span>
     <a id="nav-v6" href="#">v0.6.0</a>
     <span>|</span>
-    <span style="color:#0066cc; font-weight:700;">v0.7.0</span>
+    <a id="nav-v7" href="#">v0.7.0</a>
     <span>|</span>
     <a id="nav-v8" href="#">v0.8.0</a>
     <span>|</span>
-    <a id="nav-v9" href="#">v0.9.0 (new)</a>
+    <span style="color:#0066cc; font-weight:700;">v0.9.0 (new)</span>
   </div>
   <div id="header">
     <h1>Clinical Robot Competition</h1>
-    <span class="subtitle">4-Station PPO v0.7.0 &mdash; Enhanced Visuals</span>
+    <span class="subtitle">4-Station PPO v0.9.0 &mdash; Refined Patients, Close-Zoom, Faces</span>
   </div>
   <div id="station-selector">
     <button class="station-btn active" data-station="overview">Overview</button>
@@ -185,15 +185,16 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
     <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
   </div>
   <div id="legend">
-    <h3>Legend</h3>
+    <h3>Legend (v0.9.0)</h3>
     <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #666"></div>G1 Doctor (white coat, syringe)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (green gown, facial features)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8b090"></div>Human Patient (face, gown, sitting)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#1a1a1e;border:1px solid #3377ee"></div>G1 Nurse (blue coat, tablet)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#cc3344"></div>IV Stand</div>
     <div class="legend-item"><div class="legend-dot" style="background:#999"></div>Equipment</div>
     <div class="legend-item"><div class="legend-dot" style="background:#ff2244"></div>Injection Target</div>
+    <div class="legend-item" style="margin-top:4px;font-style:italic;color:#888">Tip: scroll/pinch to zoom in close</div>
   </div>
-  <div id="attribution">v0.7.0 | Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
+  <div id="attribution">Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
 </div>
 <div id="final-results">
   <div id="results-card">
@@ -204,12 +205,13 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
 </div>
 <div id="info-modal">
   <div id="info-content">
-    <h2>Clinical Robot Competition v0.7.0</h2>
+    <h2>Clinical Robot Competition v0.9.0</h2>
     <p>A 4-station clinical robot competition where <strong>Unitree G1 humanoid robots</strong>
     (from unitreerobotics) serve as doctors and nurses competing to perform patient injection
-    procedures on a <strong>realistic human patient</strong>. Enhanced hospital environment
-    with ceiling lights, baseboards, door, patient facial features, and more active nurse
-    animations. Each station runs independently with PPO reinforcement learning policies.</p>
+    procedures on a <strong>realistic human patient</strong>. v0.9.0 builds on the proven
+    v0.6.0 base with patient seating fixes, prominent facial features, close-zoom camera,
+    Z-fighting-free coat overlays, and accurate needle-to-deltoid contact during injection.
+    Each station runs independently with PPO reinforcement learning policies.</p>
     <h3>Unitree G1 Robots</h3>
     <ul>
       <li>1.32m tall, 35kg, 23&ndash;43 degrees of freedom</li>
@@ -236,7 +238,7 @@ body { background:#f0f2f5; color:#1a1a2e; font-family:'Segoe UI',system-ui,-appl
       <li><strong>Accuracy:</strong> Needle-to-target distance. Score = 1/(1+dist*100)</li>
       <li><strong>Winner:</strong> Fastest total time, tiebroken by accuracy</li>
     </ul>
-    <p style="margin-top:8px;font-size:10px;color:#999">v0.7.0 | Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
+    <p style="margin-top:8px;font-size:10px;color:#999">Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
     <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
   </div>
 </div>
@@ -248,12 +250,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* -- NAV BANNER -- */
 (function() {
-  const base = window.location.pathname.replace(/\/v7\/?$/, '').replace(/\/+$/, '');
+  const base = window.location.pathname.replace(/\/v9\/?$/, '').replace(/\/+$/, '');
   document.getElementById('nav-v1').href = base + '/';
   document.getElementById('nav-v5').href = base + '/v5/';
   document.getElementById('nav-v6').href = base + '/v6/';
+  document.getElementById('nav-v7').href = base + '/v7/';
   document.getElementById('nav-v8').href = base + '/v8/';
-  document.getElementById('nav-v9').href = base + '/v9/';
 })();
 
 /* -- CONSTANTS -- */
@@ -300,22 +302,27 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.5;
+renderer.toneMappingExposure = 1.4;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e8ecf0');
-scene.fog = new THREE.Fog('#e8ecf0', 28, 50);
+/* v0.9.0: pushed fog farther back so close-zoom remains crisp */
+scene.fog = new THREE.Fog('#e8ecf0', 38, 80);
 
 /* -- CAMERA -- */
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+/* v0.9.0: wider near plane and reduced minDistance for close-zoom on each station */
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 120);
 camera.position.set(0, 14, 19);
 const ctrls = new OrbitControls(camera, canvas);
 ctrls.enableDamping = true;
 ctrls.dampingFactor = 0.08;
-ctrls.target.set(0, 1.2, 0);
-ctrls.minDistance = 3;
-ctrls.maxDistance = 30;
-ctrls.maxPolarAngle = Math.PI * 0.47;
+ctrls.target.set(0, 1.0, 0);
+ctrls.minDistance = 0.4;     /* v0.9.0: allow very close zoom (was 3) */
+ctrls.maxDistance = 40;      /* v0.9.0: extended range */
+ctrls.maxPolarAngle = Math.PI * 0.49;
+/* v0.9.0: enable smooth zoom and keyboard zoom for accessibility */
+ctrls.zoomSpeed = 1.2;
+ctrls.rotateSpeed = 0.7;
 
 /* -- LIGHTS -- */
 scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -344,9 +351,11 @@ const M = {
   g1visor:  new THREE.MeshStandardMaterial({ color:0x0a0a0f, roughness:0.1, metalness:0.5 }),
   g1joint:  new THREE.MeshStandardMaterial({ color:0x888890, roughness:0.25, metalness:0.8 }),
   g1panel:  new THREE.MeshStandardMaterial({ color:0x252528, roughness:0.3, metalness:0.15 }),
-  /* Coats (semi-transparent overlays) */
-  coatWhite:new THREE.MeshStandardMaterial({ color:0xf0f0f0, roughness:0.5, transparent:true, opacity:0.85 }),
-  coatBlue: new THREE.MeshStandardMaterial({ color:0x2255cc, roughness:0.5, transparent:true, opacity:0.85 }),
+  /* Coats (v0.9.0: opaque + polygonOffset to eliminate shoulder z-fighting) */
+  coatWhite:new THREE.MeshStandardMaterial({ color:0xf4f4f4, roughness:0.55, metalness:0.02,
+    polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1 }),
+  coatBlue: new THREE.MeshStandardMaterial({ color:0x2255cc, roughness:0.55, metalness:0.02,
+    polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1 }),
   /* Human patient */
   skin:     new THREE.MeshStandardMaterial({ color:0xe8b090, roughness:0.55 }),
   hair:     new THREE.MeshStandardMaterial({ color:0x3a2a1a, roughness:0.8 }),
@@ -397,38 +406,6 @@ function buildRoom() {
   });
   const grid = new THREE.GridHelper(ROOM_W, 32, 0xc0c4c8, 0xd0d4d8);
   grid.position.y = 0.01; scene.add(grid);
-
-  /* Ceiling */
-  const ceil = mk(gBox(ROOM_W, 0.08, ROOM_D), M.wall, [0, ROOM_H, 0]);
-  ceil.castShadow = false; ceil.receiveShadow = true;
-
-  /* Baseboards along walls */
-  const bbMat = new THREE.MeshStandardMaterial({ color:0x888890, roughness:0.4 });
-  [[0, 0.06, -hd+0.06, 0, ROOM_W], [0, 0.06, hd-0.06, 0, ROOM_W],
-   [-hw+0.06, 0.06, 0, Math.PI/2, ROOM_D], [hw-0.06, 0.06, 0, Math.PI/2, ROOM_D]].forEach(([x,y,z,ry,len]) => {
-    const bb = mk(gBox(len, 0.12, 0.04), bbMat, [x, y, z]);
-    if (ry) bb.rotation.y = ry;
-    bb.castShadow = false;
-  });
-
-  /* Ceiling light fixtures (one per station quadrant) */
-  const lightFixMat = new THREE.MeshStandardMaterial({ color:0xeeeeee, roughness:0.3, metalness:0.2 });
-  const lightGlowMat = new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xffffee, emissiveIntensity:0.6 });
-  STATION_CONFIGS.forEach(cfg => {
-    const lx = cfg.gx * GRID_X / 2, lz = cfg.gz * GRID_Z / 2;
-    mk(gBox(0.8, 0.04, 0.3), lightFixMat, [lx, ROOM_H - 0.06, lz]);
-    mk(gBox(0.7, 0.01, 0.22), lightGlowMat, [lx, ROOM_H - 0.09, lz]);
-  });
-
-  /* Door on back wall */
-  const doorMat = new THREE.MeshStandardMaterial({ color:0x8B7355, roughness:0.6 });
-  const doorFrameMat = new THREE.MeshStandardMaterial({ color:0x666666, roughness:0.4 });
-  mk(gBox(0.9, 2.2, 0.06), doorMat, [0, 1.1, -hd+0.08]);
-  mk(gBox(1.0, 0.06, 0.08), doorFrameMat, [0, 2.22, -hd+0.08]);
-  mk(gBox(0.06, 2.2, 0.08), doorFrameMat, [-0.5, 1.1, -hd+0.08]);
-  mk(gBox(0.06, 2.2, 0.08), doorFrameMat, [0.5, 1.1, -hd+0.08]);
-  /* Door handle */
-  mk(gCyl(0.02, 0.02, 0.08, 8), doorFrameMat, [0.35, 1.05, -hd+0.13]);
 }
 
 /* -- UNITREE G1 HUMANOID ROBOT (unitreerobotics) -- */
@@ -438,19 +415,15 @@ function buildG1Robot(role, parent) {
   const joints = {};
   const coatMat = role === 'doctor' ? M.coatWhite : M.coatBlue;
 
-  /* === TORSO (G1 segmented chest + abdomen) === */
-  /* Upper chest */
-  mk(gBox(0.28, 0.20, 0.16), M.g1body, [0, 0.08, 0], g);
-  /* Lower abdomen */
-  mk(gBox(0.26, 0.16, 0.14), M.g1body, [0, -0.10, 0], g);
+  /* === TORSO (compact G1 body panel) === */
+  mk(gBox(0.28, 0.36, 0.16), M.g1body, [0, 0, 0], g);
   /* Front chest panel detail */
-  mk(gBox(0.24, 0.16, 0.005), M.g1panel, [0, 0.08, -0.083], g);
-  /* Abdomen panel */
-  mk(gBox(0.22, 0.10, 0.005), M.g1panel, [0, -0.10, -0.073], g);
-  /* Chest-abdomen seam ring */
-  mk(gBox(0.27, 0.012, 0.17), M.g1joint, [0, -0.01, 0], g);
-  /* Medical coat overlay */
-  mk(gBox(0.32, 0.40, 0.19), coatMat, [0, -0.02, 0], g);
+  mk(gBox(0.24, 0.30, 0.005), M.g1panel, [0, 0.01, -0.083], g);
+  /* v0.9.0: enlarged coat overlay (was 0.32x0.40x0.19) so it fully encloses the body
+     and never coplanar-fights at the shoulder seam. Lowered slightly so collar shows the body. */
+  mk(gBox(0.36, 0.44, 0.22), coatMat, [0, -0.04, 0.005], g);
+  /* v0.9.0: shoulder pad caps to hide top of body box (eliminates "glitching" stripe) */
+  mk(gBox(0.36, 0.04, 0.22), coatMat, [0, 0.18, 0.005], g);
 
   /* Role markers */
   if (role === 'doctor') {
@@ -496,12 +469,12 @@ function buildG1Robot(role, parent) {
     shoulder.position.set(sign * 0.19, 0.14, 0);
 
     const upperArm = new THREE.Group();
-    /* Shoulder joint (metallic ball) */
-    mk(gSph(0.042), M.g1joint, [0, 0, 0], upperArm);
+    /* Shoulder joint (metallic ball) — v0.9.0: slightly larger and pushed up to fill seam */
+    mk(gSph(0.05), M.g1joint, [0, 0.005, 0], upperArm);
     /* Upper arm panel */
     mk(gCap(0.035, 0.14, 4, 8), M.g1body, [0, -0.10, 0], upperArm);
-    /* Coat sleeve */
-    mk(gCap(0.042, 0.10, 4, 8), coatMat, [0, -0.07, 0], upperArm);
+    /* v0.9.0: enlarged coat sleeve so it fully covers the body capsule + shoulder seam */
+    mk(gCap(0.052, 0.16, 4, 8), coatMat, [0, -0.08, 0], upperArm);
     shoulder.add(upperArm);
 
     /* Elbow joint */
@@ -598,36 +571,46 @@ function buildHumanPatient(parent) {
   /* === TORSO (hospital gown) === */
   mk(gBox(0.30, 0.38, 0.18), M.gown, [0, 0, 0], g);
 
-  /* === HEAD === */
+  /* === HEAD (v0.9.0: prominent facial features so the front is unambiguous) === */
   const head = new THREE.Group();
   head.position.set(0, 0.30, 0);
-  /* Face/head */
-  mk(gSph(0.10, 14, 12), M.skin, [0, 0, 0], head);
-  /* Hair (dark cap) */
-  const hairCap = mk(gSph(0.105, 14, 8), M.hair, [0, 0.02, 0], head);
-  hairCap.scale.set(1, 0.7, 1);
-  hairCap.position.y = 0.03;
-  /* Ears */
-  mk(gSph(0.02), M.skin, [-0.10, -0.02, 0], head);
-  mk(gSph(0.02), M.skin, [0.10, -0.02, 0], head);
-  /* Eyes */
-  const eyeMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.2 });
-  const pupilMat = new THREE.MeshStandardMaterial({ color:0x2a1a0a, roughness:0.3 });
-  mk(gSph(0.018, 8, 8), eyeMat, [-0.035, 0.01, -0.085], head);
-  mk(gSph(0.018, 8, 8), eyeMat, [0.035, 0.01, -0.085], head);
-  mk(gSph(0.009, 6, 6), pupilMat, [-0.035, 0.01, -0.10], head);
-  mk(gSph(0.009, 6, 6), pupilMat, [0.035, 0.01, -0.10], head);
+  /* Skull (slightly elongated for human shape) */
+  const skull = mk(gSph(0.10, 18, 14), M.skin, [0, 0, 0], head);
+  skull.scale.set(1.0, 1.05, 1.05);
+  /* Hair cap covering only the back/top of the skull — clearly indicates the front */
+  const hairCap = mk(gSph(0.108, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.65), M.hair, [0, 0.018, 0.012], head);
+  hairCap.scale.set(1.0, 0.95, 1.0);
+  /* Hair fringe at the back-top so the back of the head is clearly hair, the front is face */
+  const fringe = mk(gSph(0.105, 16, 10), M.hair, [0, 0.04, 0.04], head);
+  fringe.scale.set(0.95, 0.55, 0.55);
+  /* Ears (slightly behind centerline) */
+  mk(gSph(0.022, 10, 8), M.skin, [-0.10, -0.015, 0.012], head);
+  mk(gSph(0.022, 10, 8), M.skin, [0.10, -0.015, 0.012], head);
+  /* === FACIAL FEATURES on the -Z (front) side === */
+  /* Eye sockets (slightly recessed appearance via shading) */
+  const eyeWhite = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.25, metalness:0.0 });
+  const pupil = new THREE.MeshStandardMaterial({ color:0x1a1208, roughness:0.3, metalness:0.0 });
+  const browMat = new THREE.MeshStandardMaterial({ color:0x2c1d10, roughness:0.75 });
+  const mouthMat = new THREE.MeshStandardMaterial({ color:0xb86a5e, roughness:0.55 });
+  /* Eyes — left and right */
+  mk(gSph(0.020, 12, 10), eyeWhite, [-0.038, 0.012, -0.088], head);
+  mk(gSph(0.020, 12, 10), eyeWhite, [ 0.038, 0.012, -0.088], head);
+  /* Pupils — pushed slightly forward of the white */
+  mk(gSph(0.010, 10, 8), pupil, [-0.038, 0.012, -0.103], head);
+  mk(gSph(0.010, 10, 8), pupil, [ 0.038, 0.012, -0.103], head);
   /* Eyebrows */
-  const browMat = new THREE.MeshStandardMaterial({ color:0x3a2a1a, roughness:0.7 });
-  mk(gBox(0.03, 0.005, 0.008), browMat, [-0.035, 0.035, -0.09], head);
-  mk(gBox(0.03, 0.005, 0.008), browMat, [0.035, 0.035, -0.09], head);
-  /* Nose */
-  mk(gBox(0.01, 0.018, 0.012), M.skin, [0, -0.01, -0.10], head);
+  const browL = mk(gBox(0.034, 0.007, 0.010), browMat, [-0.038, 0.046, -0.094], head);
+  const browR = mk(gBox(0.034, 0.007, 0.010), browMat, [ 0.038, 0.046, -0.094], head);
+  browL.rotation.z = 0.10; browR.rotation.z = -0.10;
+  /* Nose (cone-like via two boxes) */
+  mk(gBox(0.014, 0.030, 0.018), M.skin, [0, -0.012, -0.098], head);
+  mk(gBox(0.020, 0.012, 0.014), M.skin, [0, -0.028, -0.094], head);
   /* Mouth */
-  const mouthMat = new THREE.MeshStandardMaterial({ color:0xcc8877, roughness:0.5 });
-  mk(gBox(0.025, 0.005, 0.006), mouthMat, [0, -0.04, -0.095], head);
+  mk(gBox(0.030, 0.006, 0.008), mouthMat, [0, -0.052, -0.094], head);
+  /* Subtle chin */
+  mk(gSph(0.030, 10, 8), M.skin, [0, -0.072, -0.080], head);
   /* Neck */
-  mk(gCyl(0.04, 0.04, 0.08, 10), M.skin, [0, -0.10, 0], head);
+  mk(gCyl(0.042, 0.042, 0.09, 12), M.skin, [0, -0.105, 0], head);
   g.add(head);
   joints.head = head;
 
@@ -675,26 +658,31 @@ function buildHumanPatient(parent) {
   buildArm('r');
   buildArm('l');
 
-  /* === LEG BUILDER (human) === */
+  /* === LEG BUILDER (v0.9.0: realistic adult proportions so feet reach the floor) === */
   function buildLeg(side) {
     const sign = side === 'r' ? 1 : -1;
     const hip = new THREE.Group();
     hip.position.set(sign * 0.10, -0.06, 0);
 
+    /* Thigh — total length 0.42m (gown-covered) */
     const thigh = new THREE.Group();
-    mk(gCap(0.050, 0.18, 4, 8), M.gown, [0, -0.13, 0], thigh);
+    mk(gCap(0.058, 0.30, 4, 8), M.gown, [0, -0.21, 0], thigh);
     hip.add(thigh);
 
+    /* Knee placed at end of thigh */
     const knee = new THREE.Group();
-    knee.position.set(0, -0.27, 0);
+    knee.position.set(0, -0.42, 0);
+    mk(gSph(0.046, 12, 10), M.skin, [0, 0, 0], knee);
 
+    /* Shin — total length 0.42m so feet hit the floor when sitting */
     const shin = new THREE.Group();
-    mk(gCap(0.040, 0.18, 4, 8), M.skin, [0, -0.12, 0], shin);
+    mk(gCap(0.044, 0.30, 4, 8), M.skin, [0, -0.21, 0], shin);
     knee.add(shin);
 
+    /* Foot at end of shin */
     const foot = new THREE.Group();
-    foot.position.set(0, -0.26, 0);
-    mk(gBox(0.06, 0.03, 0.12), M.skin, [0, 0, 0.01], foot);
+    foot.position.set(0, -0.42, 0);
+    mk(gBox(0.07, 0.035, 0.16), M.skin, [0, 0.0, 0.025], foot);
     shin.add(foot);
 
     thigh.add(knee);
@@ -774,14 +762,20 @@ function buildMonitor(parent) {
   return g;
 }
 
-/* -- SYRINGE (doctor's Dex3-1 hand) -- */
+/* -- SYRINGE (v0.9.0: longer, more visible needle that clearly contacts deltoid) -- */
 function buildSyringe(parent) {
   const g = new THREE.Group();
-  mk(gCyl(0.012, 0.012, 0.14), M.syringe, [0, 0, 0], g);
+  /* Barrel */
+  mk(gCyl(0.013, 0.013, 0.14), M.syringe, [0, 0, 0], g);
+  /* Plunger rod */
   mk(gCyl(0.008, 0.008, 0.06), M.tray, [0, 0.10, 0], g);
-  mk(gCyl(0.018, 0.018, 0.01), M.syringe, [0, 0.075, 0], g);
-  mk(gCyl(0.008, 0.004, 0.02), M.syringe, [0, -0.08, 0], g);
-  mk(gCyl(0.0018, 0.0018, 0.06), M.needle, [0, -0.12, 0], g);
+  /* Plunger top flange */
+  mk(gCyl(0.020, 0.020, 0.01), M.syringe, [0, 0.075, 0], g);
+  /* Hub (Luer lock) */
+  mk(gCyl(0.010, 0.005, 0.025), M.syringe, [0, -0.085, 0], g);
+  /* Needle (longer at 0.10m so it visibly reaches the deltoid) */
+  const needle = mk(gCyl(0.0020, 0.0010, 0.10), M.needle, [0, -0.15, 0], g);
+  g.userData.needle = needle;
   g.rotation.x = Math.PI / 2;
   if (parent) parent.add(g);
   return g;
@@ -842,41 +836,52 @@ function buildStation(cfg) {
   /* Chair (center) — backrest at +Z so patient faces -Z (forward) */
   buildChair(grp);
 
-  /* Human Patient (seated, facing forward -Z) */
+  /* Human Patient (v0.9.0: lowered so pelvis rests ON the cushion;
+     pushed back so torso rests against the backrest) */
   const patient = buildHumanPatient(grp);
-  patient.position.set(0, 1.15, 0.02);
+  patient.position.set(0, 0.775, 0.10);
   const pj = patient.userData.joints;
-  /* Seated pose: thighs forward on seat, shins hanging down */
+  /* Seated pose: thighs forward on seat, shins hanging down to the floor */
   pj.rThigh.rotation.x = Math.PI / 2;
   pj.rKnee.rotation.x = -Math.PI / 2;
   pj.lThigh.rotation.x = Math.PI / 2;
   pj.lKnee.rotation.x = -Math.PI / 2;
-  /* Arms resting on armrests */
-  pj.rUpperArm.rotation.x = 0.3;
-  pj.rUpperArm.rotation.z = -0.25;
-  pj.rElbow.rotation.x = -0.9;
-  pj.lUpperArm.rotation.x = 0.3;
-  pj.lUpperArm.rotation.z = 0.25;
-  pj.lElbow.rotation.x = -0.9;
+  /* Slight outward rotation so knees aren't perfectly parallel */
+  pj.rThigh.rotation.z = -0.08;
+  pj.lThigh.rotation.z = 0.08;
+  /* Arms resting on armrests (armrest top y ≈ 0.60 world; patient hands target there) */
+  pj.rUpperArm.rotation.x = 0.18;
+  pj.rUpperArm.rotation.z = -0.18;
+  pj.rElbow.rotation.x = -1.05;
+  pj.lUpperArm.rotation.x = 0.18;
+  pj.lUpperArm.rotation.z = 0.18;
+  pj.lElbow.rotation.x = -1.05;
+  /* Head facing forward (toward -Z) — explicit to remove any ambiguity */
+  pj.head.rotation.set(0, 0, 0);
 
-  /* Injection target ON patient right deltoid (upper right arm) */
+  /* Injection target ON patient right deltoid (upper right arm) — slightly larger, on outer surface */
   const injMarker = buildInjectionMarker(patient);
-  injMarker.position.set(0.22, 0.10, -0.04);
+  /* World location: patient (0, 0.775, 0.10) + (0.235, 0.10, -0.05) = (0.235, 0.875, 0.05) */
+  injMarker.position.set(0.235, 0.10, -0.05);
 
-  /* Doctor G1 (standing, RIGHT of patient) */
+  /* Doctor G1 (standing on floor — robot foot bottom is at y_local≈-0.80, so y=0.80) */
   const doctor = buildG1Robot('doctor', grp);
-  doctor.position.set(0.7, 0.89, -0.15);
+  doctor.position.set(0.65, 0.80, -0.10);
   doctor.rotation.y = -Math.PI / 4;
   const dj = doctor.userData.joints;
 
-  /* Syringe firmly in doctor's right Dex3-1 hand */
+  /* Syringe firmly in doctor's right Dex3-1 hand — needle (longer in v0.9.0)
+     points out of the front of the hand toward the patient during injection */
   const syringe = buildSyringe(dj.rHand);
-  syringe.position.set(0, -0.02, 0.02);
+  syringe.position.set(0, -0.02, 0.04);
+  /* Keep builder's default rotation (Rx=π/2): needle points in hand's local -Z
+     (the front of the hand). When the arm extends across the body, the needle
+     tracks toward the deltoid. */
 
   /* Nurse G1 (standing, LEFT of patient) */
   const nurse = buildG1Robot('nurse', grp);
-  nurse.position.set(-0.6, 0.89, -0.25);
-  nurse.rotation.y = Math.PI / 6;
+  nurse.position.set(-0.60, 0.80, -0.20);
+  nurse.rotation.y = Math.PI / 5;
   const nj = nurse.userData.joints;
 
   /* Tablet in nurse's right hand */
@@ -896,9 +901,9 @@ function buildStation(cfg) {
   const mon = buildMonitor(grp);
   mon.position.set(-0.8, 0, 0.2);
 
-  /* Station label (lowered to y=2.4) */
+  /* Station label (v0.9.0: lowered to y=2.0 — closer to participants, easier to read on close-zoom) */
   const label = makeLabel('Station ' + cfg.name, cfg.color);
-  label.position.set(0, 2.4, 0);
+  label.position.set(0, 2.0, 0);
   grp.add(label);
 
   /* PPO timing */
@@ -920,7 +925,9 @@ function buildStation(cfg) {
     dj, nj, pj,
     total, accuracy, needleDist, phases, times,
     elapsed: 0, completed: false, finishOrder: 0, phaseIdx: 0,
-    docHomeX: 0.7, docHomeZ: -0.15,
+    docHomeX: 0.65, docHomeY: 0.80, docHomeZ: -0.10,
+    nurseHomeX: -0.60, nurseHomeY: 0.80, nurseHomeZ: -0.20,
+    patientHomeY: 0.775,
   };
 }
 
@@ -929,14 +936,16 @@ buildRoom();
 const stations = STATION_CONFIGS.map(cfg => buildStation(cfg));
 let finishCount = 0;
 
+/* v0.9.0: per-station cameras pull in much closer for detailed inspection */
 const camTgt = {
-  overview: { pos:new THREE.Vector3(0, 14, 19), target:new THREE.Vector3(0, 1.2, 0) },
+  overview: { pos:new THREE.Vector3(0, 12, 16), target:new THREE.Vector3(0, 1.0, 0) },
 };
 stations.forEach((st, i) => {
   const c = stationPos(st.cfg);
+  /* Close-up viewing position: 1.4m to the right, 1.6m up, 2.0m back of patient */
   camTgt[i] = {
-    pos: new THREE.Vector3(c.x + 2.5, 4.5, c.z + 5.0),
-    target: new THREE.Vector3(c.x, 1, c.z),
+    pos: new THREE.Vector3(c.x + 1.4, 1.6, c.z - 2.0),
+    target: new THREE.Vector3(c.x, 1.0, c.z),
   };
 });
 
@@ -1030,7 +1039,8 @@ function rebuildTiming() {
     st.dj.rUpperArm.rotation.z = 0;
     st.dj.rElbow.rotation.x = 0;
     if (st.dj.rWrist) st.dj.rWrist.rotation.y = 0;
-    st.doctor.position.x = st.docHomeX;
+    st.doctor.position.set(st.docHomeX, st.docHomeY, st.docHomeZ);
+    st.nurse.position.set(st.nurseHomeX, st.nurseHomeY, st.nurseHomeZ);
     st.nj.rUpperArm.rotation.x = -20 * DEG;
     st.nj.rElbow.rotation.x = -70 * DEG;
   });
@@ -1098,54 +1108,66 @@ function animStation(st, dt) {
   const pT = Math.min(1, (t - ph.start) / (ph.end - ph.start));
   const sT = ssq(pT);
 
-  /* === DOCTOR G1 ARM ANIMATION (smoother) === */
-  let docSP = 0, docSY = 0, docElbow = 0, docWrist = 0, docXOff = 0;
+  /* === DOCTOR G1 ARM ANIMATION (v0.9.0: tuned so the syringe needle actually
+     contacts the patient's right deltoid during inject/hold phases) === */
+  let docSP = 0, docSY = 0, docElbow = 0, docWrist = 0, docXOff = 0, docZOff = 0;
 
+  /* v0.9.0: cross-body shoulder yaw (large -SY) brings the right arm across the
+     body so the right hand reaches the patient's right deltoid. Less SP keeps
+     the upper arm closer to horizontal; large elbow bend points the forearm
+     forward at the shoulder. */
   switch(ph.name) {
     case 'prepare':
-      docSP = sT * 30;
-      docElbow = sT * 55;
+      docSP = sT * 25;
+      docSY = sT * (-15);
+      docElbow = sT * 60;
       docWrist = sT * 10;
       break;
     case 'approach':
-      docSP = 30 + sT * 40;
-      docSY = sT * (-30);
-      docElbow = 55 + sT * 25;
+      docSP = 25 + sT * 10;
+      docSY = -15 + sT * (-40);
+      docElbow = 60 + sT * 25;
       docWrist = 10 + sT * 15;
-      docXOff = sT * (-0.15);
+      docXOff = sT * (-0.18);
+      docZOff = sT * 0.04;
       break;
     case 'position':
-      docSP = 70 + sT * 8;
-      docSY = -30 - sT * 12;
-      docElbow = 80 + sT * 10;
-      docWrist = 25 + sT * 5;
-      docXOff = -0.15 - sT * 0.02;
+      docSP = 35 + sT * 5;
+      docSY = -55 - sT * 20;
+      docElbow = 85 + sT * 10;
+      docWrist = 25 + sT * 6;
+      docXOff = -0.18 - sT * 0.06;
+      docZOff = 0.04 + sT * 0.04;
       break;
     case 'inject':
-      docSP = 78 + sT * 2;
-      docSY = -42 - sT * 5;
-      docElbow = 90 + sT * 2;
-      docWrist = 30 - sT * 3;
-      docXOff = -0.17;
+      /* Final cross-body extension: hand drives needle into the deltoid */
+      docSP = 40 + sT * 5;
+      docSY = -75 - sT * 8;
+      docElbow = 95 + sT * 5;
+      docWrist = 31 - sT * 3;
+      docXOff = -0.24 - sT * 0.06;
+      docZOff = 0.08 + sT * 0.02;
       break;
     case 'hold':
-      docSP = 80 + Math.sin(pT * Math.PI * 3) * 0.3;
-      docSY = -47;
-      docElbow = 92;
-      docWrist = 27;
-      docXOff = -0.17;
+      docSP = 45 + Math.sin(pT * Math.PI * 3) * 0.3;
+      docSY = -83;
+      docElbow = 100;
+      docWrist = 28;
+      docXOff = -0.30;
+      docZOff = 0.10;
       break;
     case 'withdraw':
-      docSP = 80 - sT * 45;
-      docSY = -47 + sT * 37;
-      docElbow = 92 - sT * 55;
-      docWrist = 27 - sT * 22;
-      docXOff = -0.17 + sT * 0.17;
+      docSP = 45 - sT * 25;
+      docSY = -83 + sT * 60;
+      docElbow = 100 - sT * 65;
+      docWrist = 28 - sT * 23;
+      docXOff = -0.30 + sT * 0.30;
+      docZOff = 0.10 - sT * 0.10;
       break;
     case 'monitor':
-      docSP = 35 - sT * 35;
-      docSY = -10 + sT * 10;
-      docElbow = 37 - sT * 37;
+      docSP = 20 - sT * 20;
+      docSY = -23 + sT * 23;
+      docElbow = 35 - sT * 35;
       docWrist = 5 - sT * 5;
       break;
   }
@@ -1155,113 +1177,59 @@ function animStation(st, dt) {
   st.dj.rElbow.rotation.x = -docElbow * DEG;
   if (st.dj.rWrist) st.dj.rWrist.rotation.y = docWrist * DEG;
   st.doctor.position.x = st.docHomeX + docXOff;
+  st.doctor.position.z = st.docHomeZ + docZOff;
 
   /* Doctor left arm idle sway */
   st.dj.lUpperArm.rotation.x = Math.sin(t * 0.8) * 0.025;
-  /* Doctor subtle body breathing */
-  st.doctor.position.y = 0.89 + Math.sin(t * 1.5) * 0.003;
+  /* Doctor subtle body breathing — uses new home y */
+  st.doctor.position.y = st.docHomeY + Math.sin(t * 1.5) * 0.003;
   /* Doctor head slight track toward patient */
   if (st.dj.head) {
-    const headTrack = ph.name === 'inject' || ph.name === 'hold' ? -0.15 : -0.05;
+    const headTrack = ph.name === 'inject' || ph.name === 'hold' ? -0.20 : -0.08;
     st.dj.head.rotation.y = headTrack + Math.sin(t * 0.3) * 0.02;
   }
 
-  /* === NURSE G1 ANIMATION (active throughout) === */
-  let nurseSP = 20, nurseElbow = 70, nurseLeftSP = 0;
-  switch(ph.name) {
-    case 'prepare':
-      /* Nurse checks tablet during preparation */
-      nurseSP = 20 + sT * 10;
-      nurseElbow = 70 - sT * 10;
-      nurseLeftSP = sT * 5;
-      break;
-    case 'approach':
-      /* Nurse steps slightly closer, raises tablet */
-      nurseSP = 30 + sT * 5;
-      nurseElbow = 60 - sT * 5;
-      nurseLeftSP = 5 + sT * 3;
-      break;
-    case 'position':
-      /* Nurse watches positioning intently */
-      nurseSP = 35;
-      nurseElbow = 55;
-      nurseLeftSP = 8 + Math.sin(pT * Math.PI) * 3;
-      break;
-    case 'inject':
-      /* Nurse holds tablet up to record */
-      nurseSP = 35 + sT * 10;
-      nurseElbow = 55 - sT * 10;
-      nurseLeftSP = 10;
-      break;
-    case 'hold':
-      /* Nurse steadily observes */
-      nurseSP = 45 + Math.sin(pT * Math.PI * 2) * 2;
-      nurseElbow = 45;
-      nurseLeftSP = 10 + Math.sin(pT * Math.PI) * 2;
-      break;
-    case 'withdraw':
-      /* Nurse lowers tablet slightly */
-      nurseSP = 45 - sT * 15;
-      nurseElbow = 45 + sT * 15;
-      nurseLeftSP = 10 - sT * 5;
-      break;
-    case 'monitor':
-      /* Nurse raises tablet for final check */
-      nurseSP = 30 + sT * 15;
-      nurseElbow = 60 - sT * 20;
-      nurseLeftSP = 5 - sT * 5;
-      break;
+  /* === NURSE G1 ANIMATION === */
+  let nurseSP = 20, nurseElbow = 70;
+  if (ph.name === 'monitor') {
+    nurseSP = 20 + sT * 15;
+    nurseElbow = 70 - sT * 20;
   }
   st.nj.rUpperArm.rotation.x = -nurseSP * DEG;
   st.nj.rElbow.rotation.x = -nurseElbow * DEG;
-  st.nj.lUpperArm.rotation.x = -nurseLeftSP * DEG + Math.sin(t * 1.5) * 0.015;
-  st.nurse.position.y = 0.89 + Math.sin(t * 2.2) * 0.003;
-  /* Nurse head tracks toward patient more actively */
+  st.nurse.position.y = st.nurseHomeY + Math.sin(t * 2.2) * 0.003;
+  st.nj.lUpperArm.rotation.x = Math.sin(t * 1.5) * 0.015;
+  /* Nurse head looks toward patient */
   if (st.nj.head) {
-    const nurseHeadTrack = (ph.name === 'inject' || ph.name === 'hold') ? 0.15 : 0.08;
-    st.nj.head.rotation.y = nurseHeadTrack + Math.sin(t * 0.4) * 0.03;
-    st.nj.head.rotation.x = (ph.name === 'inject' || ph.name === 'hold') ? -0.05 : 0;
+    st.nj.head.rotation.y = 0.08 + Math.sin(t * 0.4) * 0.02;
   }
 
-  /* === PATIENT animation (reactive) === */
+  /* === PATIENT subtle movement (v0.9.0: uses new patientHomeY) === */
   st.pj.head.rotation.y = Math.sin(t * 0.3) * 0.025;
-  st.pj.rUpperArm.rotation.x = 0.3 + Math.sin(t * 0.8) * 0.004;
+  st.pj.rUpperArm.rotation.x = 0.18 + Math.sin(t * 0.8) * 0.004;
   /* Patient slight breathing */
-  st.patient.position.y = 1.15 + Math.sin(t * 2.0) * 0.002;
-  /* Patient looks toward doctor during injection */
-  if (ph.name === 'inject' || ph.name === 'hold') {
-    st.pj.head.rotation.y = 0.06 + Math.sin(t * 0.5) * 0.015;
-    st.pj.head.rotation.x = -0.03;
-  } else {
-    st.pj.head.rotation.x = Math.sin(t * 0.4) * 0.01;
-  }
-  /* Patient left hand slight grip during injection */
-  if (ph.name === 'inject') {
-    st.pj.lElbow.rotation.x = -0.9 - sT * 0.05;
-  } else if (ph.name === 'hold') {
-    st.pj.lElbow.rotation.x = -0.95 + sT * 0.05;
-  }
+  st.patient.position.y = st.patientHomeY + Math.sin(t * 2.0) * 0.002;
 
   /* Monitor LED blink */
   if (st.mon && st.mon.userData && st.mon.userData.led) {
     st.mon.userData.led.material.emissiveIntensity = Math.sin(t * 6) > 0 ? 0.8 : 0.1;
   }
 
-  /* G1 head LED mask pulse (doctor) */
+  /* G1 head LED mask pulse */
   if (st.doctor.userData.joints.head && st.doctor.userData.joints.head.userData.ledMask) {
     st.doctor.userData.joints.head.userData.ledMask.material.emissiveIntensity =
       0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * 4));
   }
-  /* G1 head LED mask pulse (nurse) */
-  if (st.nurse.userData.joints.head && st.nurse.userData.joints.head.userData.ledMask) {
-    st.nurse.userData.joints.head.userData.ledMask.material.emissiveIntensity =
-      0.3 + 0.5 * (0.5 + 0.5 * Math.sin(t * 3.5 + 1.2));
-  }
 
-  /* Pulse injection target ring */
+  /* Pulse injection target ring + contact highlight during inject/hold (v0.9.0) */
   if (st.injMarker && st.injMarker.userData.ring) {
-    const pulse = 1.0 + 0.15 * Math.sin(t * 4);
+    const isContact = ph.name === 'inject' || ph.name === 'hold';
+    const pulse = isContact
+      ? 1.6 + 0.25 * Math.sin(t * 8)         /* larger, faster pulse on contact */
+      : 1.0 + 0.15 * Math.sin(t * 4);
     st.injMarker.userData.ring.scale.set(pulse, pulse, pulse);
+    /* Brighter emissive while needle is making contact */
+    st.injMarker.userData.ring.material.emissiveIntensity = isContact ? 0.9 : 0.4;
   }
 }
 

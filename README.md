@@ -1,12 +1,19 @@
 # Clinical Robot Competition
 
-MuJoCo-based clinical trial simulation with **SOTA Unitree G1 humanoid robots**
+MuJoCo-based clinical trial simulation with **Unitree G1 humanoid robots**
 (from [unitreerobotics](https://www.unitree.com/g1/)) competing across **four simultaneous
 stations** in a 2x2 grid. A **doctor G1 robot** (white medical coat, right of patient) performs
 a 7-phase deltoid injection with syringe, while a **nurse G1 robot** (blue medical coat, left
 of patient) monitors the procedure with a tablet. A **realistic human patient** sits correctly
 in the exam chair receiving the injection. All stations are driven by **PPO reinforcement
 learning** policies with distinct behavior profiles from different random seeds.
+
+v0.9.0 is the recommended viewer — it builds on the proven v0.6.0 base with five targeted
+fixes: the patient now sits properly on the chair (not on the cushion with feet on the seat),
+the head is forward-facing with prominent facial features (eyes, eyebrows, nose, mouth, chin,
+hair fringe), the camera supports close-zoom on each station, the doctor and nurse coat
+overlays no longer Z-fight at the shoulder seam, and the syringe needle visibly contacts the
+patient's right deltoid during the inject and hold phases.
 
 The objective is to illustrate that having competitions across multiple autonomous robots is
 advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
@@ -23,12 +30,12 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 **Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
-**Note: Top Roofs for v0.8.0 & v0.7.0**
 | Version | URL | Description |
 |---|---|---|
-| **v0.8.0 Competition (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
+| **v0.9.0 Competition (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v9/](https://kevinkawchak.github.io/robot-competition-clinical/v9/) | v0.6.0 base + patient seating, facial features, close-zoom, no shoulder Z-fight, needle-contact |
+| **v0.8.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
 | **v0.7.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v7/](https://kevinkawchak.github.io/robot-competition-clinical/v7/) | Enhanced visuals: ceiling lights, patient faces, active nurse |
-| **v0.6.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient |
+| **v0.6.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient (v0.9.0 base) |
 | **v0.5.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v5/](https://kevinkawchak.github.io/robot-competition-clinical/v5/) | 4-station PPO competition (light mode, open-top) |
 | **v0.1.0 Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection (stable) |
 
@@ -38,32 +45,45 @@ When all stations finish, a **Competition Results** overlay displays the final
 1st/2nd/3rd/4th ranking with times and accuracies. Close the overlay and use
 **Reset** to replay.
 
-## What This Simulates (v0.8.0)
+## What This Simulates (v0.9.0)
 
-Four identical stations compete simultaneously. Each station features **SOTA Unitree G1
-humanoid robots** (from unitreerobotics) as the doctor and nurse, with a **realistic human
-patient** (with facial features, hospital wristband, pulse oximeter) seated in an exam chair.
-The hospital environment features a premium dark theme with surgical overhead spotlights per
-station, glass observation window, medical curtain dividers, emergency exit sign, and hand
-sanitizer dispensers. PBR-style materials provide specular highlights on G1 robot bodies and
-realistic skin rendering on patients. Every station uses the same PPO policy architecture but
-with different random seed initialization, producing distinct timing and accuracy behavior.
+Four identical stations compete simultaneously. Each station features **Unitree G1 humanoid
+robots** (from unitreerobotics) as the doctor and nurse, with a **realistic human patient**
+(facial features, hair, gown) seated **correctly** on the exam chair with feet on the floor.
+The hospital environment is light-mode (matching the strong-performing v0.6.0 base) with
+overhead lights per station, full medical equipment (IV stand, tray, vitals monitor) per
+station, and the camera now supports zooming in very close (minDistance reduced from 3m to
+0.4m) so users can inspect each station's robots and patient in detail. Every station uses
+the same PPO policy architecture but with different random seed initialization, producing
+distinct timing and accuracy behavior.
 
-### v0.8.0 Changes from v0.7.0
+### v0.9.0 Targeted Fixes (over v0.6.0 base)
 
-| Aspect | v0.7.0 | v0.8.0 |
+| # | v0.6.0 Issue | v0.9.0 Fix |
 |---|---|---|
-| Visual theme | Light mode (#e8ecf0) | **Premium dark theme** (#0d1117) with frosted glass UI panels |
-| UI accent colors | Blue (#0066cc) | **Neon cyan (#00d4ff)** with gold highlights (#ffd700) |
-| G1 robot detail | Basic body panels | **Enhanced PBR**: articulated finger segments, battery pack, spine LED strip, ankle actuators |
-| Patient detail | Face + gown | **Hospital wristband, pulse oximeter, visible arm veins**, individual finger geometry |
-| Hospital environment | Ceiling + lights + door | **Surgical spotlights with glow cones, glass observation window, curtain dividers, exit sign, sanitizer dispensers** |
-| Materials | Standard materials | **PBR-style**: specular highlights, translucent IV bags with fluid level |
-| Doctor equipment | Syringe only | **Syringe + alcohol swab** in other hand during prepare phase |
-| Nurse accessories | Tablet only | **Tablet + stethoscope** draped around neck, pen in coat pocket |
-| Room size | 16m x 16m | **18m x 18m** with 6.0m grid spacing |
-| Nav banner | v0.1.0-v0.7.0 | **v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0 (new)** |
-| URL path | `/v7/` | **`/v8/`** |
+| 1 | Patient floats above chair with feet on the seat | Patient lowered (root y 1.15→0.775) and legs lengthened (thigh & shin 0.42m each) so pelvis rests on cushion and feet rest on floor |
+| 2 | Patient head reverse / no facial features | Eyes (whites + pupils), eyebrows, nose, mouth, chin, hair fringe added on the −Z (front) side; head explicitly forward-facing |
+| 3 | Cannot zoom close to a station | Camera `minDistance` 3.0→0.4, near-plane 0.1→0.05, fog start 28m→38m, per-station camera presets pulled in from (+2.5, 4.5, +5.0) to (+1.4, 1.6, −2.0) relative to station |
+| 4 | Shoulder/coat Z-fight & glitching | Coat made opaque + `polygonOffset:-1`; coat boxes enlarged to fully enclose body (0.36×0.44×0.22 vs 0.32×0.40×0.19); shoulder pad cap added; sleeve capsule enlarged to 0.052r×0.16L |
+| 5 | Needle does not contact patient arm during injection | Cross-body shoulder yaw (SY −83°) + 100° elbow bend during hold; doctor approaches further (XOff −0.30, ZOff +0.10); needle lengthened from 0.06m to 0.10m; injection target ring brightens & pulses 1.6× during inject/hold |
+
+### v0.9.0 Changes from v0.6.0
+
+| Aspect | v0.6.0 | v0.9.0 |
+|---|---|---|
+| Patient seat position | Floats above chair with feet on cushion | **Pelvis rests on cushion (y 0.485), feet on floor** |
+| Patient legs | Thigh 0.18m / shin 0.18m (too short) | **Thigh 0.42m / shin 0.42m (anatomically realistic)** |
+| Patient face | Plain skin sphere (no features) | **Eyes (whites + pupils), eyebrows, nose, mouth, chin, hair fringe** |
+| Patient orientation | Ambiguous (faceless head) | **Forward-facing, unambiguous** |
+| Camera min zoom | 3.0m | **0.4m (close-up inspection)** |
+| Camera per-station preset | (+2.5, 4.5, +5.0) | **(+1.4, 1.6, −2.0) — much closer, slightly above eye-level** |
+| Coat overlay rendering | Transparent + Z-fight at shoulder | **Opaque + polygonOffset, fully enclosed shoulder cap** |
+| Inject phase doctor pose | SP 78° / SY −42° / Elbow 90° | **SP 45° / SY −83° / Elbow 100° (cross-body reach)** |
+| Inject XOff / ZOff | −0.17 / 0 | **−0.30 / +0.10 (closer to patient)** |
+| Syringe needle length | 0.06m | **0.10m (visibly contacts deltoid)** |
+| Inject target marker | Constant pulse | **Brightens 1.6× and pulses 2× faster during inject/hold** |
+| Nav banner | v0.1.0–v0.6.0 + v0.7.0/v0.8.0 | **v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0, v0.9.0 (new)** |
+| URL path | `/v6/` | **`/v9/`** |
 
 ### Station Layout (2x2 Grid)
 
@@ -74,13 +94,13 @@ with different random seed initialization, producing distinct timing and accurac
 | **C** | Back-left | 256 | 1.08x | Highest | Accuracy-focused |
 | **D** | Back-right | 512 | 0.95x | High | Cautious |
 
-### Role Assignments (v0.8.0 — SOTA Unitree G1 Robots + Realistic Human Patient)
+### Role Assignments (v0.9.0 — Unitree G1 Robots + Properly Seated Patient)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor (G1) | Right of patient | Dark charcoal G1 body, white medical coat overlay, red cross, visor head | Syringe in Dex3-1 hand | Performs 7-phase injection |
-| Patient (Human) | Center (seated) | Skin-colored human, dark hair, green hospital gown | Exam chair | Receives injection (right deltoid) |
-| Nurse (G1) | Left of patient | Dark charcoal G1 body, blue medical coat overlay, gold badge, visor head | Tablet in hand | Monitors procedure |
+| Doctor (G1) | Right of patient (x=+0.65, y=0.80) | Dark charcoal G1 body, white opaque medical coat (no Z-fight), red cross, visor head | Syringe (0.10m needle) in Dex3-1 hand | Cross-body 7-phase injection that contacts the deltoid |
+| Patient (Human) | Center (y=0.775, seated on cushion) | Skin-colored human, dark hair w/ fringe, green hospital gown, prominent facial features | Exam chair | Receives injection (right deltoid) |
+| Nurse (G1) | Left of patient (x=−0.60, y=0.80) | Dark charcoal G1 body, blue opaque medical coat (no Z-fight), gold badge, visor head | Tablet in hand | Monitors procedure |
 
 ### 7-Phase Injection Procedure Per Station (v0.1.0)
 
@@ -123,7 +143,7 @@ objectives: speed (finish fast), accuracy (needle close to target), and smoothne
 - **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
 - **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
 
-### Simulation Results (v0.8.0)
+### Simulation Results (v0.9.0)
 
 Results from `python -m simulation_v2.run_competition`:
 
@@ -139,14 +159,14 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 
 ## Features
 
-- **Premium Dark Theme** (v0.8.0): #0d1117 gradient background with frosted glass UI panels (backdrop-filter: blur) and neon cyan (#00d4ff) accents
-- **PBR-Style Materials** (v0.8.0): Specular highlights on G1 bodies, translucent IV bags with fluid level, realistic skin rendering
-- **Enhanced G1 Robots** (v0.8.0): Articulated finger segments, battery pack on back, spine LED strip, ankle actuators — SOTA Unitree G1 from unitreerobotics
-- **Detailed Human Patients** (v0.8.0): Hospital wristband, pulse oximeter on finger, visible arm veins, individual finger geometry, facial features
-- **Hospital Environment** (v0.8.0): Surgical spotlights with glow cones, glass observation window, curtain dividers, emergency exit sign, hand sanitizer dispensers
-- **Doctor Equipment** (v0.8.0): Syringe in right Dex3-1 hand + alcohol swab in left hand during prepare phase
-- **Nurse Equipment** (v0.8.0): Tablet + stethoscope draped around neck + pen in coat pocket
-- **4-Station Competition**: Simultaneous independent simulation across all stations in 18m x 18m room
+- **Properly Seated Patient** (v0.9.0): Pelvis rests on the cushion, feet on the floor — anatomically realistic adult proportions (thigh 0.42m, shin 0.42m)
+- **Prominent Facial Features** (v0.9.0): Eyes with pupils, eyebrows, nose, mouth, chin, hair cap with fringe — head orientation now unambiguous
+- **Close-Up Camera Zoom** (v0.9.0): `minDistance=0.4m` (was 3m) lets users zoom into a single G1 finger or syringe needle
+- **No Shoulder Z-Fighting** (v0.9.0): Opaque coat materials with `polygonOffset:-1`, enlarged coat geometry, dedicated shoulder cap
+- **Needle-Contacts-Deltoid** (v0.9.0): Cross-body shoulder yaw + deeper elbow bend brings the syringe needle to the patient's right deltoid; needle lengthened to 0.10m; injection-target ring brightens and double-speed pulses during inject/hold
+- **Per-Station Camera Presets** (v0.9.0): Clicking A/B/C/D drops the camera to (+1.4m right, 1.6m up, −2.0m back) of that station for detail inspection
+- **Refined Patient Pose** (v0.9.0): Legs cross slightly outward, arms rest with realistic 18° forward tilt and 60° elbow bend on the armrests
+- **4-Station Competition**: Simultaneous independent simulation across all stations
 - **7-Phase Procedure**: Matching v0.1.0's exact injection procedure per station
 - **PPO RL Policies**: Distinct behavior from seeded policy training (seeds 42, 137, 256, 512)
 - **Full Medical Equipment**: IV stand with fluid, instrument tray, vitals monitor, exam chair per station
@@ -161,54 +181,54 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 - **Interactive Controls**: Play/pause, reset, station camera focus
 - **File Upload**: Upload custom JSON configs for station seeds/speeds
 - **Mobile-Optimized**: Responsive layout across iPhone, Android, tablet, desktop
-- **5-Version Nav Banner**: Clickable links across v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0
+- **6-Version Nav Banner**: Clickable links across v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0, v0.9.0
 - **Open & Free**: All dependencies open-source (no wandb)
 
 ## Architecture Diagrams
 
-### Diagram 1: Multi-Station Competition Architecture (v0.8.0)
+### Diagram 1: Multi-Station Competition Architecture (v0.9.0)
 
 ```
 +----------------------------------------------------------------------+
-|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.8.0       |
-|  SOTA G1 Robots + Human Patient, Premium Dark Theme, PBR Materials  |
+|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.9.0       |
+|   Refined seating, facial features, close-zoom, needle-contact      |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |  MuJoCo Backend      |        |   Three.js Competition Viewer |   |
-|  |  (Python)            |        |   (HTML/JS - docs/v8/)        |   |
+|  |  (Python)            |        |   (HTML/JS - docs/v9/)        |   |
 |  |                      |        |                               |   |
 |  | +------------------+ |  JSON  | +---------------------------+ |   |
 |  | | competition_scene| | -----> | | 4-Station 3D Renderer    | |   |
-|  | | .xml (4 stations)| | export | | - 2x2 Grid (6.0m space)  | |   |
-|  | +------------------+ |        | | - 8 SOTA G1 Robots       | |   |
-|  |        |             |        | | - 4 Human Patients        | |   |
-|  |        v             |        | | - PBR materials+specular  | |   |
-|  | +------------------+ |        | | - Articulated fingers     | |   |
-|  | | ppo_policy.py    | |        | | - Target ON patient arm   | |   |
-|  | | - PPO MLP 64x64  | |        | | - Surgical spotlights    | |   |
-|  | | - 4 seed configs | |        | | - Glass window+curtains  | |   |
+|  | | .xml (4 stations)| | export | | - 2x2 Grid (5.5m space)  | |   |
+|  | +------------------+ |        | | - 8 Unitree G1 Robots    | |   |
+|  |        |             |        | | - 4 Seated Human Patients | |   |
+|  |        v             |        | | - Opaque coat (no Z-fight)| |   |
+|  | +------------------+ |        | | - Patient facial features | |   |
+|  | | ppo_policy.py    | |        | | - Needle contacts deltoid | |   |
+|  | | - PPO MLP 64x64  | |        | | - Camera minDistance 0.4m | |   |
+|  | | - 4 seed configs | |        | | - Per-station close-zoom  | |   |
 |  | | - Reward function| |        | +---------------------------+ |   |
 |  | +------------------+ |        |          |                    |   |
 |  |        |             |        |          v                    |   |
 |  |        v             |        | +---------------------------+ |   |
 |  | +------------------+ |        | | Per-Station Animation    | |   |
 |  | | run_competition  | |        | | - 7 doctor phases (v0.1) | |   |
-|  | | .py              | |        | | - Smooth G1 arm motion   | |   |
+|  | | .py              | |        | | - Cross-body inject reach | |   |
 |  | | - 4 stations     | |        | | - Independent timing      | |   |
-|  | | - Metrics/rank   | |        | | - Dexterous hand grip    | |   |
+|  | | - Metrics/rank   | |        | | - Brighter target on hold | |   |
 |  | +------------------+ |        | | - Finish-order tracking   | |   |
 |  |        |             |        | +---------------------------+ |   |
 |  |        v             |        |          |                    |   |
 |  | +------------------+ |        |          v                    |   |
 |  | | export_competitn | |        | +---------------------------+ |   |
-|  | | .py              | |        | | Dark-Mode UI (v0.8.0)    | |   |
-|  | | - Station frames | |        | | - #0d1117 gradient bg     | |   |
-|  | | - JSON output    | |        | | - Frosted glass panels    | |   |
-|  | | - Schema v0.8.0  | |        | | - Neon cyan accents       | |   |
+|  | | .py              | |        | | Light-Mode UI (v0.9.0)   | |   |
+|  | | - Station frames | |        | | - #e8ecf0 light bg        | |   |
+|  | | - JSON output    | |        | | - Blue accents (#0066cc)  | |   |
+|  | | - Schema v0.9.0  | |        | | - Pulsing inject ring     | |   |
 |  | +------------------+ |        | | - Results overlay (close) | |   |
 |  |                      |        | | - Metrics reset on replay | |   |
-|  +----------------------+        | | - 5-version nav banner    | |   |
+|  +----------------------+        | | - 6-version nav banner    | |   |
 |                                  | +---------------------------+ |   |
 |                                  +-------------------------------+   |
 |                                                                      |
@@ -271,39 +291,35 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 3: v0.8.0 3D Layout and Technology Stack
+### Diagram 3: v0.9.0 3D Layout and Technology Stack
 
 ```
 +----------------------------------------------------------------------+
-|   3D LAYOUT & TECHNOLOGY STACK (v0.8.0 — SOTA G1 + Human, Dark)     |
+|   3D LAYOUT & TECHNOLOGY STACK (v0.9.0 — Refined seating, faces)    |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +---------- HOSPITAL ROOM (18m x 18m, DARK THEME) --------------+  |
-|  |  [exit sign]        [glass observation window]                 |  |
-|  |  +-- Station A --------+  | +-- Station B --------+           |  |
-|  |  | [G1n]  [Hum]  [G1d] |  c | [G1n]  [Hum]  [G1d] |          |  |
-|  |  | blue   chair  white  |  u | blue   chair  white  |          |  |
-|  |  | tab+   IV+mon syr+   |  r | tab+   IV+mon syr+   |          |  |
-|  |  | steth  oximeter swab |  t | steth  oximeter swab |          |  |
-|  |  |  [spotlight cone]    |  a |  [spotlight cone]    |          |  |
-|  |  +----------------------+  i +----------------------+          |  |
-|  |        6.0m spacing        n       6.0m spacing                |  |
-|  |  +-- Station C --------+  | +-- Station D --------+           |  |
-|  |  | [G1n]  [Hum]  [G1d] |  | | [G1n]  [Hum]  [G1d] |          |  |
-|  |  | blue   chair  white  |  | | blue   chair  white  |          |  |
-|  |  | tab+   IV+mon syr+   |    | tab+   IV+mon syr+   |          |  |
-|  |  | steth  oximeter swab |    | steth  oximeter swab |          |  |
-|  |  |  [spotlight cone]    |    |  [spotlight cone]    |          |  |
-|  |  +----------------------+    +----------------------+          |  |
-|  |  [sanitizer]                              [sanitizer]          |  |
+|  +---------- HOSPITAL ROOM (16m x 16m, LIGHT THEME) -------------+  |
+|  |                                                                |  |
+|  |  +-- Station A --------+    +-- Station B --------+           |  |
+|  |  | [G1n]  [Pat]  [G1d] |    | [G1n]  [Pat]  [G1d] |           |  |
+|  |  | blue   y=0.78 white |    | blue   y=0.78 white |           |  |
+|  |  | tablet  face  syr+  |    | tablet  face  syr+  |           |  |
+|  |  | seated  feet  needle|    | seated  feet  needle|           |  |
+|  |  | y=0.80 floor  10cm  |    | y=0.80 floor  10cm  |           |  |
+|  |  +----------------------+    +----------------------+           |  |
+|  |        5.5m grid spacing — closer per-station camera          |  |
+|  |  +-- Station C --------+    +-- Station D --------+           |  |
+|  |  | [G1n]  [Pat]  [G1d] |    | [G1n]  [Pat]  [G1d] |           |  |
+|  |  +----------------------+    +----------------------+           |  |
+|  |                                                                |  |
 |  +----------------------------------------------------------------+  |
 |                                                                      |
-|  Legend: G1d=Doctor(white coat,syringe+swab,R) syr+=syringe+swab    |
-|          Hum=Human(skin,gown,wristband,oximeter) tab+=tablet+steth  |
-|          G1n=Nurse(blue coat,tablet+stethoscope,L) curtain=divider  |
+|  Legend: G1d=Doctor(white opaque coat, syringe 0.10m needle, R)     |
+|          Pat=Patient(seated y=0.78, feet on floor, face features)   |
+|          G1n=Nurse(blue opaque coat, tablet, L)                     |
 |                                                                      |
 |  LAYER 1: MuJoCo + PPO (Python backend)                             |
-|  LAYER 2: Three.js r169 (docs/v8/index.html)                        |
+|  LAYER 2: Three.js r169 (docs/v9/index.html)                        |
 |  LAYER 3: GitHub Pages (static hosting)                              |
 |                                                                      |
 |  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)  |
@@ -331,7 +347,9 @@ robot-competition-clinical/
 │   ├── v7/
 │   │   └── index.html                  # v0.7.0 Competition viewer
 │   ├── v8/
-│   │   └── index.html                  # v0.8.0 Competition viewer (current)
+│   │   └── index.html                  # v0.8.0 Competition viewer
+│   ├── v9/
+│   │   └── index.html                  # v0.9.0 Competition viewer (current)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams
@@ -378,9 +396,9 @@ The Python backend is optional — the web viewers work independently.
 # Install dependencies
 pip install mujoco numpy
 
-# --- v0.8.0 Competition ---
+# --- v0.9.0 Competition ---
 python -m simulation_v2.run_competition
-python -m simulation_v2.export_competition --output docs/v8/competition_data.json
+python -m simulation_v2.export_competition --output docs/v9/competition_data.json
 
 # --- v0.1.0 Single Station ---
 python -m simulation.run_simulation --export output/animation.json

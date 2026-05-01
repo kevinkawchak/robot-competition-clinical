@@ -1,5 +1,31 @@
 # Prompts
 
+## v0.9.0 Implementation Prompt
+
+Your goal is to generate a fully functional simulation based on the best performing v0.6.0 Competition from kevinkawchak/robot-competition-clinical. Create a new v0.9.0 link at the top of the current GitHub version table. Keep version labeling based on the current ascending versioning method. There are many issues to fix from v0.6.0 including:
+1. The patients do not sit on the chair and their feet is on the seat.
+2. The patients' heads are on reverse. The patients don't have facial features.
+3. It is not possible to zoom in closely to each station.
+4. The tops of the doctors and nurses shoulders appear to have continual resolution/glitching issues.
+5. For the person injecting the medicine, the needle does not touch the patient's arm.
+Use kevinkawchak/robot-competition-clinical/blob/main/[prompts.md](http://prompts.md) to gain additional feedback, but use v0.6.0 as the most working simulation to based your improvements on.
+
+Place the new release notes in [releases.md](http://releases.md) under main using the format below.
+Provide an updated changelog (v0.9.0). Provide a copy of this prompt under [prompts.md](http://prompts.md). When you are finished, auto-push the update to GitHub on your own for my review. The user will then review your updates in GitHub prior to finalization.
+
+"FORMAT"
+Release title v0.9.0 -
+
+## Summary
+
+## Features
+
+## Contributors
+@kevinkawchak
+@claude
+
+## Notes
+
 ## v0.8.0 Implementation Prompt
 
 Create v0.8.0 for robot-competition-clinical repo. New simulation that doesn't look/behave like prior versions. SOTA Unitree G1 robots as doctor and nurse. Realistic human patients properly sitting in chairs. Keep time/accuracy competition approach. Keep iPhone/device compatibility, retractable menus, action buttons. Nav banner: "v0.1.0", "0.5.0", "0.6.0", "0.7.0", "0.8.0 (new)" (all clickable). Default view is v0.8.0. Real life hospital equipment. Premium dark theme with frosted glass UI panels and neon cyan accents. PBR-style materials with specular highlights on G1 bodies, translucent IV bags. Enhanced G1 robots with articulated finger segments, battery pack, spine LED strip, ankle actuators. Realistic human patients with hospital wristband, pulse oximeter, visible arm veins, individual fingers. Surgical overhead spotlights with visible glow cones per station quadrant. Glass observation window, curtain dividers between station pairs. Emergency exit sign, wall-mounted hand sanitizer dispensers. Doctor holds alcohol swab in left hand during preparation phase. Nurse wears stethoscope around neck, pen in coat pocket. 18m x 18m room with 6.0m grid spacing. Update README, releases.md, changelog.md, prompts.md. When finished, auto-push to GitHub for review.
