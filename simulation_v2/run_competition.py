@@ -108,7 +108,7 @@ def run_competition(
     print()
 
     result: CompetitionResult = {
-        "version": "0.9.0",
+        "version": "1.0.0",
         "simulation": "clinical_competition",
         "num_stations": len(stations),
         "max_duration": max(s["total_time"] for s in stations),

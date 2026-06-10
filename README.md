@@ -2,18 +2,22 @@
 
 MuJoCo-based clinical trial simulation with **Unitree G1 humanoid robots**
 (from [unitreerobotics](https://www.unitree.com/g1/)) competing across **four simultaneous
-stations** in a 2x2 grid. A **doctor G1 robot** (white medical coat, right of patient) performs
-a 7-phase deltoid injection with syringe, while a **nurse G1 robot** (blue medical coat, left
-of patient) monitors the procedure with a tablet. A **realistic human patient** sits correctly
-in the exam chair receiving the injection. All stations are driven by **PPO reinforcement
-learning** policies with distinct behavior profiles from different random seeds.
+stations** in a 2x2 grid. At each station a **doctor G1 robot** (white coat, 43 DOF incl.
+Dex3-1 dexterous hands) and a **nurse G1 robot** (scrub-blue coat) execute a complete
+**GCP-aligned 12-phase intramuscular injection visit** on a **realistic human trial
+participant**, while a **human Clinical Research Associate (CRA)** observes from a sponsor
+monitoring desk. All stations are driven by **PPO reinforcement learning** policies with
+distinct behavior profiles from different random seeds, and are ranked by a **composite
+GCP score** spanning time, needle accuracy, protocol adherence, sterility, dose precision,
+and participant comfort.
 
-v0.9.0 is the recommended viewer — it builds on the proven v0.6.0 base with five targeted
-fixes: the patient now sits properly on the chair (not on the cushion with feet on the seat),
-the head is forward-facing with prominent facial features (eyes, eyebrows, nose, mouth, chin,
-hair fringe), the camera supports close-zoom on each station, the doctor and nurse coat
-overlays no longer Z-fight at the shoulder seam, and the syringe needle visibly contacts the
-patient's right deltoid during the inject and hold phases.
+v1.0.0 is the recommended viewer — a ground-up, state-of-the-art rebuild for clinical trial
+experts: high-DOF robots with articulated fingers and gait, an IK tip-correction system that
+guarantees frame-accurate needle-to-deltoid contact (eliminating the historical object-overlap
+and needle-gap bugs by construction), a photoreal **open-top room (no ceiling)**, live animated
+ECG monitors, a central live scoreboard tower, a seeded Grade 1 adverse event with autonomous
+response, and a zoom-anywhere camera (0.05 m minimum distance, zoom-to-cursor, double-click
+focus on any object in the room).
 
 The objective is to illustrate that having competitions across multiple autonomous robots is
 advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
@@ -32,89 +36,98 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 | Version | URL | Description |
 |---|---|---|
-| **v0.9.0 Competition (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v9/](https://kevinkawchak.github.io/robot-competition-clinical/v9/) | v0.6.0 base + patient seating, facial features, close-zoom, no shoulder Z-fight, needle-contact |
+| **v1.0.0 GCP Trial Suite (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v10/](https://kevinkawchak.github.io/robot-competition-clinical/v10/) | 12-phase GCP visit, 43-DOF robots, IK needle contact, composite scoring, open-top photoreal suite, AE response, human CRA |
+| **v0.9.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v9/](https://kevinkawchak.github.io/robot-competition-clinical/v9/) | v0.6.0 base + patient seating, facial features, close-zoom, no shoulder Z-fight, needle-contact |
 | **v0.8.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
 | **v0.7.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v7/](https://kevinkawchak.github.io/robot-competition-clinical/v7/) | Enhanced visuals: ceiling lights, patient faces, active nurse |
-| **v0.6.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient (v0.9.0 base) |
+| **v0.6.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v6/](https://kevinkawchak.github.io/robot-competition-clinical/v6/) | Realistic Unitree G1 robots + human patient |
 | **v0.5.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v5/](https://kevinkawchak.github.io/robot-competition-clinical/v5/) | 4-station PPO competition (light mode, open-top) |
 | **v0.1.0 Single Station** | [https://kevinkawchak.github.io/robot-competition-clinical/](https://kevinkawchak.github.io/robot-competition-clinical/) | Original single-station injection (stable) |
 
-Press **Play** to start the competition and watch all 4 stations race. Use the
-toggle buttons to open/close the **Phase Timeline** and **Scoreboard** panels.
-When all stations finish, a **Competition Results** overlay displays the final
-1st/2nd/3rd/4th ranking with times and accuracies. Close the overlay and use
-**Reset** to replay.
+Press **Play** to start the competition and watch all 4 stations run the GCP visit. Use the
+toggle buttons to open the **GCP Phase Timeline + Live Telemetry** and **GCP Scoreboard**
+panels. When all stations finish, the **Final GCP Results** overlay displays the composite
+ranking. Scroll/pinch zooms toward the cursor; **double-click (or double-tap) any object** —
+a fingertip, the needle, the ECG trace, a poster — to glide the camera to it.
 
-## What This Simulates (v0.9.0)
+## What This Simulates (v1.0.0)
 
-Four identical stations compete simultaneously. Each station features **Unitree G1 humanoid
-robots** (from unitreerobotics) as the doctor and nurse, with a **realistic human patient**
-(facial features, hair, gown) seated **correctly** on the exam chair with feet on the floor.
-The hospital environment is light-mode (matching the strong-performing v0.6.0 base) with
-overhead lights per station, full medical equipment (IV stand, tray, vitals monitor) per
-station, and the camera now supports zooming in very close (minDistance reduced from 3m to
-0.4m) so users can inspect each station's robots and patient in detail. Every station uses
-the same PPO policy architecture but with different random seed initialization, producing
-distinct timing and accuracy behavior.
+Four identical stations compete simultaneously to complete a **GCP-aligned 12-phase IM
+injection visit** on diverse, realistic human participants (per-station skin tone, hairstyle,
+gown color; blinking, breathing, consent nods, armrest grip during injection). The doctor and
+nurse are **43-DOF Unitree G1 humanoids** whose articulated fingers actually grip the syringe,
+swab, vial, scanner, and tablet; their legs run a gait cycle whenever they walk between the
+patient and the supply cart. A runtime **IK tip-correction** servo drives the needle tip onto
+the deltoid target every frame — touching the surface at insertion and sitting 6 mm indwelling
+during the slow-push dose — with zero interpenetration. One seeded station experiences a
+**Grade 1 vasovagal adverse event** during observation (ECG dips to ~49 bpm, patient's head
+droops, nurse leans in, observation extends), demonstrating autonomous AE surveillance. A
+**human CRA** monitors everything from a sponsor desk with a live EDC laptop, and a central
+**4-face scoreboard tower** broadcasts live ranks. The room is open-top (no ceiling) with
+daylight + per-station freestanding exam-light booms, procedural floor/wall textures, an
+observation window, signage posters, and full per-station equipment.
 
-### v0.9.0 Targeted Fixes (over v0.6.0 base)
+### v1.0.0 Headline Upgrades
 
-| # | v0.6.0 Issue | v0.9.0 Fix |
+| # | Area | v1.0.0 Upgrade |
 |---|---|---|
-| 1 | Patient floats above chair with feet on the seat | Patient lowered (root y 1.15→0.775) and legs lengthened (thigh & shin 0.42m each) so pelvis rests on cushion and feet rest on floor |
-| 2 | Patient head reverse / no facial features | Eyes (whites + pupils), eyebrows, nose, mouth, chin, hair fringe added on the −Z (front) side; head explicitly forward-facing |
-| 3 | Cannot zoom close to a station | Camera `minDistance` 3.0→0.4, near-plane 0.1→0.05, fog start 28m→38m, per-station camera presets pulled in from (+2.5, 4.5, +5.0) to (+1.4, 1.6, −2.0) relative to station |
-| 4 | Shoulder/coat Z-fight & glitching | Coat made opaque + `polygonOffset:-1`; coat boxes enlarged to fully enclose body (0.36×0.44×0.22 vs 0.32×0.40×0.19); shoulder pad cap added; sleeve capsule enlarged to 0.052r×0.16L |
-| 5 | Needle does not contact patient arm during injection | Cross-body shoulder yaw (SY −83°) + 100° elbow bend during hold; doctor approaches further (XOff −0.30, ZOff +0.10); needle lengthened from 0.06m to 0.10m; injection target ring brightens & pulses 1.6× during inject/hold |
+| 1 | High-DOF robots | 43 DOF per G1: 7-DOF arms, 7-DOF Dex3-1 hands with 2-segment articulated fingers, 3-DOF waist, 2-DOF neck, 6-DOF legs with gait cycle |
+| 2 | Physical overlap | Fixed by construction: coat = torso shell (no overlay z-fight), verified prop clearances, patient soles exactly on floor, props flush on surfaces, IK prevents needle interpenetration |
+| 3 | Competition realism | 12-phase GCP workflow, composite GCP scoring, seeded Grade 1 AE with response, live ECG/SpO2/NIBP, eSource documentation, human-in-the-loop CRA |
+| 4 | Room | Open-top (no ceiling), photoreal textures, observation window + hallway, posters, privacy screens, exam-light booms, supply carts, sharps containers, scoreboard tower |
+| 5 | Zoom | minDistance 0.05 m, zoom-to-cursor, fog removed, double-click/double-tap glide-focus on any object, per-station camera presets, keyboard shortcuts |
 
-### v0.9.0 Changes from v0.6.0
+### 12-Phase GCP Visit Per Station (v1.0.0)
 
-| Aspect | v0.6.0 | v0.9.0 |
-|---|---|---|
-| Patient seat position | Floats above chair with feet on cushion | **Pelvis rests on cushion (y 0.485), feet on floor** |
-| Patient legs | Thigh 0.18m / shin 0.18m (too short) | **Thigh 0.42m / shin 0.42m (anatomically realistic)** |
-| Patient face | Plain skin sphere (no features) | **Eyes (whites + pupils), eyebrows, nose, mouth, chin, hair fringe** |
-| Patient orientation | Ambiguous (faceless head) | **Forward-facing, unambiguous** |
-| Camera min zoom | 3.0m | **0.4m (close-up inspection)** |
-| Camera per-station preset | (+2.5, 4.5, +5.0) | **(+1.4, 1.6, −2.0) — much closer, slightly above eye-level** |
-| Coat overlay rendering | Transparent + Z-fight at shoulder | **Opaque + polygonOffset, fully enclosed shoulder cap** |
-| Inject phase doctor pose | SP 78° / SY −42° / Elbow 90° | **SP 45° / SY −83° / Elbow 100° (cross-body reach)** |
-| Inject XOff / ZOff | −0.17 / 0 | **−0.30 / +0.10 (closer to patient)** |
-| Syringe needle length | 0.06m | **0.10m (visibly contacts deltoid)** |
-| Inject target marker | Constant pulse | **Brightens 1.6× and pulses 2× faster during inject/hold** |
-| Nav banner | v0.1.0–v0.6.0 + v0.7.0/v0.8.0 | **v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0, v0.9.0 (new)** |
-| URL path | `/v6/` | **`/v9/`** |
+| # | Phase | Actor | Base | What Happens |
+|---|-------|-------|------|--------------|
+| 1 | Identity verification | Nurse | 1.2s | Wristband scan (two identifiers), scanner LED blinks |
+| 2 | eConsent confirmation | Nurse | 1.2s | Tablet raised to participant, participant nods |
+| 3 | Baseline vitals | Nurse | 1.4s | ECG/SpO2/NIBP captured on the live monitor |
+| 4 | Hand hygiene & gloves | Doctor | 1.2s | Hand rub at the sanitizer |
+| 5 | Drug prep & barcode check | Doctor | 2.2s | Walks to cart, draws 0.50 mL from vial (gait + finger grip) |
+| 6 | Aseptic site prep | Doctor | 1.6s | Alcohol swab circles the right deltoid (left hand, IK) |
+| 7 | Landmark & alignment | Doctor | 1.4s | Needle aligned to target (IK ramps in) |
+| 8 | Needle insertion | Doctor | 1.2s | 90° IM — tip meets the deltoid surface exactly |
+| 9 | Dose delivery | Doctor | 2.4s | Plunger depresses, fluid empties, 6 mm indwelling |
+| 10 | Withdraw & safety | Doctor | 1.0s | Needle out, IK releases |
+| 11 | Sharps disposal | Doctor | 1.4s | Syringe dropped into sharps container, LED confirms |
+| 12 | Observation & eSource | Nurse | 2.3s | Documentation taps; AE surveillance (extended +2.5s/speed on AE) |
+
+**Total base duration:** 18.5 seconds. PPO jitter and speed profiles produce actual visit
+times of ~18.8–19.9 s.
 
 ### Station Layout (2x2 Grid)
 
-| Station | Position | Seed | Speed | Accuracy | Profile |
-|---------|----------|------|-------|----------|---------|
-| **A** | Front-left | 42 | 1.00x | High | Balanced |
-| **B** | Front-right | 137 | 0.88x | Medium | Speed-focused |
-| **C** | Back-left | 256 | 1.08x | Highest | Accuracy-focused |
-| **D** | Back-right | 512 | 0.95x | High | Cautious |
+| Station | Position | Seed | Speed | Patient | Profile |
+|---------|----------|------|-------|---------|---------|
+| **A** | Front-left | 42 | 1.00x | Light skin, short brown hair, mint gown | Balanced |
+| **B** | Front-right | 137 | 0.93x | Deep brown skin, black curly hair, light-blue gown | Speed-focused |
+| **C** | Back-left | 256 | 1.07x | Tan skin, long dark hair, lavender gown | Careful (draws the Grade 1 AE) |
+| **D** | Back-right | 512 | 0.97x | Pale skin, grey hair, peach gown | Precision-focused |
 
-### Role Assignments (v0.9.0 — Unitree G1 Robots + Properly Seated Patient)
+### Role Assignments (v1.0.0)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor (G1) | Right of patient (x=+0.65, y=0.80) | Dark charcoal G1 body, white opaque medical coat (no Z-fight), red cross, visor head | Syringe (0.10m needle) in Dex3-1 hand | Cross-body 7-phase injection that contacts the deltoid |
-| Patient (Human) | Center (y=0.775, seated on cushion) | Skin-colored human, dark hair w/ fringe, green hospital gown, prominent facial features | Exam chair | Receives injection (right deltoid) |
-| Nurse (G1) | Left of patient (x=−0.60, y=0.80) | Dark charcoal G1 body, blue opaque medical coat (no Z-fight), gold badge, visor head | Tablet in hand | Monitors procedure |
+| Doctor (G1) | Right of patient, walks to cart | Charcoal G1, white coat shell, red cross, glossy visor | Syringe (IK-corrected needle), swab, vial | Hygiene, drug prep, site prep, injection, dose, sharps disposal |
+| Nurse (G1) | Left of patient | Charcoal G1, scrub-blue coat shell, gold badge | Tablet (always), wristband scanner | Identity check, eConsent, vitals, observation, eSource documentation |
+| Patient (Human) | Infusion recliner, feet on floor | Diverse per station; blinks, breathes, nods, grips armrest | Wristband, live ECG leads | Receives the 0.50 mL IM dose (right deltoid) |
+| CRA (Human) | Sponsor monitoring desk | Business casual, ID badge | EDC laptop, monitoring banner | Human-in-the-loop oversight; types, scans the room |
 
-### 7-Phase Injection Procedure Per Station (v0.1.0)
+### Composite GCP Scoring (v1.0.0)
 
-All 7 phases are performed by the **doctor** (matching v0.1.0 exactly):
+`Composite = 0.30×Time + 0.25×Accuracy + 0.20×Protocol + 0.10×Sterility + 0.10×Dose + 0.05×Comfort`
 
-1. **Prepare** — Doctor prepares syringe (1.0s base)
-2. **Approach** — Doctor approaches patient from the right (2.0s base)
-3. **Position** — Doctor positions needle at right deltoid (1.5s base)
-4. **Inject** — Needle insertion at injection target (2.0s base)
-5. **Hold** — Steady hold during medication delivery (1.5s base)
-6. **Withdraw** — Syringe removal from injection site (1.5s base)
-7. **Monitor** — Post-injection monitoring, nurse assists (2.0s base)
-
-**Total base duration:** 11.5 seconds. PPO jitter produces actual times of ~10–14s.
+- **Time score**: `100 × (fastest_total / station_total)` over all 12 phases (incl. AE extension)
+- **Accuracy score**: `100 − 18 × needle_deviation_mm` (recorded placement deviation)
+- **Protocol adherence**: seeded 96–100% (visit-schedule deviations)
+- **Sterility index**: seeded 97–100% (aseptic technique)
+- **Dose score**: `100 − 4000 × |delivered − 0.500 mL|`
+- **Comfort index**: seeded 88–100 (motion-jerk proxy)
+- **Ranking**: composite descending, total time ascending as tiebreak
+- **AE policy**: the AE station's extended observation costs time; safety response itself is
+  never penalized
 
 ### PPO Reinforcement Learning Details
 
@@ -127,110 +140,102 @@ All four stations use **Proximal Policy Optimization (PPO)** with:
 - **Training**: 500 episodes, gamma=0.99, clip_ratio=0.2, learning_rate=3e-4
 - **Key insight**: Same policy architecture + different random seeds produces different learned behaviors
 
-**Same policy, different state**: Each station shares the same MLP architecture and
-PPO hyperparameters. The only difference between stations is the random seed used during
-training initialization (42, 137, 256, 512). This produces genuinely distinct learned
-parameters — different speed/accuracy tradeoffs — from the same reward function. The
-PPO reward `R = -0.3*time + 0.5/(1+dist) + 0.2/(1+jerk)` balances three competing
-objectives: speed (finish fast), accuracy (needle close to target), and smoothness
-(minimal jerk in arm motion).
+**Same policy, different state**: Each station shares the same MLP architecture and PPO
+hyperparameters. The only difference between stations is the random seed used during training
+initialization (42, 137, 256, 512). This produces genuinely distinct learned parameters —
+different speed/accuracy/protocol trade-offs — from the same reward function.
 
-### Measurement
+### Simulation Results (v1.0.0, deterministic from seeds)
 
-- **Time**: Elapsed simulation seconds from prepare phase start to monitor phase end (all 7 phases)
-- **Accuracy**: Simulated Euclidean distance (meters) between needle tip and injection target site
-- **Accuracy Score**: `1.0 / (1.0 + distance * 100.0)` — higher is better
-- **PPO Reward**: Weighted sum of time penalty, accuracy reward, and smoothness reward
-- **Ranking**: Stations ranked by total time (lower is better), tiebroken by accuracy score
+| Rank | Station | Composite | Total Time | Needle Dev | Protocol | Sterility | Dose | Notes |
+|------|---------|-----------|-----------|------------|----------|-----------|------|-------|
+| #1 | **D** | **94.8** | 18.84s | 0.76mm | 98.6% | 98.8% | 0.497mL | Precision wins |
+| #2 | A | 89.8 | 18.89s | 2.04mm | 97.2% | 97.6% | 0.500mL | Perfect dose |
+| #3 | B | 86.0 | 19.46s | 2.41mm | 97.1% | 97.8% | 0.503mL | |
+| #4 | C | 84.7 | 19.82s | 2.32mm | 97.2% | 97.3% | 0.495mL | Grade 1 vasovagal AE, resolved |
 
-### Simulation Results (v0.9.0)
-
-Results from `python -m simulation_v2.run_competition`:
-
-| Rank | Station | Total Time | Accuracy | Needle Dist | PPO Reward |
-|------|---------|-----------|----------|-------------|------------|
-| #1 | **B** | 12.514s | 32.8% | 0.0205m | -3.1064 |
-| #2 | D | 13.734s | 50.6% | 0.0098m | -3.4585 |
-| #3 | A | 13.810s | 43.6% | 0.0130m | -3.4684 |
-| #4 | C | 14.830s | 61.1% | 0.0064m | -3.7605 |
-
-**Winner: Station B** — fastest total time (12.514s) despite lower accuracy, demonstrating
-the speed vs. accuracy tradeoff inherent in the PPO reward function.
+**Winner: Station D** — near-fastest visit with sub-millimeter needle placement,
+demonstrating that the composite GCP score rewards precision + speed together rather than
+raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP scoring).
 
 ## Features
 
-- **Properly Seated Patient** (v0.9.0): Pelvis rests on the cushion, feet on the floor — anatomically realistic adult proportions (thigh 0.42m, shin 0.42m)
-- **Prominent Facial Features** (v0.9.0): Eyes with pupils, eyebrows, nose, mouth, chin, hair cap with fringe — head orientation now unambiguous
-- **Close-Up Camera Zoom** (v0.9.0): `minDistance=0.4m` (was 3m) lets users zoom into a single G1 finger or syringe needle
-- **No Shoulder Z-Fighting** (v0.9.0): Opaque coat materials with `polygonOffset:-1`, enlarged coat geometry, dedicated shoulder cap
-- **Needle-Contacts-Deltoid** (v0.9.0): Cross-body shoulder yaw + deeper elbow bend brings the syringe needle to the patient's right deltoid; needle lengthened to 0.10m; injection-target ring brightens and double-speed pulses during inject/hold
-- **Per-Station Camera Presets** (v0.9.0): Clicking A/B/C/D drops the camera to (+1.4m right, 1.6m up, −2.0m back) of that station for detail inspection
-- **Refined Patient Pose** (v0.9.0): Legs cross slightly outward, arms rest with realistic 18° forward tilt and 60° elbow bend on the armrests
-- **4-Station Competition**: Simultaneous independent simulation across all stations
-- **7-Phase Procedure**: Matching v0.1.0's exact injection procedure per station
-- **PPO RL Policies**: Distinct behavior from seeded policy training (seeds 42, 137, 256, 512)
-- **Full Medical Equipment**: IV stand with fluid, instrument tray, vitals monitor, exam chair per station
-- **Pulsing Injection Marker**: Red dot with animated ring on patient right deltoid
-- **Closable Scoreboard**: Toggle on/off — total time, accuracy, needle distance, rank
-- **Closable Phase Timeline**: Toggle on/off — tracks all 7 phases per station
-- **Competition Results Overlay**: 1st/2nd/3rd/4th display with times and accuracies
-- **Metrics Reset**: Full state reset between competition runs
-- **Cross-Device 3D Viewer**: Desktop, iOS, Android via Three.js
-- **Zero Installation**: View directly from GitHub Pages
-- **MuJoCo Physics**: Full MJCF scene models with articulated humanoids
-- **Interactive Controls**: Play/pause, reset, station camera focus
-- **File Upload**: Upload custom JSON configs for station seeds/speeds
-- **Mobile-Optimized**: Responsive layout across iPhone, Android, tablet, desktop
-- **6-Version Nav Banner**: Clickable links across v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0, v0.9.0
-- **Open & Free**: All dependencies open-source (no wandb)
+- **12-Phase GCP Workflow** (v1.0.0): identity → eConsent → vitals → hygiene → drug prep →
+  site prep → alignment → insertion → dose → withdraw → sharps → observation/eSource
+- **43-DOF G1 Robots** (v1.0.0): articulated Dex3-1 fingers that grip, 3-DOF waist, 2-DOF
+  neck, wrist supination, leg gait during walking
+- **IK Needle Contact** (v1.0.0): tip servo-driven onto the deltoid target every frame —
+  surface at insertion, 6 mm indwelling at dose, zero interpenetration
+- **Overlap-Free Scene** (v1.0.0): coat-as-shell torsos, verified prop clearances, flush
+  prop seating, patient soles exactly on the floor
+- **Open-Top Photoreal Room** (v1.0.0): no ceiling, procedural textures, IBL + ACES,
+  observation window, posters, privacy screens, exam-light booms
+- **Live Clinical Displays** (v1.0.0): animated ECG/SpO2/NIBP per station, central 4-face
+  scoreboard tower, EDC laptop at the CRA desk
+- **Seeded Grade 1 AE** (v1.0.0): vasovagal episode at Station C with ECG dip, patient
+  response, nurse response, extended observation, scoreboard flag
+- **Human-in-the-Loop CRA** (v1.0.0): sponsor monitoring desk with a realistic human
+- **Diverse Realistic Patients** (v1.0.0): four skin tones/hairstyles/gowns; blinking,
+  breathing, nodding, gripping
+- **Composite GCP Scoreboard**: time, needle deviation, protocol, sterility, dose, comfort,
+  live status, AE flags — closable panel
+- **Live Telemetry Panel**: DOF count, live needle→target mm, dose delivered, heart rate,
+  eSource latency
+- **Zoom-Anywhere Camera**: 0.05 m min distance, zoom-to-cursor, double-click/double-tap
+  focus, per-station presets, keyboard shortcuts (Space, R, 0–4)
+- **4-Station Competition**: simultaneous independent PPO-seeded stations
+- **Final GCP Results Overlay**: composite ranking with times and deviations
+- **Metrics Reset**: full deterministic state reset between runs
+- **File Upload**: custom JSON configs for station seeds/speeds
+- **Cross-Device 3D Viewer**: desktop, iOS, Android via Three.js — zero installation
+- **MuJoCo Physics Backend**: MJCF scene models with articulated humanoids (optional)
+- **7-Version Nav Banner**: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 | v1.0.0 (new)
+- **Open & Free**: all dependencies open-source (no wandb)
 
 ## Architecture Diagrams
 
-### Diagram 1: Multi-Station Competition Architecture (v0.9.0)
+### Diagram 1: Multi-Station Competition Architecture (v1.0.0)
 
 ```
 +----------------------------------------------------------------------+
-|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v0.9.0       |
-|   Refined seating, facial features, close-zoom, needle-contact      |
+|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v1.0.0       |
+|     GCP Trial Suite: 12-phase visit, 43-DOF G1s, composite score     |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
-|  |  MuJoCo Backend      |        |   Three.js Competition Viewer |   |
-|  |  (Python)            |        |   (HTML/JS - docs/v9/)        |   |
+|  |  MuJoCo Backend      |        |   Three.js GCP Trial Suite    |   |
+|  |  (Python)            |        |   (HTML/JS - docs/v10/)       |   |
 |  |                      |        |                               |   |
 |  | +------------------+ |  JSON  | +---------------------------+ |   |
-|  | | competition_scene| | -----> | | 4-Station 3D Renderer    | |   |
-|  | | .xml (4 stations)| | export | | - 2x2 Grid (5.5m space)  | |   |
-|  | +------------------+ |        | | - 8 Unitree G1 Robots    | |   |
-|  |        |             |        | | - 4 Seated Human Patients | |   |
-|  |        v             |        | | - Opaque coat (no Z-fight)| |   |
-|  | +------------------+ |        | | - Patient facial features | |   |
-|  | | ppo_policy.py    | |        | | - Needle contacts deltoid | |   |
-|  | | - PPO MLP 64x64  | |        | | - Camera minDistance 0.4m | |   |
-|  | | - 4 seed configs | |        | | - Per-station close-zoom  | |   |
-|  | | - Reward function| |        | +---------------------------+ |   |
+|  | | competition_scene| | -----> | | Open-Top Photoreal Room   | |   |
+|  | | .xml (4 stations)| | export | | - 18m x 18m, no ceiling   | |   |
+|  | +------------------+ |        | | - 8 G1 robots (43 DOF)    | |   |
+|  |        |             |        | | - 4 diverse patients      | |   |
+|  |        v             |        | | - human CRA + EDC desk    | |   |
+|  | +------------------+ |        | | - live ECG monitors       | |   |
+|  | | ppo_policy.py    | |        | | - scoreboard tower        | |   |
+|  | | - PPO MLP 64x64  | |        | +---------------------------+ |   |
+|  | | - 4 seed configs | |        |          |                    |   |
+|  | | - Reward function| |        |          v                    |   |
+|  | +------------------+ |        | +---------------------------+ |   |
+|  |        |             |        | | 12-Phase GCP Animation    | |   |
+|  |        v             |        | | - keyframed pose system   | |   |
+|  | +------------------+ |        | | - IK tip correction       | |   |
+|  | | run_competition  | |        | | - gait while walking      | |   |
+|  | | .py              | |        | | - finger grip/release     | |   |
+|  | | - 4 stations     | |        | | - seeded Grade 1 AE       | |   |
+|  | | - Metrics/rank   | |        | +---------------------------+ |   |
 |  | +------------------+ |        |          |                    |   |
 |  |        |             |        |          v                    |   |
 |  |        v             |        | +---------------------------+ |   |
-|  | +------------------+ |        | | Per-Station Animation    | |   |
-|  | | run_competition  | |        | | - 7 doctor phases (v0.1) | |   |
-|  | | .py              | |        | | - Cross-body inject reach | |   |
-|  | | - 4 stations     | |        | | - Independent timing      | |   |
-|  | | - Metrics/rank   | |        | | - Brighter target on hold | |   |
-|  | +------------------+ |        | | - Finish-order tracking   | |   |
-|  |        |             |        | +---------------------------+ |   |
-|  |        v             |        |          |                    |   |
-|  | +------------------+ |        |          v                    |   |
-|  | | export_competitn | |        | +---------------------------+ |   |
-|  | | .py              | |        | | Light-Mode UI (v0.9.0)   | |   |
-|  | | - Station frames | |        | | - #e8ecf0 light bg        | |   |
-|  | | - JSON output    | |        | | - Blue accents (#0066cc)  | |   |
-|  | | - Schema v0.9.0  | |        | | - Pulsing inject ring     | |   |
-|  | +------------------+ |        | | - Results overlay (close) | |   |
-|  |                      |        | | - Metrics reset on replay | |   |
-|  +----------------------+        | | - 6-version nav banner    | |   |
-|                                  | +---------------------------+ |   |
-|                                  +-------------------------------+   |
+|  | +------------------+ |        | | Composite GCP Scoring     | |   |
+|  | | export_competitn | |        | | - time/acc/protocol       | |   |
+|  | | .py              | |        | | - sterility/dose/comfort  | |   |
+|  | | - Station frames | |        | | - live telemetry panel    | |   |
+|  | | - JSON output    | |        | | - final results overlay   | |   |
+|  | | - Schema v1.0.0  | |        | | - 7-version nav banner    | |   |
+|  | +------------------+ |        | +---------------------------+ |   |
+|  +----------------------+        +-------------------------------+   |
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |   CI/CD + Testing    |        | Device Targets               |   |
@@ -245,85 +250,78 @@ the speed vs. accuracy tradeoff inherent in the PPO reward function.
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 2: PPO Competition Workflow (v0.5.0)
+### Diagram 2: GCP Competition Workflow (v1.0.0)
 
 ```
 +----------------------------------------------------------------------+
-|              PPO COMPETITION WORKFLOW - 4-STATION RACE                |
-|     v0.5.0: Doctor 7-Phase Injection (matching v0.1.0 procedure)     |
+|            GCP COMPETITION WORKFLOW - 4-STATION VISIT RACE           |
+|   v1.0.0: 12-phase GCP visit, composite scoring, seeded Grade 1 AE   |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +--- STATION A (seed=42, balanced, 1.00x speed) ----------------+  |
-|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
-|  | <-- base 1.0 + 2.0 + 1.5 + 2.0 + 1.5 + 1.5 + 2.0 = 11.5s -> |  |
-|  | Actual: ~13.8s (PPO jitter) | Accuracy: 43.6%                 |  |
-|  +----------------------------------------------------------------+  |
-|  +--- STATION B (seed=137, speed-focused, 0.88x) ----------------+  |
-|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
-|  | Actual: ~12.5s (FASTEST) | Accuracy: 32.8% (lowest)           |  |
-|  +----------------------------------------------------------------+  |
-|  +--- STATION C (seed=256, accuracy-focused, 1.08x) -------------+  |
-|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
-|  | Actual: ~14.8s (slowest) | Accuracy: 61.1% (HIGHEST)          |  |
-|  +----------------------------------------------------------------+  |
-|  +--- STATION D (seed=512, cautious, 0.95x) ---------------------+  |
-|  | [prepare][approach][position][inject][hold][withdraw][monitor]  |  |
-|  | Actual: ~13.7s | Accuracy: 50.6%                              |  |
-|  +----------------------------------------------------------------+  |
+|  N=nurse  D=doctor                                                   |
+|  [identity][consent][vitals][hygiene][drugprep][siteprep][position]  |
+|     N         N        N       D         D         D        D       |
+|  [inject][dose][withdraw][sharps][monitor+eSource]                   |
+|     D      D       D        D        N                               |
 |                                                                      |
-|  +--------------- PPO REWARD FUNCTION --------------------------+   |
-|  |                                                               |   |
-|  |  R = -0.3 x time  +  0.5 / (1 + dist)  +  0.2 / (1 + jerk) |   |
-|  |       ^                   ^                    ^              |   |
-|  |   Speed penalty     Accuracy reward     Smoothness reward    |   |
-|  |                                                               |   |
-|  |  Policy: MLP 64x64, tanh | g=0.99 | clip=0.2 | lr=3e-4     |   |
-|  |  Same architecture, 4 different seeds -> 4 distinct policies  |   |
-|  +---------------------------------------------------------------+   |
+|  STATION A (seed=42,  1.00x): 18.89s  2.04mm  composite 89.8  #2    |
+|  STATION B (seed=137, 0.93x): 19.46s  2.41mm  composite 86.0  #3    |
+|  STATION C (seed=256, 1.07x): 19.82s  2.32mm  composite 84.7  #4    |
+|             ^ Grade 1 vasovagal AE during monitor (+2.5s/speed)      |
+|  STATION D (seed=512, 0.97x): 18.84s  0.76mm  composite 94.8  #1    |
 |                                                                      |
-|  +--------------- COMPETITION RESULTS ----------------------------+  |
-|  |   #1  Station B - 12.51s - 32.8% accuracy  (speed wins)      |  |
-|  |   #2  Station D - 13.73s - 50.6% accuracy                    |  |
-|  |   #3  Station A - 13.81s - 43.6% accuracy                    |  |
-|  |   #4  Station C - 14.83s - 61.1% accuracy  (most accurate)   |  |
-|  |           [ Close Results ]  <- user manually replays          |  |
-|  +----------------------------------------------------------------+  |
+|  +--------------- COMPOSITE GCP SCORE -----------------------------+ |
+|  |                                                                 | |
+|  |  0.30*Time + 0.25*Accuracy + 0.20*Protocol                      | |
+|  |          + 0.10*Sterility + 0.10*Dose + 0.05*Comfort            | |
+|  |                                                                 | |
+|  |  PPO: MLP 64x64 tanh | R = -0.3t + 0.5/(1+d) + 0.2/(1+j)        | |
+|  |  Same architecture, 4 seeds -> 4 distinct visit profiles        | |
+|  +-----------------------------------------------------------------+ |
+|                                                                      |
+|  +--------------- FINAL GCP RESULTS -------------------------------+ |
+|  |   #1  Station D - 94.8 - 18.84s - 0.76mm  (precision wins)      | |
+|  |   #2  Station A - 89.8 - 18.89s - 2.04mm                        | |
+|  |   #3  Station B - 86.0 - 19.46s - 2.41mm                        | |
+|  |   #4  Station C - 84.7 - 19.82s - 2.32mm  (AE Gr.1, resolved)   | |
+|  |           [ Close Results ]  <- user manually replays           | |
+|  +-----------------------------------------------------------------+ |
 +----------------------------------------------------------------------+
 ```
 
-### Diagram 3: v0.9.0 3D Layout and Technology Stack
+### Diagram 3: v1.0.0 3D Layout and Technology Stack
 
 ```
 +----------------------------------------------------------------------+
-|   3D LAYOUT & TECHNOLOGY STACK (v0.9.0 — Refined seating, faces)    |
+|     3D LAYOUT & TECHNOLOGY STACK (v1.0.0 - GCP Trial Suite)          |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +---------- HOSPITAL ROOM (16m x 16m, LIGHT THEME) -------------+  |
+|  +------- OPEN-TOP SUITE (18m x 18m, NO CEILING) -----------------+  |
+|  |   obs window--+                                                |  |
+|  |  +-- Station A ---------+    +-- Station B ---------+          |  |
+|  |  | [G1n] [Pat] [G1d]    |    | [G1n] [Pat] [G1d]    |          |  |
+|  |  | scan  ECG   cart+    |    | scan  ECG   cart+    |          |  |
+|  |  | tablet IV   sharps   |    | tablet IV   sharps   |          |  |
+|  |  | exam-light boom      |    | exam-light boom      |          |  |
+|  |  +----------------------+    +----------------------+          |  |
+|  |                  [SCOREBOARD TOWER]                            |  |
+|  |  +-- Station C ---------+    +-- Station D ---------+          |  |
+|  |  | (Grade 1 AE seeded)  |    | (composite winner)   |          |  |
+|  |  +----------------------+    +----------------------+          |  |
 |  |                                                                |  |
-|  |  +-- Station A --------+    +-- Station B --------+           |  |
-|  |  | [G1n]  [Pat]  [G1d] |    | [G1n]  [Pat]  [G1d] |           |  |
-|  |  | blue   y=0.78 white |    | blue   y=0.78 white |           |  |
-|  |  | tablet  face  syr+  |    | tablet  face  syr+  |           |  |
-|  |  | seated  feet  needle|    | seated  feet  needle|           |  |
-|  |  | y=0.80 floor  10cm  |    | y=0.80 floor  10cm  |           |  |
-|  |  +----------------------+    +----------------------+           |  |
-|  |        5.5m grid spacing — closer per-station camera          |  |
-|  |  +-- Station C --------+    +-- Station D --------+           |  |
-|  |  | [G1n]  [Pat]  [G1d] |    | [G1n]  [Pat]  [G1d] |           |  |
-|  |  +----------------------+    +----------------------+           |  |
-|  |                                                                |  |
+|  |              [CRA MONITORING DESK + EDC laptop]      door->    |  |
 |  +----------------------------------------------------------------+  |
 |                                                                      |
-|  Legend: G1d=Doctor(white opaque coat, syringe 0.10m needle, R)     |
-|          Pat=Patient(seated y=0.78, feet on floor, face features)   |
-|          G1n=Nurse(blue opaque coat, tablet, L)                     |
+|  Legend: G1d=Doctor(white coat shell, syringe w/ IK needle, R)       |
+|          Pat=Patient(diverse, blinking, soles on floor)              |
+|          G1n=Nurse(scrub-blue coat shell, tablet+scanner, L)         |
 |                                                                      |
-|  LAYER 1: MuJoCo + PPO (Python backend)                             |
-|  LAYER 2: Three.js r169 (docs/v9/index.html)                        |
+|  LAYER 1: MuJoCo + PPO (Python backend)                              |
+|  LAYER 2: Three.js r169 (docs/v10/index.html) + RoomEnvironment IBL  |
 |  LAYER 3: GitHub Pages (static hosting)                              |
 |                                                                      |
-|  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)  |
-|  ROBOTS: Unitree G1 (unitreerobotics) — unitree.com/g1/            |
+|  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)    |
+|  ROBOTS: Unitree G1 (unitreerobotics) - unitree.com/g1/              |
 +----------------------------------------------------------------------+
 ```
 
@@ -341,7 +339,7 @@ robot-competition-clinical/
 │   │   ├── index.html                  # v0.4.0 Competition viewer (legacy)
 │   │   └── competition_data.json       # v0.4.0 animation data
 │   ├── v5/
-│   │   └── index.html                  # v0.5.0 Competition viewer (previous)
+│   │   └── index.html                  # v0.5.0 Competition viewer
 │   ├── v6/
 │   │   └── index.html                  # v0.6.0 Competition viewer
 │   ├── v7/
@@ -349,13 +347,16 @@ robot-competition-clinical/
 │   ├── v8/
 │   │   └── index.html                  # v0.8.0 Competition viewer
 │   ├── v9/
-│   │   └── index.html                  # v0.9.0 Competition viewer (current)
+│   │   └── index.html                  # v0.9.0 Competition viewer
+│   ├── v10/
+│   │   └── index.html                  # v1.0.0 GCP Trial Suite (current)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams
 │       ├── v2_viewer_modules.md        # v0.3.0 viewer internal module map
 │       ├── v3_architecture.md          # Archived v0.3.0 text diagrams
-│       └── v4_architecture.md          # Archived v0.4.0 text diagrams
+│       ├── v4_architecture.md          # Archived v0.4.0 text diagrams
+│       └── v5_architecture.md          # Archived v0.5.0 text diagrams
 ├── simulation/                         # v0.1.x single-station simulation
 │   ├── __init__.py
 │   ├── constants.py
@@ -396,9 +397,9 @@ The Python backend is optional — the web viewers work independently.
 # Install dependencies
 pip install mujoco numpy
 
-# --- v0.9.0 Competition ---
+# --- v1.0.0 Competition ---
 python -m simulation_v2.run_competition
-python -m simulation_v2.export_competition --output docs/v9/competition_data.json
+python -m simulation_v2.export_competition --output docs/v10/competition_data.json
 
 # --- v0.1.0 Single Station ---
 python -m simulation.run_simulation --export output/animation.json

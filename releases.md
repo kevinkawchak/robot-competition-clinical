@@ -1,5 +1,93 @@
 # Releases
 
+## Clinical Robot Competition — v1.0.0 GCP Trial Suite
+
+v1.0.0 — 2026-06-10
+
+### Summary
+
+Milestone release: a ground-up, state-of-the-art rebuild of the nurse / doctor / patient
+competition aimed squarely at clinical trial experts. Each of the four stations now executes
+a complete **GCP-aligned 12-phase IM injection visit** — identity verification (two-identifier
+wristband scan), eConsent confirmation, baseline vitals on a **live animated ECG monitor**,
+hand hygiene, drug preparation with barcode check at the supply cart, aseptic site prep,
+landmark/alignment, 90° needle insertion, slow-push 0.50 mL dose delivery, withdrawal with
+safety engagement, sharps disposal into a yellow sharps container, and post-dose observation
+with eSource documentation. Robots are upgraded to **high-DOF Unitree G1 models (43 DOF
+incl. Dex3-1 hands)** with articulated finger segments that actually grip, 3-DOF waist,
+2-DOF neck, supinating wrists, and a leg gait cycle whenever the root translates. A runtime
+**inverse-kinematic tip-correction system** drives the syringe needle tip onto the deltoid
+target (and 6 mm deep during dose) every frame — physical object overlap and the historical
+"needle doesn't touch the arm" class of bugs are eliminated by construction; coats are now
+built into the torso shell so no overlay z-fighting can occur, and every prop is placed with
+verified clearances. The room is **open-top (no ceiling)** and photoreal: procedural vinyl-tile
+floor and wainscot wall textures, observation window with hallway, signage posters, freestanding
+exam-light booms per station, privacy screens, infusion pumps on IV poles, supply carts with
+drawers/vials/gloves, a **central live scoreboard tower**, and a **human CRA at a sponsor
+monitoring desk** with a live EDC laptop. Patients are diverse, realistic humans (four skin
+tones, hairstyles, gown colors) who blink, breathe, nod consent, grip the armrest during
+injection, and — at one seeded station — experience a **Grade 1 vasovagal adverse event**
+with an ECG dip, nurse response, and extended observation. Ranking moves from raw time to a
+**composite GCP score** (Time 30%, Accuracy 25%, Protocol 20%, Sterility 10%, Dose 10%,
+Comfort 5%). The camera zooms to-the-cursor down to 0.05 m, has no fog, and **double-click /
+double-tap focuses any object in the room** for close inspection.
+
+### Features
+
+- 12-phase GCP visit workflow per station (identity → eSource documentation), each phase
+  labeled with its acting role (Nurse / Doctor) in the timeline panel
+- 43-DOF G1 robots: 7-DOF arms, 7-DOF Dex3-1 dexterous hands with 2-segment articulated
+  fingers, 3-DOF waist, 2-DOF neck, 6-DOF legs with gait cycle during root translation
+- IK-lite tip correction: needle tip lands exactly on the deltoid target (surface during
+  insertion, 6 mm indwelling during dose); horizontal error feeds a natural "step-in" of
+  the whole robot so the wrist never detaches
+- Physical-overlap fixes by construction: coat = torso shell (zero z-fight), verified prop
+  clearances, patient pelvis on the cushion with soles exactly on the floor, props seated
+  flush on cart surfaces
+- Open-top room (no ceiling) with daylight key light + per-station exam-light spotlights
+- Photoreal environment: procedural floor/wall textures, PBR materials with room-environment
+  IBL, ACES tone mapping, observation window, door, posters, station floor decals
+- Live animated ECG/SpO2/NIBP monitor per station (canvas texture, P-QRS-T waveform)
+- Central 4-face live scoreboard tower with rank, composite score, progress, and AE flags
+- Human CRA (Clinical Research Associate) at a sponsor monitoring desk with EDC laptop —
+  human-in-the-loop oversight; types, scans the room, blinks
+- Diverse realistic patients (per-station skin tone, hairstyle, gown color) with blinking
+  eyes, breathing chest, consent nod, injection head-turn, and armrest grip
+- Seeded Grade 1 vasovagal AE at exactly one station: HR dips to ~49 bpm on the ECG,
+  patient head droops, nurse leans in, observation extends (+2.5 s/speed), scoreboard flag
+- Composite GCP scoring: 0.30×Time + 0.25×Accuracy + 0.20×Protocol + 0.10×Sterility +
+  0.10×Dose + 0.05×Comfort, with all sub-metrics live in the scoreboard
+- Live telemetry panel: DOF count, phase, needle→target distance (mm, live), recorded
+  deviation, dose delivered, heart rate, eSource latency, AE status
+- Zoom-anywhere camera: minDistance 0.05 m, zoom-to-cursor, no fog, double-click /
+  double-tap glide-focus on any object, keyboard shortcuts (Space, R, 0–4)
+- Sharps disposal with confirmation LED flash; tray syringe → hand syringe → sharps
+  container hand-off is fully stateless (scrub/reset safe)
+- Seven-version nav banner: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 |
+  v1.0.0 (new, farthest right)
+- Cross-device support: desktop, iPhone, Android, tablet
+
+### Contributors
+@kevinkawchak
+@claude
+
+### Notes
+
+- The v1.0.0 viewer is at `/v10/` on GitHub Pages
+- All four stations still use the **same PPO policy architecture** (MLP 64x64, tanh) with
+  **different random seeds** (42, 137, 256, 512); v1.0.0 tunes per-station speed factors
+  to 1.00 / 0.93 / 1.07 / 0.97 across the longer 18.5 s-base 12-phase visit
+- Deterministic v1.0.0 results (seeded; Station C draws the Grade 1 AE):
+  - #1 Station D — composite 94.8, 18.84 s, 0.76 mm needle deviation
+  - #2 Station A — composite 89.8, 18.89 s, 2.04 mm
+  - #3 Station B — composite 86.0, 19.46 s, 2.41 mm
+  - #4 Station C — composite 84.7, 19.82 s, 2.32 mm, Grade 1 vasovagal AE (resolved)
+- Ranking is now by composite GCP score (time-only ranking retired); the AE station's
+  extended observation is its time penalty — safety handling is never penalized directly
+- All prior viewers (v0.1.0–v0.9.0) preserved and accessible via the nav banner
+
+---
+
 ## Clinical Robot Competition — v0.9.0 Refined Patients, Close-Zoom & Needle Contact
 
 v0.9.0 — 2026-05-01

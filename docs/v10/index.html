@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Clinical Robot Competition v1.0.0 — GCP Trial Suite</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-apple-system,sans-serif; }
+#canvas3d { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; display:block; }
+#overlay { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+#overlay > * { pointer-events:auto; }
+#nav-banner { position:absolute; top:0; left:0; right:0; height:28px;
+  background:rgba(255,255,255,0.94); border-bottom:1px solid #d4dde5; backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center; gap:13px; font-size:11px; }
+#nav-banner a { color:#0a66c2; text-decoration:none; font-weight:600; }
+#nav-banner a:hover { text-decoration:underline; }
+#nav-banner span.sep { color:#9fb0bd; }
+#header { position:absolute; top:28px; left:0; right:0; height:46px;
+  background:rgba(255,255,255,0.92); border-bottom:1px solid #d4dde5; backdrop-filter:blur(6px);
+  display:flex; align-items:center; padding:0 14px; gap:12px; }
+#header h1 { font-size:15px; font-weight:700; color:#0a66c2; white-space:nowrap; }
+#header .subtitle { font-size:10px; color:#7c8b97; line-height:1.3; }
+#station-selector { position:absolute; top:82px; left:50%; transform:translateX(-50%);
+  display:flex; gap:5px; background:rgba(255,255,255,0.94); padding:5px 8px; border-radius:10px;
+  border:1px solid #ccd6df; box-shadow:0 2px 10px rgba(20,40,60,0.08); z-index:20; backdrop-filter:blur(6px); }
+.station-btn { background:#f3f6f9; border:1px solid #ccd6df; color:#4d5d6b; padding:5px 14px; border-radius:7px;
+  cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.station-btn:hover { background:#e7edf2; border-color:#9fb3c2; }
+.station-btn.active { background:#0a66c2; color:#fff; border-color:#0a66c2; }
+.panel-toggle { position:absolute; z-index:15; background:rgba(255,255,255,0.94); border:1px solid #ccd6df;
+  color:#0a66c2; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.panel-toggle:hover { background:#e7edf2; border-color:#0a66c2; }
+.panel-toggle.open { background:#0a66c2; color:#fff; }
+#toggle-phases { top:122px; left:12px; }
+#toggle-scoreboard { top:122px; right:12px; }
+#phase-panel { position:absolute; top:160px; left:12px; background:rgba(255,255,255,0.95);
+  border:1px solid #ccd6df; border-radius:10px; padding:10px 12px; min-width:228px; max-width:258px;
+  display:none; max-height:calc(100vh - 230px); overflow-y:auto; z-index:14;
+  box-shadow:0 4px 16px rgba(20,40,60,0.10); backdrop-filter:blur(6px); }
+#phase-panel.visible { display:block; }
+#phase-panel h3 { font-size:11px; color:#0a66c2; margin-bottom:5px; letter-spacing:0.5px; text-transform:uppercase; }
+.phase-line { font-size:10px; margin:2px 0; color:#8a99a6; display:flex; align-items:center; gap:5px; }
+.phase-line.active { color:#0a8a4a; font-weight:700; }
+.phase-line.done { color:#0a66c2; }
+.phase-dot { width:5px; height:5px; border-radius:50%; background:#ccd6df; flex-shrink:0; }
+.phase-line.active .phase-dot { background:#0a8a4a; }
+.phase-line.done .phase-dot { background:#0a66c2; }
+.phase-actor { margin-left:auto; font-size:8px; font-weight:700; padding:0 4px; border-radius:3px; }
+.phase-actor.N { background:#e3f0fb; color:#0a66c2; }
+.phase-actor.D { background:#fdf1e0; color:#b06a10; }
+#telemetry { margin-top:8px; border-top:1px solid #e1e8ee; padding-top:7px; }
+#telemetry h3 { font-size:10px; }
+.tel-row { display:flex; justify-content:space-between; font-size:10px; color:#7c8b97; padding:1px 0; }
+.tel-row span:last-child { color:#15202b; font-weight:600; font-variant-numeric:tabular-nums; }
+#scoreboard-panel { position:absolute; top:160px; right:12px; width:272px; background:rgba(255,255,255,0.95);
+  border:1px solid #ccd6df; border-radius:10px; padding:10px 12px; display:none;
+  max-height:calc(100vh - 230px); overflow-y:auto; z-index:14;
+  box-shadow:0 4px 16px rgba(20,40,60,0.10); backdrop-filter:blur(6px); }
+#scoreboard-panel.visible { display:block; }
+#scoreboard-panel h2 { font-size:12px; color:#0a66c2; margin-bottom:6px; text-align:center;
+  border-bottom:1px solid #e1e8ee; padding-bottom:5px; letter-spacing:0.5px; text-transform:uppercase; }
+.score-station { margin-bottom:8px; padding:7px 8px; background:#f6f9fb; border-radius:7px; border-left:3px solid #ccd6df; }
+.score-station.rank1 { border-left-color:#c9a227; }
+.score-station.rank2 { border-left-color:#8e9aa5; }
+.score-station.rank3 { border-left-color:#a0622d; }
+.score-station.rank4 { border-left-color:#b9c4cd; }
+.station-label { font-weight:700; font-size:12px; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
+.score-row { display:flex; justify-content:space-between; font-size:10px; color:#7c8b97; padding:1px 0; }
+.score-row span:last-child { color:#2b3a47; font-weight:600; font-variant-numeric:tabular-nums; }
+.rank-badge { font-size:10px; padding:1px 6px; border-radius:4px; font-weight:700; }
+.rank-badge.r1 { background:#c9a227; color:#fff; }
+.rank-badge.r2 { background:#8e9aa5; color:#fff; }
+.rank-badge.r3 { background:#a0622d; color:#fff; }
+.rank-badge.r4 { background:#b9c4cd; color:#fff; }
+.ae-flag { display:inline-block; background:#fdebe7; color:#c2452d; border:1px solid #c2452d;
+  font-size:8px; font-weight:700; border-radius:3px; padding:0 4px; margin-left:5px; }
+#final-results { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:50;
+  background:rgba(10,25,40,0.45); align-items:center; justify-content:center; }
+#final-results.show { display:flex; }
+#results-card { background:#fff; border:2px solid #0a66c2; border-radius:16px;
+  padding:24px; max-width:500px; width:92%; max-height:86vh; overflow-y:auto; text-align:center;
+  box-shadow:0 12px 48px rgba(10,30,50,0.25); }
+#results-card h2 { color:#c9a227; font-size:20px; margin-bottom:4px; }
+#results-card .sub { font-size:11px; color:#7c8b97; margin-bottom:12px; }
+.result-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px;
+  margin:4px 0; border-radius:8px; font-size:12px; gap:8px; }
+.result-row.first { background:rgba(201,162,39,0.12); border:1px solid #c9a227; }
+.result-row.second { background:#f4f6f8; border:1px solid #ccd6df; }
+.result-row.third { background:#f9f4ef; border:1px solid #d9c4af; }
+.result-row.fourth { background:#f4f6f8; border:1px solid #e1e8ee; }
+.result-rank { font-weight:700; width:28px; flex-shrink:0; }
+.result-name { font-weight:700; color:#0a66c2; width:64px; flex-shrink:0; text-align:left; }
+.result-comp { color:#0a8a4a; font-weight:700; }
+.result-time, .result-acc { color:#4d5d6b; font-variant-numeric:tabular-nums; }
+#results-card button { margin-top:14px; background:#0a66c2; color:#fff; border:none; padding:10px 28px;
+  border-radius:9px; font-weight:700; font-size:14px; cursor:pointer; }
+#results-card button:hover { background:#0857a6; }
+#controls { position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; background:rgba(255,255,255,0.94); padding:6px 12px; border-radius:12px;
+  border:1px solid #ccd6df; box-shadow:0 2px 10px rgba(20,40,60,0.08); z-index:15; backdrop-filter:blur(6px); }
+.ctrl-btn { background:#f3f6f9; border:1px solid #ccd6df; color:#4d5d6b; width:38px; height:38px; border-radius:9px;
+  cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center;
+  transition:all .15s; -webkit-tap-highlight-color:transparent; }
+.ctrl-btn:hover { background:#e7edf2; border-color:#0a66c2; color:#0a66c2; }
+.ctrl-btn.active { background:#0a66c2; color:#fff; border-color:#0a66c2; }
+#legend { position:absolute; bottom:14px; left:12px; background:rgba(255,255,255,0.94);
+  border:1px solid #ccd6df; border-radius:10px; padding:8px 12px; z-index:14; backdrop-filter:blur(6px); }
+#legend h3 { font-size:10px; color:#0a66c2; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:10px; margin:2px 0; color:#4d5d6b; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+#info-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100;
+  background:rgba(10,25,40,0.45); align-items:center; justify-content:center; }
+#info-modal.show { display:flex; }
+#info-content { background:#fff; border:1px solid #ccd6df; border-radius:14px; padding:22px;
+  max-width:540px; width:92%; max-height:82vh; overflow-y:auto; }
+#info-content h2 { color:#0a66c2; margin-bottom:10px; font-size:18px; }
+#info-content h3 { color:#0a66c2; margin:10px 0 5px; font-size:13px; }
+#info-content p, #info-content li { font-size:12px; line-height:1.55; color:#3a4a57; }
+#info-content ul, #info-content ol { padding-left:18px; margin:6px 0; }
+#info-content .close-btn { background:#0a66c2; color:#fff; border:none; padding:8px 20px; border-radius:7px;
+  cursor:pointer; font-weight:600; margin-top:14px; font-size:13px; }
+#attribution { position:absolute; bottom:3px; right:12px; font-size:8px; color:#9fb0bd; }
+#hint { position:absolute; bottom:64px; left:50%; transform:translateX(-50%); font-size:10px;
+  color:#5d6e7b; background:rgba(255,255,255,0.85); border-radius:6px; padding:3px 10px;
+  pointer-events:none; transition:opacity 1s; z-index:12; }
+#file-input { display:none; }
+@media (max-width:768px) {
+  #nav-banner { font-size:8.5px; gap:6px; height:24px; }
+  #header { top:24px; height:40px; }
+  #header h1 { font-size:12px; }
+  #header .subtitle { font-size:8px; }
+  #station-selector { top:70px; gap:3px; padding:4px 6px; }
+  .station-btn { padding:4px 9px; font-size:10px; }
+  #toggle-phases { top:106px; left:6px; width:28px; height:28px; font-size:12px; }
+  #toggle-scoreboard { top:106px; right:6px; width:28px; height:28px; font-size:12px; }
+  #phase-panel { top:140px; left:6px; min-width:178px; max-width:198px; padding:7px 9px; }
+  #scoreboard-panel { top:140px; right:6px; width:196px; padding:7px 9px; }
+  #scoreboard-panel h2 { font-size:10px; }
+  .score-station { padding:5px 6px; }
+  .station-label { font-size:10px; }
+  .score-row { font-size:9px; }
+  .rank-badge { font-size:8px; padding:1px 4px; }
+  #legend { display:none; }
+  #hint { display:none; }
+  .ctrl-btn { width:34px; height:34px; font-size:15px; }
+  #controls { bottom:10px; }
+  #results-card { padding:16px; }
+  #results-card h2 { font-size:16px; }
+  .result-row { font-size:10px; padding:6px 8px; }
+}
+@media (max-width:420px) {
+  #scoreboard-panel { width:164px; }
+  #phase-panel { max-width:164px; min-width:150px; }
+  .station-btn { padding:3px 7px; font-size:9px; }
+}
+</style>
+</head>
+<body>
+<canvas id="canvas3d"></canvas>
+<div id="overlay">
+  <div id="nav-banner">
+    <a id="nav-v1" href="#">v0.1.0</a><span class="sep">|</span>
+    <a id="nav-v5" href="#">v0.5.0</a><span class="sep">|</span>
+    <a id="nav-v6" href="#">v0.6.0</a><span class="sep">|</span>
+    <a id="nav-v7" href="#">v0.7.0</a><span class="sep">|</span>
+    <a id="nav-v8" href="#">v0.8.0</a><span class="sep">|</span>
+    <a id="nav-v9" href="#">v0.9.0</a><span class="sep">|</span>
+    <span style="color:#0a66c2; font-weight:700;">v1.0.0 (new)</span>
+  </div>
+  <div id="header">
+    <h1>Clinical Robot Competition</h1>
+    <span class="subtitle">v1.0.0 GCP Trial Suite &mdash; 43-DOF humanoids &bull; 12-phase GCP workflow &bull;
+      IK needle contact &bull; composite scoring &bull; open-top photoreal suite</span>
+  </div>
+  <div id="station-selector">
+    <button class="station-btn active" data-station="overview">Overview</button>
+    <button class="station-btn" data-station="0">A</button>
+    <button class="station-btn" data-station="1">B</button>
+    <button class="station-btn" data-station="2">C</button>
+    <button class="station-btn" data-station="3">D</button>
+  </div>
+  <button class="panel-toggle" id="toggle-phases" title="Toggle GCP Phase Timeline">&#9776;</button>
+  <button class="panel-toggle" id="toggle-scoreboard" title="Toggle Scoreboard">&#9783;</button>
+  <div id="phase-panel">
+    <h3>GCP Phase Timeline</h3>
+    <div id="phase-lines"></div>
+    <div id="telemetry">
+      <h3>Live Telemetry</h3>
+      <div id="tel-rows"></div>
+    </div>
+  </div>
+  <div id="scoreboard-panel"><h2>GCP Scoreboard</h2><div id="score-entries"></div></div>
+  <div id="controls">
+    <button class="ctrl-btn" id="btn-play" title="Play/Pause (Space)">&#9654;</button>
+    <button class="ctrl-btn" id="btn-reset" title="Reset (R)">&#8634;</button>
+    <button class="ctrl-btn" id="btn-info" title="Info">&#9432;</button>
+    <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
+  </div>
+  <div id="legend">
+    <h3>Legend (v1.0.0)</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#f4f4f2;border:1px solid #999"></div>Doctor G1 &mdash; 43 DOF, white coat, syringe</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1f6fb2"></div>Nurse G1 &mdash; 43 DOF, scrub-blue coat, tablet</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e0a884"></div>Patients &mdash; 4 diverse human participants</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6b4f3a"></div>Human CRA &mdash; sponsor monitoring desk</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffd400;border:1px solid #b59500"></div>Sharps container / safety</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff2244"></div>Injection target (right deltoid)</div>
+    <div class="legend-item" style="margin-top:4px;font-style:italic;color:#8a99a6">Double-click anything to inspect it up close</div>
+  </div>
+  <div id="hint">Scroll/pinch zooms to cursor &bull; double-click/double-tap focuses any object &bull; drag rotates &bull; right-drag pans</div>
+  <div id="attribution">Unitree G1 Robots (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</div>
+</div>
+<div id="final-results">
+  <div id="results-card">
+    <h2>&#127942; Final GCP Results</h2>
+    <div class="sub">Composite = 0.30&times;Time + 0.25&times;Accuracy + 0.20&times;Protocol + 0.10&times;Sterility + 0.10&times;Dose + 0.05&times;Comfort</div>
+    <div id="results-rows"></div>
+    <button id="btn-results-close">Close Results</button>
+  </div>
+</div>
+<div id="info-modal">
+  <div id="info-content">
+    <h2>Clinical Robot Competition v1.0.0 &mdash; GCP Trial Suite</h2>
+    <p>Four autonomous stations compete to execute a complete, <strong>GCP-aligned intramuscular
+    injection visit</strong> on realistic human trial participants. Each station is staffed by two
+    <strong>Unitree G1 humanoid robots</strong> (43 DOF incl. Dex3-1 dexterous hands): a doctor G1
+    (white coat) and a nurse G1 (scrub-blue coat). A human Clinical Research Associate (CRA)
+    observes from the sponsor monitoring desk. The room is open-top (no ceiling) and every part
+    of it can be inspected: zoom is cursor-targeted down to 5&nbsp;cm, and double-clicking any
+    object glides the camera to it.</p>
+    <h3>12-Phase GCP Workflow (per station)</h3>
+    <ol>
+      <li><strong>Identity verification</strong> &mdash; nurse scans wristband (two identifiers)</li>
+      <li><strong>eConsent confirmation</strong> &mdash; nurse presents tablet, participant nods</li>
+      <li><strong>Baseline vitals</strong> &mdash; nurse captures ECG/SpO2/BP on live monitor</li>
+      <li><strong>Hand hygiene &amp; gloves</strong> &mdash; doctor performs hand rub</li>
+      <li><strong>Drug preparation</strong> &mdash; doctor draws 0.50 mL at the supply cart, barcode check</li>
+      <li><strong>Aseptic site prep</strong> &mdash; doctor swabs the right deltoid</li>
+      <li><strong>Landmark &amp; alignment</strong> &mdash; needle aligned to target (IK-corrected)</li>
+      <li><strong>Needle insertion</strong> &mdash; 90&deg; IM, tip meets the deltoid surface exactly</li>
+      <li><strong>Dose delivery</strong> &mdash; plunger depresses, 0.50 mL over slow push</li>
+      <li><strong>Withdraw &amp; safety</strong> &mdash; needle out, safety engaged</li>
+      <li><strong>Sharps disposal</strong> &mdash; syringe dropped in the yellow sharps container</li>
+      <li><strong>Observation &amp; eSource</strong> &mdash; nurse documents; AE surveillance</li>
+    </ol>
+    <h3>High-DOF Robots &amp; IK Needle Contact</h3>
+    <ul>
+      <li>43 DOF per G1: 2&times;7-DOF arms, 2&times;7-DOF Dex3-1 hands with articulated finger
+        segments that actually grip, 3-DOF waist, 2-DOF neck, 2&times;6-DOF legs with gait</li>
+      <li>Runtime inverse-kinematic tip correction drives the syringe needle tip onto the
+        deltoid target (and 6 mm deep during dose) with zero geometry interpenetration &mdash;
+        the v0.x object-overlap and needle-contact bugs are eliminated by construction</li>
+      <li>All props placed with verified clearances; coats are built into the torso shell
+        (no overlay z-fighting)</li>
+    </ul>
+    <h3>Composite GCP Scoring</h3>
+    <ul>
+      <li><strong>Time (30%)</strong> &mdash; total visit duration across all 12 phases</li>
+      <li><strong>Accuracy (25%)</strong> &mdash; recorded needle placement deviation (mm)</li>
+      <li><strong>Protocol adherence (20%)</strong> &mdash; deviations from the visit schedule</li>
+      <li><strong>Sterility (10%)</strong> &mdash; aseptic technique index</li>
+      <li><strong>Dose precision (10%)</strong> &mdash; delivered vs 0.500 mL target</li>
+      <li><strong>Participant comfort (5%)</strong> &mdash; motion-jerk proxy</li>
+    </ul>
+    <p>One station experiences a seeded <strong>Grade 1 adverse event</strong> (transient
+    vasovagal episode) during observation: its ECG dips, the nurse responds, and the extended
+    observation costs time &mdash; demonstrating autonomous AE surveillance and response.</p>
+    <h3>PPO Policies</h3>
+    <p>All stations run the same PPO architecture (MLP 64&times;64, tanh) with unique seeds
+    (42, 137, 256, 512). Reward R = &minus;0.3&times;time + 0.5/(1+dist) + 0.2/(1+jerk).
+    Same policy, different state &rarr; distinct speed/accuracy/protocol trade-offs.</p>
+    <h3>Why This Matters for Clinical Trials</h3>
+    <p>Parallel autonomous stations executing the full GCP visit &mdash; identity, consent,
+    vitals, dosing, AE surveillance, and eSource documentation &mdash; show how physical-AI
+    sites could compress oncology trial timelines versus sequential human-staffed visits,
+    while keeping a human CRA in the monitoring loop.</p>
+    <p style="margin-top:8px;font-size:10px;color:#9fb0bd">Unitree G1 (unitreerobotics) | Inspired by mjlab (mujocolab/mjlab)</p>
+    <button class="close-btn" onclick="document.getElementById('info-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+<input type="file" id="file-input" accept=".json"/>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ================= NAV BANNER ================= */
+(function() {
+  const base = window.location.pathname.replace(/\/v10\/?$/, '').replace(/\/+$/, '');
+  document.getElementById('nav-v1').href = base + '/';
+  document.getElementById('nav-v5').href = base + '/v5/';
+  document.getElementById('nav-v6').href = base + '/v6/';
+  document.getElementById('nav-v7').href = base + '/v7/';
+  document.getElementById('nav-v8').href = base + '/v8/';
+  document.getElementById('nav-v9').href = base + '/v9/';
+})();
+
+/* ================= CONSTANTS ================= */
+const ROOM_W = 18, ROOM_D = 18, WALL_H = 3.4;       /* open-top: no ceiling */
+const GRID = 6.0;                                    /* station pitch (2x2 grid) */
+const DEG = Math.PI / 180;
+const ROBOT_ROOT_Y = 0.62;                           /* pelvis height -> soles exactly on floor */
+const PATIENT_SEAT_Y = 0.565;                        /* pelvis center when seated on 0.495 cushion */
+
+const STATION_CONFIGS = [
+  { name:'A', seed:42,  speed:1.00, gx:-1, gz:-1, color:'#c9a227',
+    patient:{ skin:0xe8b48e, hair:0x4a3220, gown:0x79c1a4, hairStyle:'short' } },
+  { name:'B', seed:137, speed:0.93, gx: 1, gz:-1, color:'#0a66c2',
+    patient:{ skin:0x8c5a3c, hair:0x16100a, gown:0x9ec3e8, hairStyle:'curly' } },
+  { name:'C', seed:256, speed:1.07, gx:-1, gz: 1, color:'#c2452d',
+    patient:{ skin:0xd9a06f, hair:0x2b1d10, gown:0xc3b2e0, hairStyle:'long' } },
+  { name:'D', seed:512, speed:0.97, gx: 1, gz: 1, color:'#6d4fc2',
+    patient:{ skin:0xf0c8a8, hair:0x9a9a98, gown:0xf0c9a0, hairStyle:'grey' } },
+];
+
+const PHASES = [
+  { name:'identity', dur:1.2, label:'Identity verification (2-ID scan)', actor:'N' },
+  { name:'consent',  dur:1.2, label:'eConsent confirmation',             actor:'N' },
+  { name:'vitals',   dur:1.4, label:'Baseline vitals capture',           actor:'N' },
+  { name:'hygiene',  dur:1.2, label:'Hand hygiene & gloves',             actor:'D' },
+  { name:'drugprep', dur:2.2, label:'Drug prep & barcode check',         actor:'D' },
+  { name:'siteprep', dur:1.6, label:'Aseptic site prep (deltoid)',       actor:'D' },
+  { name:'position', dur:1.4, label:'Landmark & needle alignment',       actor:'D' },
+  { name:'inject',   dur:1.2, label:'Needle insertion (90° IM)',    actor:'D' },
+  { name:'dose',     dur:2.4, label:'Dose delivery 0.50 mL',             actor:'D' },
+  { name:'withdraw', dur:1.0, label:'Withdraw & safety engage',          actor:'D' },
+  { name:'sharps',   dur:1.4, label:'Sharps disposal',                   actor:'D' },
+  { name:'monitor',  dur:2.3, label:'Observation & eSource docs',        actor:'N' },
+];
+const PH = {}; PHASES.forEach((p, i) => PH[p.name] = i);
+
+/* ================= SEEDED RNG ================= */
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function ppoJitter(rng, base, speed) {
+  const j = (rng() - 0.5) * 0.3 * base;
+  return Math.max(0.3, (base + j) / speed);
+}
+/* Per-station seeded metric draws — order matters, keep stable */
+function drawMetrics(cfg) {
+  const rng = mulberry32(cfg.seed);
+  const times = PHASES.map(p => ppoJitter(rng, p.dur, cfg.speed));
+  return {
+    times,
+    needleMm:  0.4 + rng() * 2.2,                 /* recorded placement deviation, mm */
+    protocol:  96 + rng() * 4,                    /* protocol adherence % */
+    sterility: 97 + rng() * 3,                    /* aseptic technique index */
+    doseML:    0.5 + (rng() - 0.5) * 0.012,       /* delivered dose, target 0.500 mL */
+    comfort:   88 + rng() * 12,                   /* jerk-derived comfort index */
+    docLatency: 2 + rng() * 6,                    /* eSource entry latency, s */
+    aeDraw:    rng(),                             /* AE assignment draw (max gets the AE) */
+  };
+}
+
+/* ================= RENDERER / SCENE ================= */
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#cfdbe6');
+/* No fog at all — close zoom stays crisp anywhere in the room */
+
+/* PBR image-based lighting for realistic materials */
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+/* ================= CAMERA / CONTROLS ================= */
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.02, 160);
+camera.position.set(0, 13.5, 17.5);
+const ctrls = new OrbitControls(camera, canvas);
+ctrls.enableDamping = true;
+ctrls.dampingFactor = 0.08;
+ctrls.target.set(0, 0.9, 0);
+ctrls.minDistance = 0.05;          /* zoom up close to any part of the room */
+ctrls.maxDistance = 48;
+ctrls.maxPolarAngle = Math.PI * 0.495;
+ctrls.zoomSpeed = 1.15;
+ctrls.rotateSpeed = 0.7;
+ctrls.zoomToCursor = true;         /* wheel/pinch zooms toward the pointer */
+
+/* ================= LIGHTS ================= */
+scene.add(new THREE.AmbientLight(0xffffff, 0.32));
+scene.add(new THREE.HemisphereLight(0xbed5ec, 0x6f7d72, 0.55));
+const sun = new THREE.DirectionalLight(0xfff4e4, 2.4);   /* daylight through the open top */
+sun.position.set(9, 17, 7);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
+sun.shadow.camera.top = 12; sun.shadow.camera.bottom = -12;
+sun.shadow.camera.near = 2; sun.shadow.camera.far = 40;
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+
+/* ================= CANVAS TEXTURE HELPERS ================= */
+function makeCanvas(w, h, draw) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+const floorTex = makeCanvas(1024, 1024, (g, w, h) => {
+  g.fillStyle = '#cdd6dc'; g.fillRect(0, 0, w, h);
+  const tiles = 4, ts = w / tiles;
+  for (let i = 0; i < tiles; i++) for (let j = 0; j < tiles; j++) {
+    const v = 198 + ((i * 7 + j * 13) % 5) * 5;
+    g.fillStyle = `rgb(${v},${v + 5},${v + 10})`;
+    g.fillRect(i * ts + 2, j * ts + 2, ts - 4, ts - 4);
+    for (let s = 0; s < 90; s++) {
+      const a = 0.05 + Math.random() * 0.07;
+      g.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(70,90,110,${a})`;
+      g.fillRect(i * ts + Math.random() * ts, j * ts + Math.random() * ts, 2.4, 2.4);
+    }
+  }
+  g.strokeStyle = 'rgba(110,125,140,0.55)'; g.lineWidth = 3;
+  for (let i = 0; i <= tiles; i++) {
+    g.beginPath(); g.moveTo(i * ts, 0); g.lineTo(i * ts, h); g.stroke();
+    g.beginPath(); g.moveTo(0, i * ts); g.lineTo(w, i * ts); g.stroke();
+  }
+});
+floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+floorTex.repeat.set(10, 10);   /* -> 0.9 m vinyl tiles */
+
+const wallTex = makeCanvas(256, 512, (g, w, h) => {
+  g.fillStyle = '#e9ece9'; g.fillRect(0, 0, w, h);             /* upper paint */
+  for (let s = 0; s < 500; s++) {
+    g.fillStyle = `rgba(140,150,150,${0.03 + Math.random() * 0.04})`;
+    g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+  }
+  const wainTop = h * (1 - 1.05 / WALL_H);                     /* 1.05 m wainscot */
+  g.fillStyle = '#cfd8d4'; g.fillRect(0, wainTop, w, h - wainTop);
+  g.fillStyle = '#aebbb5'; g.fillRect(0, wainTop, w, 6);       /* chair rail */
+  g.fillStyle = '#7e8a87'; g.fillRect(0, h - 14, w, 14);       /* baseboard */
+});
+wallTex.wrapS = THREE.RepeatWrapping;
+
+function posterTex(lines, accent) {
+  return makeCanvas(512, 384, (g, w, h) => {
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
+    g.fillStyle = accent; g.fillRect(0, 0, w, 64);
+    g.fillStyle = '#ffffff'; g.font = 'bold 34px sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(lines[0], w / 2, 33);
+    g.fillStyle = '#2b3a47'; g.font = '24px sans-serif';
+    for (let i = 1; i < lines.length; i++) g.fillText(lines[i], w / 2, 70 + i * 44);
+    g.strokeStyle = '#b9c4cd'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+  });
+}
+
+function makeLabelSprite(text, col) {
+  const tex = makeCanvas(256, 64, (g, w, h) => {
+    g.fillStyle = col || '#0a66c2';
+    g.font = 'bold 34px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, w / 2, h / 2);
+  });
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true }));
+  sp.scale.set(1.0, 0.25, 1);
+  return sp;
+}
+
+function floorLetterTex(letter, col) {
+  return makeCanvas(256, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = col; g.globalAlpha = 0.85;
+    g.font = 'bold 150px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(letter, w / 2, h / 2 - 14);
+    g.font = 'bold 30px sans-serif';
+    g.fillText('STATION', w / 2, h - 38);
+  });
+}
+
+/* ================= MATERIALS ================= */
+const M = {
+  floor:   new THREE.MeshStandardMaterial({ map:floorTex, roughness:0.38, metalness:0.05 }),
+  wall:    new THREE.MeshStandardMaterial({ map:wallTex, roughness:0.85 }),
+  wallCap: new THREE.MeshStandardMaterial({ color:0xb9c4c0, roughness:0.7 }),
+  glass:   new THREE.MeshStandardMaterial({ color:0xbcd6e8, transparent:true, opacity:0.22,
+            roughness:0.06, metalness:0.55, envMapIntensity:1.6, side:THREE.DoubleSide }),
+  hallway: new THREE.MeshStandardMaterial({ color:0x33414d, roughness:0.9 }),
+  steel:   new THREE.MeshStandardMaterial({ color:0xb9c0c8, roughness:0.22, metalness:0.85 }),
+  steelDark: new THREE.MeshStandardMaterial({ color:0x6a727c, roughness:0.3, metalness:0.8 }),
+  plasticWhite: new THREE.MeshStandardMaterial({ color:0xf2f4f4, roughness:0.45 }),
+  plasticGrey:  new THREE.MeshStandardMaterial({ color:0x9aa4ab, roughness:0.5 }),
+  /* G1 robot */
+  g1body:  new THREE.MeshStandardMaterial({ color:0x23262b, roughness:0.32, metalness:0.25 }),
+  g1panel: new THREE.MeshStandardMaterial({ color:0x34383f, roughness:0.4, metalness:0.2 }),
+  g1joint: new THREE.MeshStandardMaterial({ color:0x9aa2ad, roughness:0.2, metalness:0.9 }),
+  g1visor: new THREE.MeshPhysicalMaterial({ color:0x07080c, roughness:0.08, metalness:0.4,
+            clearcoat:1.0, clearcoatRoughness:0.08 }),
+  coatWhite: new THREE.MeshStandardMaterial({ color:0xf4f4f1, roughness:0.6, metalness:0.02 }),
+  coatBlue:  new THREE.MeshStandardMaterial({ color:0x1f6fb2, roughness:0.6, metalness:0.02 }),
+  glove:   new THREE.MeshStandardMaterial({ color:0x8fb6d9, roughness:0.5 }),
+  redCross:new THREE.MeshStandardMaterial({ color:0xcc2222, roughness:0.5 }),
+  badge:   new THREE.MeshStandardMaterial({ color:0xe8c34a, roughness:0.3, metalness:0.6 }),
+  led:     new THREE.MeshStandardMaterial({ color:0x18e0ff, emissive:0x18c0ff, emissiveIntensity:1.4 }),
+  /* equipment */
+  chairFrame: new THREE.MeshStandardMaterial({ color:0x8e9aa5, roughness:0.3, metalness:0.7 }),
+  cushion: new THREE.MeshStandardMaterial({ color:0x3c6fa8, roughness:0.72 }),
+  cushion2:new THREE.MeshStandardMaterial({ color:0x2d5a8c, roughness:0.75 }),
+  vialGlass: new THREE.MeshStandardMaterial({ color:0xd8ecf5, transparent:true, opacity:0.62, roughness:0.1 }),
+  ivPole:  new THREE.MeshStandardMaterial({ color:0xc4cad1, roughness:0.2, metalness:0.9 }),
+  ivBag:   new THREE.MeshStandardMaterial({ color:0xcfe6f7, transparent:true, opacity:0.55, roughness:0.25 }),
+  pump:    new THREE.MeshStandardMaterial({ color:0xe8ebed, roughness:0.4 }),
+  monitorBody: new THREE.MeshStandardMaterial({ color:0x46505a, roughness:0.42 }),
+  cart:    new THREE.MeshStandardMaterial({ color:0xdfe4e8, roughness:0.4, metalness:0.15 }),
+  cartTop: new THREE.MeshStandardMaterial({ color:0xc8cfd6, roughness:0.25, metalness:0.6 }),
+  drawer:  new THREE.MeshStandardMaterial({ color:0xb3bcc4, roughness:0.45 }),
+  sharps:  new THREE.MeshStandardMaterial({ color:0xffd400, roughness:0.45 }),
+  sharpsLid: new THREE.MeshStandardMaterial({ color:0xcc4422, roughness:0.5 }),
+  bin:     new THREE.MeshStandardMaterial({ color:0x9c3030, roughness:0.55 }),
+  screenFrame: new THREE.MeshStandardMaterial({ color:0x2b3138, roughness:0.4 }),
+  curtainA: new THREE.MeshStandardMaterial({ color:0xbfd9cf, roughness:0.85, side:THREE.DoubleSide }),
+  syringe: new THREE.MeshStandardMaterial({ color:0xeef1f3, roughness:0.12, metalness:0.1, transparent:true, opacity:0.85 }),
+  plunger: new THREE.MeshStandardMaterial({ color:0x5a87b0, roughness:0.35 }),
+  needle:  new THREE.MeshStandardMaterial({ color:0xdfe5ea, roughness:0.05, metalness:1.0 }),
+  swab:    new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.8 }),
+  tabletBody: new THREE.MeshStandardMaterial({ color:0x222a31, roughness:0.3 }),
+  tabletScreen: new THREE.MeshStandardMaterial({ color:0xd7e8f7, emissive:0x9cc4e8, emissiveIntensity:0.5 }),
+  scanner: new THREE.MeshStandardMaterial({ color:0x39424b, roughness:0.4 }),
+  scanLed: new THREE.MeshStandardMaterial({ color:0xff3030, emissive:0xff3030, emissiveIntensity:1.2 }),
+  target:  new THREE.MeshStandardMaterial({ color:0xff2244, emissive:0xff2244, emissiveIntensity:0.5 }),
+  wood:    new THREE.MeshStandardMaterial({ color:0x9a7048, roughness:0.6 }),
+  woodDark:new THREE.MeshStandardMaterial({ color:0x6b4f3a, roughness:0.65 }),
+  paper:   new THREE.MeshStandardMaterial({ color:0xfafaf5, roughness:0.85 }),
+  examLight: new THREE.MeshStandardMaterial({ color:0xf5f7f8, roughness:0.3 }),
+  examGlow:  new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xfff6df, emissiveIntensity:1.6 }),
+};
+
+/* ================= GEOMETRY HELPERS ================= */
+const gBox = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const gCyl = (rT, rB, h, s) => new THREE.CylinderGeometry(rT, rB, h, s || 14);
+const gSph = (r, w, h, ps, pl, ts, tl) =>
+  new THREE.SphereGeometry(r, w || 14, h || 12, ps ?? 0, pl ?? Math.PI * 2, ts ?? 0, tl ?? Math.PI);
+const gCap = (r, l, cs, rs) => new THREE.CapsuleGeometry(r, l, cs || 4, rs || 10);
+const gTor = (r, t, rs, ts) => new THREE.TorusGeometry(r, t, rs || 8, ts || 24);
+const gPlane = (w, h) => new THREE.PlaneGeometry(w, h);
+
+function mk(geo, mat, pos, parent) {
+  const m = new THREE.Mesh(geo, mat);
+  if (pos) m.position.set(pos[0], pos[1], pos[2]);
+  m.castShadow = true; m.receiveShadow = true;
+  (parent || scene).add(m);
+  return m;
+}
+function grp(parent, x, y, z) {
+  const g = new THREE.Group();
+  if (x !== undefined) g.position.set(x, y, z);
+  (parent || scene).add(g);
+  return g;
+}
+/* yaw so an object's local -Z (its front) faces world point (tx,tz) from (fx,fz) */
+function yawToFace(fx, fz, tx, tz) { return Math.atan2(-(tx - fx), -(tz - fz)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpAngle(a, b, t) {
+  let d = b - a;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return a + d * t;
+}
+function ssq(t) { t = Math.max(0, Math.min(1, t)); return t * t * t * (t * (t * 6 - 15) + 10); }
+function easeIO(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+function bump(t) { return Math.sin(Math.PI * Math.max(0, Math.min(1, t))); }
+
+/* ================= ROOM (open-top, photoreal) ================= */
+function buildRoom() {
+  const fl = mk(gBox(ROOM_W, 0.12, ROOM_D), M.floor, [0, -0.06, 0]);
+  fl.castShadow = false;
+
+  const hw = ROOM_W / 2, hd = ROOM_D / 2;
+  function wall(w, x, z, ry) {
+    const mat = M.wall.clone();
+    mat.map = wallTex.clone();
+    mat.map.repeat.set(w / 3, 1);
+    mat.map.wrapS = THREE.RepeatWrapping;
+    mat.map.needsUpdate = true;
+    const m = mk(gBox(w, WALL_H, 0.16), mat, [x, WALL_H / 2, z]);
+    m.rotation.y = ry; m.castShadow = false;
+    /* top cap rail (since there is no ceiling) */
+    const cap = mk(gBox(w, 0.06, 0.22), M.wallCap, [x, WALL_H + 0.03, z]);
+    cap.rotation.y = ry; cap.castShadow = false;
+    return m;
+  }
+  wall(ROOM_W, 0, -hd, 0);
+  wall(ROOM_W, 0, hd, 0);
+  wall(ROOM_D, -hw, 0, Math.PI / 2);
+  wall(ROOM_D, hw, 0, Math.PI / 2);
+
+  /* Observation window on the back (-Z) wall with hallway behind */
+  mk(gBox(6.4, 1.1, 0.06), M.hallway, [-2.0, 1.75, -hd - 0.30]).castShadow = false;
+  const win = mk(gBox(6.0, 0.95, 0.05), M.glass, [-2.0, 1.75, -hd + 0.10]);
+  win.castShadow = false;
+  mk(gBox(6.2, 0.08, 0.10), M.steelDark, [-2.0, 2.27, -hd + 0.10]).castShadow = false;
+  mk(gBox(6.2, 0.08, 0.10), M.steelDark, [-2.0, 1.23, -hd + 0.10]).castShadow = false;
+  for (let i = 0; i <= 4; i++)
+    mk(gBox(0.07, 1.1, 0.09), M.steelDark, [-2.0 - 3.0 + i * 1.5, 1.75, -hd + 0.10]).castShadow = false;
+
+  /* Door on the +X wall */
+  const door = grp(scene, hw - 0.10, 0, 4.6);
+  door.rotation.y = Math.PI / 2;
+  mk(gBox(1.16, 2.24, 0.08), M.steelDark, [0, 1.12, 0], door);
+  mk(gBox(1.02, 2.12, 0.07), M.wood, [0, 1.06, 0], door);
+  mk(gBox(0.26, 0.55, 0.078), M.glass, [0, 1.55, 0], door);
+  mk(gCyl(0.016, 0.016, 0.16, 10), M.steel, [-0.40, 1.02, -0.07], door).rotation.x = Math.PI / 2;
+  mk(gBox(0.9, 0.22, 0.075), M.steel, [0, 0.18, -0.005], door);
+
+  /* Wall posters / signage */
+  function poster(tex, w, h, x, y, z, ry) {
+    const p = mk(gPlane(w, h), new THREE.MeshStandardMaterial({ map:tex, roughness:0.8 }), [x, y, z]);
+    p.rotation.y = ry; p.castShadow = false;
+    return p;
+  }
+  poster(posterTex(['ONCOLOGY CLINICAL TRIALS UNIT', 'Autonomous Robotics Wing',
+    'Protocol ONC-2026-IM-001', 'GCP / ICH E6(R3) Compliant'], '#0a66c2'),
+    4.4, 3.3 * 0.75, 4.4, 2.15, -hd + 0.09, 0);
+  poster(posterTex(['5 MOMENTS OF HAND HYGIENE', 'Before aseptic procedures', 'After body fluid exposure',
+    'WHO Guideline'], '#0a8a4a'), 2.2, 1.65, -hw + 0.09, 2.0, -3.4, Math.PI / 2);
+  poster(posterTex(['ADVERSE EVENT REPORTING', 'Grade 1-2: observe & document', 'Grade 3+: escalate to PI',
+    '24h sponsor notification'], '#c2452d'), 2.2, 1.65, -hw + 0.09, 2.0, 1.2, Math.PI / 2);
+  poster(posterTex(['IM INJECTION PROTOCOL', 'Right deltoid • 90° insertion', '0.50 mL study drug',
+    'Slow push ≥ 10 s/mL'], '#6d4fc2'), 2.2, 1.65, hw - 0.09, 2.0, -2.6, -Math.PI / 2);
+}
+
+/* ================= LIVE ECG MONITOR ================= */
+function buildVitalsMonitor(parent) {
+  const g = grp(parent);
+  /* rolling stand */
+  mk(gCyl(0.024, 0.024, 1.05, 12), M.steel, [0, 0.55, 0], g);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const leg = mk(gBox(0.30, 0.03, 0.045), M.steelDark, [Math.cos(a) * 0.15, 0.03, Math.sin(a) * 0.15], g);
+    leg.rotation.y = -a;
+    mk(gSph(0.026, 8, 8), M.steelDark, [Math.cos(a) * 0.28, 0.026, Math.sin(a) * 0.28], g);
+  }
+  /* display */
+  const c = document.createElement('canvas'); c.width = 256; c.height = 144;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  mk(gBox(0.46, 0.32, 0.06), M.monitorBody, [0, 1.22, 0], g);
+  const scr = mk(gPlane(0.42, 0.28), new THREE.MeshStandardMaterial({
+    map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.85, roughness:0.3 }), [0, 1.22, -0.034], g);
+  scr.rotation.y = Math.PI; scr.castShadow = false;
+  mk(gBox(0.10, 0.05, 0.05), M.plasticGrey, [0.16, 1.02, 0], g);
+  g.userData.ecg = { canvas:c, ctx:c.getContext('2d'), tex, t:0 };
+  return g;
+}
+function drawECG(ecg, t, hr, spo2, alert) {
+  const g = ecg.ctx, w = 256, h = 144;
+  g.fillStyle = '#04130a'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = 'rgba(40,120,70,0.35)'; g.lineWidth = 1;
+  for (let x = 0; x < w; x += 16) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  for (let y = 0; y < h; y += 16) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  /* ECG trace */
+  g.strokeStyle = alert ? '#ffcc33' : '#33ff77'; g.lineWidth = 2; g.beginPath();
+  const beat = hr / 60;
+  for (let x = 0; x < w; x++) {
+    const tt = (t * 1.6 + x / w * 2.2) * beat;
+    const ph = tt - Math.floor(tt);
+    let v = 0;
+    if (ph < 0.08) v = Math.sin(ph / 0.08 * Math.PI) * 0.16;             /* P */
+    else if (ph > 0.16 && ph < 0.20) v = -(ph - 0.16) / 0.04 * 0.22;     /* Q */
+    else if (ph >= 0.20 && ph < 0.26) v = -0.22 + (ph - 0.20) / 0.06 * 1.32; /* R */
+    else if (ph >= 0.26 && ph < 0.31) v = 1.10 - (ph - 0.26) / 0.05 * 1.36;  /* S */
+    else if (ph > 0.42 && ph < 0.58) v = Math.sin((ph - 0.42) / 0.16 * Math.PI) * 0.30; /* T */
+    const y = 62 - v * 34;
+    if (x === 0) g.moveTo(x, y); else g.lineTo(x, y);
+  }
+  g.stroke();
+  g.font = 'bold 22px monospace'; g.textAlign = 'right';
+  g.fillStyle = alert ? '#ffcc33' : '#33ff77';
+  g.fillText(String(Math.round(hr)), w - 10, 28);
+  g.font = '11px monospace'; g.fillText('HR bpm', w - 10, 41);
+  g.fillStyle = '#3ec8ff';
+  g.font = 'bold 17px monospace'; g.fillText(spo2.toFixed(0) + '%', w - 10, 112);
+  g.font = '10px monospace'; g.fillText('SpO2', w - 10, 124);
+  g.fillStyle = '#ff9b3e'; g.font = 'bold 14px monospace';
+  g.fillText('118/76', 64, 112); g.font = '10px monospace'; g.fillText('NIBP', 60, 124);
+  if (alert) { g.fillStyle = '#ffcc33'; g.font = 'bold 12px monospace'; g.textAlign = 'left';
+    g.fillText('⚠ AE GRADE 1', 8, 18); }
+  ecg.tex.needsUpdate = true;
+}
+
+/* ================= STATION PROPS ================= */
+function buildChair(parent) {
+  const g = grp(parent);
+  /* pedestal column + four floor pads with vertical supports */
+  mk(gCyl(0.05, 0.07, 0.36, 14), M.chairFrame, [0, 0.20, 0.05], g);
+  [[0.22, -0.16], [-0.22, -0.16], [0.22, 0.26], [-0.22, 0.26]].forEach(([x, z]) => {
+    mk(gBox(0.09, 0.035, 0.09), M.chairFrame, [x, 0.02, z], g);
+    mk(gCyl(0.022, 0.022, 0.38, 8), M.chairFrame, [x, 0.225, z], g);
+  });
+  /* seat */
+  mk(gBox(0.54, 0.07, 0.50), M.cushion, [0, 0.46, 0.05], g);
+  mk(gBox(0.55, 0.025, 0.51), M.chairFrame, [0, 0.41, 0.05], g);
+  /* reclined backrest */
+  const back = grp(g, 0, 0.50, 0.285);
+  back.rotation.x = 0.17;
+  mk(gBox(0.54, 0.68, 0.09), M.cushion2, [0, 0.32, 0.02], back);
+  mk(gBox(0.30, 0.12, 0.10), M.cushion, [0, 0.62, -0.01], back);   /* headrest pillow */
+  /* armrests */
+  [-1, 1].forEach(s => {
+    mk(gBox(0.10, 0.05, 0.42), M.cushion2, [s * 0.315, 0.645, -0.01], g);
+    mk(gBox(0.035, 0.16, 0.035), M.chairFrame, [s * 0.315, 0.54, -0.16], g);
+    mk(gBox(0.035, 0.16, 0.035), M.chairFrame, [s * 0.315, 0.54, 0.13], g);
+  });
+  return g;
+}
+
+function buildIVStand(parent) {
+  const g = grp(parent);
+  mk(gCyl(0.017, 0.017, 1.85, 12), M.ivPole, [0, 0.93, 0], g);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const leg = mk(gBox(0.26, 0.025, 0.04), M.steelDark, [Math.cos(a) * 0.13, 0.025, Math.sin(a) * 0.13], g);
+    leg.rotation.y = -a;
+    mk(gSph(0.024, 8, 8), M.steelDark, [Math.cos(a) * 0.24, 0.024, Math.sin(a) * 0.24], g);
+  }
+  /* dual hooks + bag */
+  [-1, 1].forEach(s => {
+    const hook = mk(gTor(0.03, 0.006, 6, 14), M.ivPole, [s * 0.09, 1.86, 0], g);
+    hook.rotation.x = Math.PI / 2;
+  });
+  mk(gBox(0.13, 0.20, 0.045), M.ivBag, [-0.09, 1.72, 0], g);
+  mk(gBox(0.10, 0.025, 0.02), M.plasticWhite, [-0.09, 1.83, 0], g);
+  /* infusion pump on pole */
+  mk(gBox(0.22, 0.26, 0.16), M.pump, [0.02, 1.18, 0.02], g);
+  mk(gPlane(0.15, 0.10), new THREE.MeshStandardMaterial({ color:0x9fe0b8, emissive:0x57c184,
+    emissiveIntensity:0.7 }), [0.02, 1.22, -0.062], g).castShadow = false;
+  /* tubing down to bag */
+  mk(gCyl(0.004, 0.004, 0.42, 6), M.plasticWhite, [-0.09, 1.50, 0.01], g);
+  return g;
+}
+
+function buildSupplyCart(parent) {
+  const g = grp(parent);
+  mk(gBox(0.46, 0.78, 0.40), M.cart, [0, 0.43, 0], g);
+  mk(gBox(0.48, 0.035, 0.42), M.cartTop, [0, 0.84, 0], g);
+  for (let i = 0; i < 3; i++) {
+    mk(gBox(0.40, 0.16, 0.015), M.drawer, [0, 0.24 + i * 0.21, -0.205], g);
+    mk(gBox(0.14, 0.022, 0.02), M.steel, [0, 0.27 + i * 0.21, -0.215], g);
+  }
+  [[-0.19, -0.16], [0.19, -0.16], [-0.19, 0.16], [0.19, 0.16]].forEach(([x, z]) =>
+    mk(gSph(0.032, 8, 8), M.steelDark, [x, 0.034, z], g));
+  /* tray items: vial rack, vials, gloves box, swab packets, prep tray + spare syringe */
+  mk(gBox(0.13, 0.05, 0.09), M.plasticGrey, [-0.13, 0.885, 0.10], g);
+  for (let i = 0; i < 3; i++) {
+    mk(gCyl(0.016, 0.016, 0.055, 10), M.vialGlass, [-0.16 + i * 0.045, 0.91, 0.10], g);
+    mk(gCyl(0.017, 0.017, 0.012, 10), M.plunger, [-0.16 + i * 0.045, 0.944, 0.10], g);
+  }
+  mk(gBox(0.16, 0.07, 0.10), new THREE.MeshStandardMaterial({ color:0x7ec3e8, roughness:0.6 }), [0.12, 0.895, 0.11], g);
+  mk(gBox(0.085, 0.012, 0.06), M.swab, [0.02, 0.866, -0.10], g);
+  mk(gBox(0.085, 0.012, 0.06), M.swab, [-0.10, 0.866, -0.09], g);
+  const prepTray = mk(gBox(0.20, 0.018, 0.13), M.cartTop, [0.13, 0.868, -0.08], g);
+  prepTray.rotation.y = 0.2;
+  /* barcode scanner dock */
+  mk(gBox(0.06, 0.05, 0.06), M.scanner, [0.19, 0.885, 0.02], g);
+  return g;
+}
+
+function buildSharps(parent) {
+  const g = grp(parent);
+  mk(gBox(0.17, 0.22, 0.15), M.sharps, [0, 0.11, 0], g);
+  mk(gBox(0.175, 0.035, 0.155), M.sharpsLid, [0, 0.245, 0], g);
+  mk(gBox(0.09, 0.012, 0.07), new THREE.MeshStandardMaterial({ color:0x222222 }), [0, 0.266, 0], g);
+  const led = mk(gSph(0.012, 8, 8), M.scanLed.clone(), [0.07, 0.25, -0.075], g);
+  led.castShadow = false;
+  g.userData.led = led;
+  return g;
+}
+
+function buildSanitizer(parent) {
+  const g = grp(parent);
+  mk(gCyl(0.015, 0.015, 1.05, 10), M.steel, [0, 0.53, 0], g);
+  mk(gCyl(0.11, 0.13, 0.025, 12), M.steelDark, [0, 0.012, 0], g);
+  mk(gBox(0.10, 0.16, 0.07), M.plasticWhite, [0, 1.10, 0], g);
+  mk(gBox(0.08, 0.025, 0.05), M.plasticGrey, [0, 1.20, -0.015], g);
+  return g;
+}
+
+function buildPrivacyScreen(parent) {
+  const g = grp(parent);
+  for (let i = 0; i < 3; i++) {
+    const p = grp(g, (i - 1) * 0.62, 0, Math.abs(i - 1) * -0.16);
+    p.rotation.y = (i - 1) * 0.5;
+    mk(gBox(0.60, 1.55, 0.025), M.curtainA, [0, 0.92, 0], p);
+    mk(gBox(0.64, 0.04, 0.045), M.steelDark, [0, 0.13, 0], p);
+    mk(gBox(0.64, 0.03, 0.04), M.steelDark, [0, 1.72, 0], p);
+    mk(gSph(0.02, 8, 8), M.steelDark, [-0.28, 0.04, 0], p);
+    mk(gSph(0.02, 8, 8), M.steelDark, [0.28, 0.04, 0], p);
+  }
+  return g;
+}
+
+function buildExamLight(parent, pos, targetLocal) {
+  const g = grp(parent, pos[0], 0, pos[2]);
+  mk(gCyl(0.13, 0.16, 0.04, 14), M.steelDark, [0, 0.02, 0], g);
+  mk(gCyl(0.025, 0.025, 1.9, 12), M.steel, [0, 0.97, 0], g);
+  /* articulated boom: local +Z extends toward the target */
+  const dx = targetLocal[0] - pos[0], dz = targetLocal[2] - pos[2];
+  const boom = grp(g, 0, 1.88, 0);
+  boom.rotation.y = Math.atan2(dx, dz);          /* rotates local +Z onto (dx,dz) */
+  const horiz = Math.hypot(dx, dz);
+  const armLen = Math.min(0.85, horiz * 0.55);
+  const arm = mk(gCyl(0.018, 0.018, armLen, 10), M.steel, [0, -0.04, armLen / 2], boom);
+  arm.rotation.x = Math.PI / 2;
+  const headG = grp(boom, 0, -0.04, armLen);
+  mk(gCyl(0.015, 0.015, 0.30, 8), M.steel, [0, -0.14, 0.04], headG).rotation.x = 0.35;
+  const lamp = grp(headG, 0, -0.29, 0.12);
+  lamp.rotation.x = -0.62;                       /* dish aimed down-forward at the deltoid */
+  mk(gCyl(0.14, 0.17, 0.07, 18), M.examLight, [0, 0, 0], lamp);
+  const glow = mk(gCyl(0.125, 0.125, 0.012, 18), M.examGlow, [0, -0.036, 0], lamp);
+  glow.castShadow = false;
+  /* actual spotlight aimed at the target point */
+  const spot = new THREE.SpotLight(0xfff2dd, 26, 6.5, 0.5, 0.55, 2);
+  lamp.add(spot);
+  spot.position.set(0, -0.05, 0);
+  const tgt = new THREE.Object3D();
+  g.add(tgt); tgt.position.set(dx, targetLocal[1], dz);
+  spot.target = tgt;
+  return g;
+}
+
+function buildWasteBin(parent) {
+  const g = grp(parent);
+  mk(gCyl(0.13, 0.11, 0.42, 14), M.bin, [0, 0.21, 0], g);
+  mk(gCyl(0.135, 0.135, 0.03, 14), M.steelDark, [0, 0.435, 0], g);
+  return g;
+}
+
+/* ================= HAND TOOLS ================= */
+function buildSyringe(parent) {
+  /* barrel along Y, needle at -Y; dart grip: -Y of the hand = arm direction */
+  const g = grp(parent);
+  mk(gCyl(0.0135, 0.0135, 0.135, 12), M.syringe, [0, 0, 0], g);
+  const fluid = mk(gCyl(0.0105, 0.0105, 0.10, 10), new THREE.MeshStandardMaterial({
+    color:0xbfe3ff, transparent:true, opacity:0.7 }), [0, -0.01, 0], g);
+  const plunger = mk(gCyl(0.0085, 0.0085, 0.085, 8), M.plunger, [0, 0.10, 0], g);
+  mk(gCyl(0.021, 0.021, 0.012, 10), M.plunger, [0, 0.145, 0], g).name = 'plungerTop';
+  mk(gCyl(0.020, 0.020, 0.008, 10), M.syringe, [0, 0.068, 0], g);   /* flange */
+  mk(gCyl(0.009, 0.005, 0.022, 10), M.syringe, [0, -0.078, 0], g);  /* luer hub */
+  const needle = mk(gCyl(0.0016, 0.0009, 0.038, 8), M.needle, [0, -0.108, 0], g);
+  needle.castShadow = false;
+  const tip = new THREE.Object3D(); tip.position.set(0, -0.127, 0); g.add(tip);
+  g.userData = { tip, plunger, fluid };
+  return g;
+}
+function buildSwab(parent) {
+  const g = grp(parent);
+  mk(gCyl(0.004, 0.004, 0.075, 8), M.plasticWhite, [0, -0.02, 0], g);
+  mk(gSph(0.013, 10, 8), M.swab, [0, -0.062, 0], g);
+  const tip = new THREE.Object3D(); tip.position.set(0, -0.072, 0); g.add(tip);
+  g.userData = { tip };
+  return g;
+}
+function buildTablet(parent) {
+  const g = grp(parent);
+  mk(gBox(0.13, 0.185, 0.009), M.tabletBody, [0, 0, 0], g);
+  const scr = mk(gPlane(0.118, 0.170), M.tabletScreen, [0, 0, -0.0055], g);
+  scr.rotation.y = Math.PI; scr.castShadow = false;
+  return g;
+}
+function buildScanner(parent) {
+  const g = grp(parent);
+  mk(gBox(0.035, 0.09, 0.05), M.scanner, [0, -0.03, 0], g);
+  mk(gBox(0.045, 0.035, 0.075), M.scanner, [0, 0.03, -0.012], g);
+  const led = mk(gPlane(0.03, 0.008), M.scanLed.clone(), [0, 0.03, -0.051], g);
+  led.rotation.y = Math.PI; led.castShadow = false;
+  g.userData = { led };
+  return g;
+}
+function buildVial(parent) {
+  const g = grp(parent);
+  mk(gCyl(0.016, 0.016, 0.055, 10), M.vialGlass, [0, 0, 0], g);
+  mk(gCyl(0.017, 0.017, 0.012, 10), M.plunger, [0, 0.033, 0], g);
+  return g;
+}
+
+/* ================= UNITREE G1 HUMANOID (43 DOF incl. Dex3-1 hands) ================= */
+function buildG1(role) {
+  const root = new THREE.Group();
+  const J = {};
+  const coat = role === 'doctor' ? M.coatWhite : M.coatBlue;
+
+  /* --- pelvis + legs (6 DOF each) --- */
+  mk(gBox(0.26, 0.11, 0.15), M.g1body, [0, 0, 0], root);
+  mk(gTor(0.115, 0.012, 8, 18), M.g1joint, [0, 0.062, 0], root).rotation.x = Math.PI / 2;
+  function leg(side) {
+    const s = side === 'r' ? 1 : -1;
+    const hip = grp(root, s * 0.088, -0.055, 0);
+    mk(gSph(0.048, 12, 10), M.g1joint, [0, 0, 0], hip);
+    mk(gCap(0.047, 0.17, 4, 10), M.g1body, [0, -0.14, 0], hip);
+    mk(gBox(0.05, 0.10, 0.07), M.g1panel, [s * 0.025, -0.13, 0], hip);
+    const knee = grp(hip, 0, -0.28, 0);
+    mk(gSph(0.042, 12, 10), M.g1joint, [0, 0, 0], knee);
+    mk(gCap(0.040, 0.16, 4, 10), M.g1body, [0, -0.13, 0], knee);
+    const ankle = grp(knee, 0, -0.27, 0);
+    mk(gCyl(0.03, 0.03, 0.035, 10), M.g1joint, [0, 0, 0], ankle);
+    mk(gBox(0.085, 0.045, 0.15), M.g1body, [0, -0.012, 0.02], ankle);
+    mk(gBox(0.085, 0.012, 0.15), M.g1panel, [0, -0.040, 0.02], ankle);
+    J[side + 'Hip'] = hip; J[side + 'Knee'] = knee; J[side + 'Ankle'] = ankle;
+  }
+  leg('r'); leg('l');
+
+  /* --- 3-DOF waist --- */
+  const waistYaw = grp(root, 0, 0.065, 0);
+  const waist = grp(waistYaw, 0, 0, 0);
+  J.waistYaw = waistYaw; J.waist = waist;
+
+  /* torso: the coat IS the outer chest shell — no overlay, no z-fighting */
+  mk(gBox(0.24, 0.16, 0.14), M.g1panel, [0, 0.10, 0], waist);
+  mk(gBox(0.295, 0.235, 0.175), coat, [0, 0.27, 0], waist);
+  mk(gBox(0.255, 0.05, 0.15), coat, [0, 0.165, 0], waist);            /* coat skirt */
+  mk(gBox(0.18, 0.16, 0.012), M.g1panel, [0, 0.27, -0.094], waist);   /* chest control panel */
+  mk(gTor(0.075, 0.014, 8, 18), coat, [0, 0.385, 0], waist).rotation.x = Math.PI / 2;  /* collar */
+  if (role === 'doctor') {
+    mk(gBox(0.062, 0.016, 0.006), M.redCross, [0, 0.335, -0.104], waist);
+    mk(gBox(0.016, 0.062, 0.006), M.redCross, [0, 0.335, -0.104], waist);
+  } else {
+    mk(gCyl(0.024, 0.024, 0.007, 10), M.badge, [0.07, 0.335, -0.102], waist).rotation.x = Math.PI / 2;
+  }
+
+  /* --- 2-DOF neck + head --- */
+  const neckYaw = grp(waist, 0, 0.40, 0);
+  mk(gCyl(0.038, 0.042, 0.055, 12), M.g1joint, [0, 0.005, 0], neckYaw);
+  const neck = grp(neckYaw, 0, 0.045, 0);
+  const headC = grp(neck, 0, 0.065, 0);
+  const shell = mk(gSph(0.103, 18, 14), M.g1body, [0, 0, 0], headC);
+  shell.scale.set(0.94, 1.0, 1.04);
+  const visor = mk(gSph(0.099, 16, 12, Math.PI * 1.18, Math.PI * 0.64, Math.PI * 0.22, Math.PI * 0.42), M.g1visor, [0, 0.005, -0.008], headC);
+  visor.castShadow = false;
+  const ledStrip = mk(gBox(0.085, 0.008, 0.004), M.led.clone(), [0, -0.012, -0.102], headC);
+  ledStrip.castShadow = false;
+  mk(gCyl(0.012, 0.012, 0.018, 8), M.g1joint, [0, 0.055, -0.090], headC);   /* depth camera */
+  mk(gBox(0.02, 0.035, 0.012), M.g1joint, [-0.095, -0.01, 0.01], headC);
+  mk(gBox(0.02, 0.035, 0.012), M.g1joint, [0.095, -0.01, 0.01], headC);
+  J.neckYaw = neckYaw; J.neck = neck;
+  J.ledStrip = ledStrip;
+
+  /* --- arms: 7 DOF + Dex3-1 hand (7 DOF) --- */
+  function arm(side) {
+    const s = side === 'r' ? 1 : -1;
+    const sh = grp(waist, s * 0.185, 0.345, 0);
+    mk(gSph(0.052, 12, 10), M.g1joint, [0, 0, 0], sh);
+    mk(gCap(0.046, 0.155, 4, 10), coat, [0, -0.115, 0], sh);            /* coat sleeve = upper arm shell */
+    const elbow = grp(sh, 0, -0.26, 0);
+    mk(gSph(0.038, 12, 10), M.g1joint, [0, 0, 0], elbow);
+    const fore = grp(elbow, 0, 0, 0);                                    /* supination joint */
+    mk(gCap(0.032, 0.135, 4, 10), M.g1body, [0, -0.105, 0], fore);
+    mk(gBox(0.025, 0.09, 0.045), M.g1panel, [s * 0.02, -0.10, 0], fore);
+    const wrist = grp(fore, 0, -0.23, 0);
+    mk(gCyl(0.024, 0.024, 0.03, 10), M.g1joint, [0, 0, 0], wrist);
+    const handIK = grp(wrist, 0, -0.022, 0);                             /* IK translation group */
+    handIK.userData.base = new THREE.Vector3(0, -0.022, 0);
+    const hand = grp(handIK, 0, 0, 0);
+    mk(gBox(0.072, 0.095, 0.038), M.glove, [0, -0.045, 0], hand);
+    /* Dex3-1: thumb + 2 fingers, 2 articulated segments each */
+    function finger(px, pz, rotY, isThumb) {
+      const a = grp(hand, px, -0.092, pz);
+      a.rotation.y = rotY || 0;
+      mk(gBox(isThumb ? 0.020 : 0.017, 0.034, isThumb ? 0.020 : 0.017), M.g1panel, [0, -0.015, 0], a);
+      const b = grp(a, 0, -0.035, 0);
+      mk(gBox(isThumb ? 0.018 : 0.015, 0.030, isThumb ? 0.018 : 0.015), M.glove, [0, -0.013, 0], b);
+      return { a, b };
+    }
+    const f1 = finger(s * 0.022, -0.008, 0, false);
+    const f2 = finger(s * -0.012, 0.008, 0, false);
+    const th = grp(hand, s * -0.035, -0.055, -0.008);
+    th.rotation.z = s * -0.7;
+    mk(gBox(0.020, 0.034, 0.020), M.g1panel, [0, -0.015, 0], th);
+    const thB = grp(th, 0, -0.035, 0);
+    mk(gBox(0.018, 0.028, 0.018), M.glove, [0, -0.012, 0], thB);
+    J[side + 'Sh'] = sh; J[side + 'Elbow'] = elbow; J[side + 'Fore'] = fore;
+    J[side + 'Wrist'] = wrist; J[side + 'HandIK'] = handIK; J[side + 'Hand'] = hand;
+    J[side + 'Fingers'] = [f1.a, f1.b, f2.a, f2.b, th, thB];
+  }
+  arm('r'); arm('l');
+
+  root.userData = { role, J };
+  return root;
+}
+/* finger curl 0..1 */
+function setCurl(fingers, c) {
+  for (let i = 0; i < fingers.length; i += 2) {
+    fingers[i].rotation.x = c * 0.95;
+    fingers[i + 1].rotation.x = c * 1.05;
+  }
+}
+
+/* ================= REALISTIC HUMAN ================= */
+function buildHuman(opt) {
+  /* opt: skin, hair, gown, hairStyle, scale */
+  const skin = new THREE.MeshStandardMaterial({ color:opt.skin, roughness:0.62 });
+  const hair = new THREE.MeshStandardMaterial({ color:opt.hair, roughness:0.92 });
+  const gown = new THREE.MeshStandardMaterial({ color:opt.gown, roughness:0.8 });
+  const root = new THREE.Group();
+  const J = {};
+
+  /* pelvis */
+  mk(gBox(0.30, 0.14, 0.20), gown, [0, 0, 0], root);
+
+  /* torso (lean group) */
+  const torso = grp(root, 0, 0.05, 0);
+  torso.rotation.x = 0.09;          /* relaxed 5° recline against backrest */
+  mk(gBox(0.28, 0.18, 0.19), gown, [0, 0.13, 0], torso);
+  const chest = mk(gBox(0.31, 0.23, 0.20), gown, [0, 0.295, 0], torso);  /* breathing */
+  mk(gCyl(0.085, 0.10, 0.06, 12), gown, [0, 0.40, 0.01], torso);         /* gown collar */
+  J.chest = chest; J.torso = torso;
+
+  /* neck + head */
+  const neckYaw = grp(torso, 0, 0.425, 0.005);
+  mk(gCyl(0.045, 0.05, 0.075, 12), skin, [0, 0.01, 0], neckYaw);
+  const neck = grp(neckYaw, 0, 0.05, 0);
+  const head = grp(neck, 0, 0.075, 0);
+  const skull = mk(gSph(0.102, 18, 14), skin, [0, 0.005, 0.005], head);
+  skull.scale.set(0.92, 1.06, 1.0);
+  /* face (front = -Z) */
+  const eyeW = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.2 });
+  const iris = new THREE.MeshStandardMaterial({ color:0x39506b, roughness:0.25 });
+  const pupil = new THREE.MeshStandardMaterial({ color:0x10100e, roughness:0.25 });
+  const lipM = new THREE.MeshStandardMaterial({ color:0xb06a58, roughness:0.55 });
+  [-1, 1].forEach(s => {
+    mk(gSph(0.019, 12, 10), eyeW, [s * 0.037, 0.018, -0.082], head);
+    mk(gSph(0.0105, 10, 8), iris, [s * 0.037, 0.018, -0.0935], head);
+    mk(gSph(0.0058, 8, 6), pupil, [s * 0.037, 0.018, -0.0985], head);
+    const lid = mk(gBox(0.043, 0.040, 0.012), skin, [s * 0.037, 0.018, -0.090], head);
+    lid.castShadow = false;
+    lid.userData.eyeY = 0.018;
+    if (s < 0) J.lidL = lid; else J.lidR = lid;
+    const brow = mk(gBox(0.040, 0.0075, 0.012), hair, [s * 0.038, 0.052, -0.088], head);
+    brow.rotation.z = s * -0.12;
+  });
+  mk(gBox(0.016, 0.034, 0.020), skin, [0, -0.006, -0.094], head);       /* nose bridge */
+  mk(gBox(0.024, 0.014, 0.016), skin, [0, -0.026, -0.092], head);       /* nose tip */
+  mk(gBox(0.034, 0.007, 0.010), lipM, [0, -0.050, -0.089], head);       /* lips */
+  mk(gSph(0.032, 10, 8), skin, [0, -0.073, -0.062], head);              /* chin */
+  [-1, 1].forEach(s => mk(gSph(0.021, 10, 8), skin, [s * 0.094, -0.005, 0.012], head));
+  /* hair styles */
+  if (opt.hairStyle === 'curly') {
+    const cap = mk(gSph(0.112, 14, 12), hair, [0, 0.030, 0.012], head);
+    cap.scale.set(0.96, 0.88, 0.98);
+    mk(gSph(0.055, 10, 8), hair, [-0.06, 0.075, 0.04], head);
+    mk(gSph(0.055, 10, 8), hair, [0.06, 0.075, 0.04], head);
+    mk(gSph(0.05, 10, 8), hair, [0, 0.09, -0.02], head);
+  } else if (opt.hairStyle === 'long') {
+    const cap = mk(gSph(0.108, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.62), hair, [0, 0.022, 0.012], head);
+    cap.scale.set(0.95, 0.96, 1.0);
+    mk(gBox(0.045, 0.20, 0.06), hair, [-0.085, -0.06, 0.045], head);
+    mk(gBox(0.045, 0.20, 0.06), hair, [0.085, -0.06, 0.045], head);
+    mk(gBox(0.14, 0.16, 0.05), hair, [0, -0.03, 0.085], head);
+  } else if (opt.hairStyle === 'grey') {
+    const cap = mk(gSph(0.105, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), hair, [0, 0.034, 0.018], head);
+    cap.scale.set(0.92, 0.78, 0.97);
+  } else { /* short */
+    const cap = mk(gSph(0.108, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6), hair, [0, 0.024, 0.012], head);
+    cap.scale.set(0.96, 0.92, 1.0);
+    mk(gSph(0.098, 14, 8), hair, [0, 0.045, 0.045], head).scale.set(0.95, 0.6, 0.7);
+  }
+  J.neckYaw = neckYaw; J.neck = neck; J.head = head;
+
+  /* arms */
+  function arm(side) {
+    const s = side === 'r' ? 1 : -1;
+    const sh = grp(torso, s * 0.205, 0.355, 0);
+    mk(gSph(0.052, 12, 10), gown, [0, -0.005, 0], sh);                  /* gown shoulder */
+    mk(gCap(0.046, 0.065, 4, 10), gown, [0, -0.065, 0], sh);            /* short gown sleeve */
+    mk(gCap(0.040, 0.135, 4, 10), skin, [0, -0.165, 0], sh);            /* bare upper arm */
+    const elbow = grp(sh, 0, -0.27, 0);
+    mk(gSph(0.037, 10, 8), skin, [0, 0, 0], elbow);
+    mk(gCap(0.033, 0.155, 4, 10), skin, [0, -0.115, 0], elbow);
+    const wrist = grp(elbow, 0, -0.25, 0);
+    const hand = grp(wrist, 0, 0, 0);
+    mk(gBox(0.062, 0.085, 0.030), skin, [0, -0.045, 0], hand);
+    const fingers = grp(hand, 0, -0.088, 0);
+    mk(gBox(0.058, 0.052, 0.026), skin, [0, -0.024, 0], fingers);
+    const thumb = grp(hand, s * -0.034, -0.045, -0.004);
+    thumb.rotation.z = s * -0.55;
+    mk(gBox(0.020, 0.046, 0.020), skin, [0, -0.02, 0], thumb);
+    /* wristband on left wrist (trial ID band) */
+    if (side === 'l') {
+      const band = mk(gCyl(0.037, 0.037, 0.022, 12), M.plasticWhite, [0, 0.012, 0], hand);
+      J.wristband = band;
+    }
+    J[side + 'Sh'] = sh; J[side + 'Elbow'] = elbow; J[side + 'Wrist'] = wrist;
+    J[side + 'Hand'] = hand; J[side + 'FingerBlock'] = fingers; J[side + 'Thumb'] = thumb;
+  }
+  arm('r'); arm('l');
+
+  /* legs (seated pose applied by caller) */
+  function leg(side) {
+    const s = side === 'r' ? 1 : -1;
+    const hip = grp(root, s * 0.095, -0.011, 0);   /* mid-pelvis: thigh rests on cushion */
+    mk(gCap(0.062, 0.27, 4, 10), gown, [0, -0.20, 0], hip);
+    const knee = grp(hip, 0, -0.40, 0);
+    mk(gSph(0.048, 12, 10), skin, [0, 0, 0], knee);
+    mk(gCap(0.044, 0.40, 4, 10), skin, [0, -0.26, 0], knee);
+    const ankle = grp(knee, 0, -0.505, 0);         /* soles land exactly on the floor */
+    mk(gBox(0.075, 0.045, 0.17), skin, [0, -0.012, -0.035], ankle);
+    mk(gBox(0.08, 0.018, 0.18), new THREE.MeshStandardMaterial({ color:0x4a6f8a, roughness:0.7 }),
+      [0, -0.040, -0.035], ankle);                                       /* slipper sole */
+    J[side + 'Hip'] = hip; J[side + 'Knee'] = knee; J[side + 'Ankle'] = ankle;
+  }
+  leg('r'); leg('l');
+
+  if (opt.scale) root.scale.setScalar(opt.scale);
+  root.userData = { J, blinkAt: 1 + Math.random() * 3 };
+  return root;
+}
+
+function poseSeated(h) {
+  const J = h.userData.J;
+  J.rHip.rotation.x = Math.PI / 2; J.lHip.rotation.x = Math.PI / 2;
+  J.rHip.rotation.z = -0.07; J.lHip.rotation.z = 0.07;
+  J.rKnee.rotation.x = -Math.PI / 2; J.lKnee.rotation.x = -Math.PI / 2;
+  /* arms resting on armrests */
+  ['r', 'l'].forEach(side => {
+    const s = side === 'r' ? 1 : -1;
+    J[side + 'Sh'].rotation.x = 0.22;
+    J[side + 'Sh'].rotation.z = s * 0.14;
+    J[side + 'Elbow'].rotation.x = 1.05;     /* forearm forward to the armrest pad */
+  });
+}
+
+/* ================= CRA MONITORING DESK (human in the loop) ================= */
+function buildCRADesk() {
+  const g = grp(scene, 0, 0, 6.1);
+  g.rotation.y = 0;   /* CRA faces -Z toward the stations */
+  /* desk */
+  mk(gBox(1.5, 0.05, 0.7), M.woodDark, [0, 0.74, 0], g);
+  [[-0.68, -0.28], [0.68, -0.28], [-0.68, 0.28], [0.68, 0.28]].forEach(([x, z]) =>
+    mk(gBox(0.05, 0.74, 0.05), M.steelDark, [x, 0.37, z], g));
+  mk(gBox(1.5, 0.30, 0.03), M.woodDark, [0, 0.60, -0.30], g);
+  /* laptop with EDC screen */
+  const lap = grp(g, -0.25, 0.765, -0.05);
+  mk(gBox(0.34, 0.012, 0.24), M.steelDark, [0, 0, 0], lap);   /* keyboard base */
+  const lid = grp(lap, 0, 0, -0.115);                          /* hinge at far edge */
+  lid.rotation.x = -0.32;                                      /* leans away from the CRA */
+  mk(gBox(0.34, 0.235, 0.012), M.steelDark, [0, 0.115, 0], lid);
+  const edc = makeCanvas(256, 160, (gg, w, h) => {
+    gg.fillStyle = '#10263c'; gg.fillRect(0, 0, w, h);
+    gg.fillStyle = '#3ec8ff'; gg.font = 'bold 16px monospace'; gg.fillText('EDC — ONC-2026-IM-001', 10, 24);
+    gg.font = '11px monospace'; gg.fillStyle = '#9fd8a8';
+    ['SUBJ 0101  dosing  ✓', 'SUBJ 0102  dosing  ✓', 'SUBJ 0103  vitals  ●',
+     'SUBJ 0104  consent ✓', 'AE log: 1 open (Gr.1)'].forEach((l, i) => gg.fillText(l, 10, 50 + i * 20));
+  });
+  const escr = mk(gPlane(0.32, 0.21), new THREE.MeshStandardMaterial({ map:edc, emissive:0xffffff,
+    emissiveMap:edc, emissiveIntensity:0.6, roughness:0.4 }), [0, 0.115, 0.008], lid);
+  escr.castShadow = false;                                     /* faces +Z toward the CRA */
+  /* papers, mug, phone */
+  mk(gBox(0.21, 0.006, 0.28), M.paper, [0.28, 0.77, -0.02], g).rotation.y = -0.15;
+  mk(gCyl(0.035, 0.03, 0.09, 12), new THREE.MeshStandardMaterial({ color:0xc24545, roughness:0.4 }), [0.58, 0.81, 0.10], g);
+  mk(gBox(0.07, 0.008, 0.14), M.scanner, [0.46, 0.77, -0.15], g).rotation.y = 0.3;
+  /* office chair */
+  const ch = grp(g, 0, 0, 0.62);
+  mk(gCyl(0.04, 0.04, 0.30, 10), M.steelDark, [0, 0.30, 0], ch);
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * Math.PI * 2;
+    mk(gBox(0.26, 0.03, 0.05), M.steelDark, [Math.cos(a) * 0.13, 0.04, Math.sin(a) * 0.13], ch).rotation.y = -a;
+  }
+  mk(gBox(0.46, 0.07, 0.45), new THREE.MeshStandardMaterial({ color:0x35424e, roughness:0.7 }), [0, 0.48, 0], ch);
+  mk(gBox(0.46, 0.55, 0.08), new THREE.MeshStandardMaterial({ color:0x35424e, roughness:0.7 }), [0, 0.82, 0.22], ch);
+  /* the human CRA — business casual, seated facing the stations */
+  const cra = buildHuman({ skin:0xc89878, hair:0x33261a, gown:0x4a6584, hairStyle:'short' });
+  cra.position.set(0, 0.565, 0.60);
+  /* builder front is -Z, which already faces the stations — no extra yaw */
+  g.add(cra);
+  poseSeated(cra);
+  const cj = cra.userData.J;
+  /* typing pose: forearms toward desk */
+  cj.rSh.rotation.x = 0.55; cj.lSh.rotation.x = 0.55;
+  cj.rElbow.rotation.x = 0.85; cj.lElbow.rotation.x = 0.85;
+  cj.torso.rotation.x = -0.06;   /* lean toward the laptop */
+  /* ID badge lanyard */
+  mk(gBox(0.055, 0.075, 0.006), M.plasticWhite, [0.0, 0.22, -0.105], cj.torso);
+  /* standing banner */
+  const ban = grp(g, 1.35, 0, -0.3);
+  mk(gBox(0.55, 0.02, 0.30), M.steelDark, [0, 0.01, 0], ban);
+  const banTex = posterTex(['SPONSOR MONITORING', 'Human-in-the-loop CRA', 'Source data verification',
+    'Live AE surveillance'], '#0a66c2');
+  const bp = mk(gPlane(0.62, 1.45), new THREE.MeshStandardMaterial({ map:banTex, roughness:0.7,
+    side:THREE.DoubleSide }), [0, 0.95, 0], ban);
+  bp.castShadow = false;
+  return { group:g, cra };
+}
+
+/* ================= CENTRAL LIVE SCOREBOARD TOWER ================= */
+const towerCanvas = document.createElement('canvas');
+towerCanvas.width = 512; towerCanvas.height = 384;
+const towerTex = new THREE.CanvasTexture(towerCanvas);
+towerTex.colorSpace = THREE.SRGBColorSpace;
+function buildTower() {
+  const g = grp(scene, 0, 0, 0);
+  mk(gCyl(0.16, 0.22, 0.06, 16), M.steelDark, [0, 0.03, 0], g);
+  mk(gCyl(0.05, 0.05, 2.0, 12), M.steel, [0, 1.06, 0], g);
+  const mat = new THREE.MeshStandardMaterial({ map:towerTex, emissive:0xffffff,
+    emissiveMap:towerTex, emissiveIntensity:0.55, roughness:0.4 });
+  const boardG = grp(g, 0, 2.45, 0);
+  mk(gBox(0.94, 0.74, 0.94), M.screenFrame, [0, 0, 0], boardG);
+  for (let i = 0; i < 4; i++) {
+    const p = mk(gPlane(0.88, 0.68), mat, [0, 0, 0], boardG);
+    p.castShadow = false;
+    p.rotation.y = i * Math.PI / 2;
+    const off = 0.476;
+    if (i === 0) p.position.z = off; else if (i === 1) p.position.x = off;
+    else if (i === 2) p.position.z = -off; else p.position.x = -off;
+  }
+  /* gold star on top */
+  mk(gCyl(0.0, 0.09, 0.16, 5), M.badge, [0, 2.95, 0], g);
+  return g;
+}
+function drawTower(stations) {
+  const g = towerCanvas.getContext('2d'), w = 512, h = 384;
+  g.fillStyle = '#081826'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#0a66c2'; g.fillRect(0, 0, w, 56);
+  g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.textAlign = 'center';
+  g.fillText('GCP COMPETITION — LIVE', w / 2, 38);
+  const sorted = rankStations(stations);
+  sorted.forEach((s, i) => {
+    const y = 80 + i * 72;
+    g.fillStyle = i === 0 ? 'rgba(201,162,39,0.25)' : 'rgba(255,255,255,0.06)';
+    g.fillRect(16, y, w - 32, 60);
+    g.fillStyle = ['#c9a227', '#8e9aa5', '#a0622d', '#7b8894'][i];
+    g.font = 'bold 34px sans-serif'; g.textAlign = 'left';
+    g.fillText('#' + (i + 1), 30, y + 41);
+    g.fillStyle = s.cfg.color; g.fillText(s.cfg.name, 96, y + 41);
+    g.fillStyle = '#e8f0f8'; g.font = 'bold 26px sans-serif';
+    g.fillText(s.composite.toFixed(1), 150, y + 40);
+    g.font = '17px sans-serif'; g.fillStyle = '#9fb8cc';
+    g.fillText('GCP', 152, y + 56);
+    g.font = '22px sans-serif'; g.fillStyle = '#bcd2e2'; g.textAlign = 'right';
+    const status = s.completed ? s.total.toFixed(2) + 's ✓'
+      : (s.elapsed / s.total * 100).toFixed(0) + '%';
+    g.fillText(status, w - 36, y + 32);
+    g.font = '15px sans-serif';
+    g.fillText(s.ae ? '⚠ AE Gr.1' : s.metrics.needleMm.toFixed(2) + ' mm', w - 36, y + 53);
+  });
+  towerTex.needsUpdate = true;
+}
+
+/* ================= INJECTION TARGET MARKER ================= */
+function buildTargetMarker(parent) {
+  const g = grp(parent);
+  const dot = mk(gSph(0.011, 10, 8), M.target, [0, 0, 0], g);
+  dot.castShadow = false;
+  const ring = mk(gTor(0.024, 0.0035, 8, 22), M.target.clone(), [0, 0, 0], g);
+  ring.castShadow = false;
+  ring.rotation.y = Math.PI / 2;       /* ring plane faces outward (+X of the arm) */
+  g.userData.ring = ring;
+  return g;
+}
+
+/* ================= STATION ASSEMBLY ================= */
+/* Verified-clearance local layout (chair faces -Z, patient right = +X):
+   chair (0,0,0.05) | doctor home (0.88,-0.50) | nurse home (-0.74,-0.48)
+   supply cart (1.08,0.06) | sharps on cart | IV (-0.52,0.55) | monitor (-1.02,0.12)
+   sanitizer (0.78,0.88) | privacy screen (-0.25,1.06) | exam light (0.50,0.98)
+   waste bin (1.12,0.50) — nothing intersects anything else or any motion path. */
+function stationPos(cfg) { return new THREE.Vector3(cfg.gx * GRID / 2, 0, cfg.gz * GRID / 2); }
+
+const DOC_HOME = { x:0.88, z:-0.50 };
+const NUR_HOME = { x:-0.74, z:-0.48 };
+const CART = { x:1.08, z:0.06 };
+const DELTOID = { x:0.255, y:0.915, z:0.13 };   /* approx world-local; IK closes the gap */
+
+function buildStation(cfg) {
+  const center = stationPos(cfg);
+  const g = new THREE.Group();
+  g.position.copy(center);
+  scene.add(g);
+
+  /* floor zone marking + letter decal */
+  const zc = new THREE.Color(cfg.color);
+  const zoneMat = new THREE.MeshStandardMaterial({ color:zc, roughness:0.5,
+    transparent:true, opacity:0.85 });
+  [[0, -1.7], [0, 1.7]].forEach(([x, z]) => mk(gBox(3.4, 0.006, 0.06), zoneMat, [x, 0.004, z], g).castShadow = false);
+  [[-1.7, 0], [1.7, 0]].forEach(([x, z]) => mk(gBox(0.06, 0.006, 3.4), zoneMat, [x, 0.004, z], g).castShadow = false);
+  const letter = mk(gPlane(0.62, 0.62), new THREE.MeshBasicMaterial({
+    map:floorLetterTex(cfg.name, cfg.color), transparent:true }), [-1.25, 0.012, -1.25], g);
+  letter.rotation.x = -Math.PI / 2; letter.castShadow = false; letter.receiveShadow = false;
+
+  /* props */
+  buildChair(g);
+  const iv = buildIVStand(g);       iv.position.set(-0.52, 0, 0.55);
+  const cart = buildSupplyCart(g);  cart.position.set(CART.x, 0, CART.z);
+  cart.rotation.y = Math.PI;        /* drawers face the doctor (-Z side) */
+  const sharps = buildSharps(g);    sharps.position.set(CART.x + 0.10, 0.8575, CART.z + 0.10);
+  const sani = buildSanitizer(g);   sani.position.set(0.78, 0, 0.88);
+  const screen = buildPrivacyScreen(g); screen.position.set(-0.25, 0, 1.06);
+  buildExamLight(g, [0.50, 0, 0.98], [0.25, 0.95, 0.10]);
+  const bin = buildWasteBin(g);     bin.position.set(1.12, 0, 0.50);
+  const mon = buildVitalsMonitor(g); mon.position.set(-1.02, 0, 0.12);
+  mon.rotation.y = yawToFace(-1.02, 0.12, NUR_HOME.x, NUR_HOME.z);   /* screen (front=-Z) toward nurse */
+
+  /* patient (diverse per station) */
+  const patient = buildHuman(cfg.patient);
+  patient.position.set(0, PATIENT_SEAT_Y, 0.12);
+  g.add(patient);
+  poseSeated(patient);
+  const pj = patient.userData.J;
+
+  /* injection target on the bare mid-deltoid (child of the arm: tracks any motion) */
+  const marker = buildTargetMarker(pj.rSh);
+  marker.position.set(0.046, -0.115, 0);
+  const targetSurface = new THREE.Object3D();
+  pj.rSh.add(targetSurface); targetSurface.position.set(0.044, -0.115, 0);
+  const targetDeep = new THREE.Object3D();
+  pj.rSh.add(targetDeep); targetDeep.position.set(0.016, -0.115, 0);   /* 6 mm + radius inward */
+
+  /* doctor G1 */
+  const doctor = buildG1('doctor');
+  doctor.position.set(DOC_HOME.x, ROBOT_ROOT_Y, DOC_HOME.z);
+  g.add(doctor);
+  const dj = doctor.userData.J;
+  const syringe = buildSyringe(dj.rHand); syringe.position.set(0, -0.105, -0.005);
+  const swab = buildSwab(dj.lHand);       swab.position.set(0, -0.10, -0.004);
+  const vial = buildVial(dj.lHand);       vial.position.set(0, -0.115, -0.006);
+  /* spare syringe on the cart tray until "picked up" (cart local coords; cart rotated π) */
+  const traySyr = buildSyringe(cart); traySyr.position.set(-0.12, 0.873, 0.07);
+  traySyr.rotation.z = Math.PI / 2;
+
+  /* nurse G1 */
+  const nurse = buildG1('nurse');
+  nurse.position.set(NUR_HOME.x, ROBOT_ROOT_Y, NUR_HOME.z);
+  g.add(nurse);
+  const nj = nurse.userData.J;
+  const tablet = buildTablet(nj.lHand); tablet.position.set(0, -0.12, -0.025); tablet.rotation.x = -0.55;
+  const scanner = buildScanner(nj.rHand); scanner.position.set(0, -0.11, -0.01);
+
+  /* floating station label */
+  const label = makeLabelSprite('Station ' + cfg.name, cfg.color);
+  label.position.set(0, 2.05, 0);
+  g.add(label);
+
+  /* seeded metrics & timing */
+  const st = {
+    cfg, g, doctor, nurse, patient, dj, nj, pj,
+    syringe, swab, vial, traySyr, tablet, scanner, sharps, mon, marker,
+    targetSurface, targetDeep,
+    elapsed:0, completed:false, finishOrder:0, phaseIdx:0,
+    ae:false, hr:64 + (cfg.seed % 17), spo2:97.5,
+    docYaw:0, nurYaw:0, prevDocPos:new THREE.Vector2(DOC_HOME.x, DOC_HOME.z),
+    prevNurPos:new THREE.Vector2(NUR_HOME.x, NUR_HOME.z),
+    docGait:0, nurGait:0, tipDistMm:null, docRootIK:new THREE.Vector2(0, 0),
+  };
+  applyStationMetrics(st);
+  return st;
+}
+
+function applyStationMetrics(st) {
+  st.metrics = drawMetrics(st.cfg);
+  st.times = st.metrics.times.slice();
+  st.elapsed = 0; st.completed = false; st.finishOrder = 0; st.phaseIdx = 0;
+  st.tipDistMm = null;
+  if (st.docRootIK) st.docRootIK.set(0, 0);
+}
+function finalizeMetrics(stations) {
+  /* exactly one station draws the Grade-1 AE (highest aeDraw) */
+  let aeIdx = 0;
+  stations.forEach((s, i) => { if (s.metrics.aeDraw > stations[aeIdx].metrics.aeDraw) aeIdx = i; });
+  stations.forEach((s, i) => {
+    s.ae = (i === aeIdx);
+    if (s.ae) s.times[PH.monitor] += 2.5 / s.cfg.speed;   /* extended observation */
+    s.total = s.times.reduce((a, b) => a + b, 0);
+    s.phases = [];
+    let c = 0;
+    s.times.forEach((t, k) => { s.phases.push({ start:c, end:c + t, ...PHASES[k] }); c += t; });
+  });
+  const minTotal = Math.min(...stations.map(s => s.total));
+  stations.forEach(s => {
+    const m = s.metrics;
+    s.timeScore = 100 * (minTotal / s.total);
+    s.accScore = Math.max(0, 100 - m.needleMm * 18);
+    s.doseScore = Math.max(0, 100 - Math.abs(m.doseML - 0.5) * 4000);
+    s.composite = 0.30 * s.timeScore + 0.25 * s.accScore + 0.20 * m.protocol
+      + 0.10 * m.sterility + 0.10 * s.doseScore + 0.05 * m.comfort;
+  });
+}
+function rankStations(stations) {
+  return [...stations].sort((a, b) =>
+    (b.composite - a.composite) || (a.total - b.total));
+}
+
+/* ================= BUILD WORLD ================= */
+buildRoom();
+buildTower();
+const craDesk = buildCRADesk();
+const stations = STATION_CONFIGS.map(buildStation);
+finalizeMetrics(stations);
+let finishCount = 0;
+
+/* per-station exam-light spots already added; nothing else needed */
+
+/* ================= CAMERA PRESETS ================= */
+const camTgt = {
+  overview: { pos:new THREE.Vector3(0, 13.5, 17.5), target:new THREE.Vector3(0, 0.9, 0) },
+};
+stations.forEach((st, i) => {
+  const c = stationPos(st.cfg);
+  camTgt[i] = {
+    pos:   new THREE.Vector3(c.x + 1.7, 1.55, c.z - 2.3),
+    target:new THREE.Vector3(c.x + 0.05, 0.95, c.z),
+  };
+});
+
+/* ================= APP STATE / UI ================= */
+let playing = true;
+let activeSt = 'overview';
+let camAnim = false, camStart = 0;
+const camDur = 0.8;
+let camFrom = { pos:camera.position.clone(), target:ctrls.target.clone() };
+let camTo   = { pos:camera.position.clone(), target:ctrls.target.clone() };
+let showPhases = false, showScoreboard = false, resultsShown = false;
+
+const btnPlay = document.getElementById('btn-play');
+const btnReset = document.getElementById('btn-reset');
+const btnInfo = document.getElementById('btn-info');
+const btnUpload = document.getElementById('btn-upload');
+const fileIn = document.getElementById('file-input');
+const stBtns = document.querySelectorAll('.station-btn');
+const phasePanel = document.getElementById('phase-panel');
+const sbPanel = document.getElementById('scoreboard-panel');
+const togglePh = document.getElementById('toggle-phases');
+const toggleSb = document.getElementById('toggle-scoreboard');
+const finalRes = document.getElementById('final-results');
+
+function setPlaying(p) {
+  playing = p;
+  btnPlay.innerHTML = playing ? '&#10074;&#10074;' : '&#9654;';
+  btnPlay.classList.toggle('active', playing);
+}
+btnPlay.addEventListener('click', () => {
+  if (!playing && stations.every(s => s.completed)) { resetAll(); return; }
+  setPlaying(!playing);
+});
+setPlaying(true);
+
+function resetAll() {
+  finishCount = 0; resultsShown = false;
+  finalRes.classList.remove('show');
+  stations.forEach(applyStationMetrics);
+  finalizeMetrics(stations);
+  stations.forEach(st => {
+    st.doctor.position.set(DOC_HOME.x, ROBOT_ROOT_Y, DOC_HOME.z);
+    st.nurse.position.set(NUR_HOME.x, ROBOT_ROOT_Y, NUR_HOME.z);
+    animStation(st, 0);
+  });
+  setPlaying(true);
+}
+btnReset.addEventListener('click', resetAll);
+btnInfo.addEventListener('click', () => document.getElementById('info-modal').classList.add('show'));
+document.getElementById('info-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+document.getElementById('btn-results-close').addEventListener('click', () => finalRes.classList.remove('show'));
+
+btnUpload.addEventListener('click', () => fileIn.click());
+fileIn.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rdr = new FileReader();
+  rdr.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data && Array.isArray(data.stations)) {
+        data.stations.forEach((sc, i) => {
+          if (i >= stations.length) return;
+          if (typeof sc.speed === 'number') stations[i].cfg.speed = sc.speed;
+          if (typeof sc.seed === 'number') stations[i].cfg.seed = sc.seed;
+        });
+        resetAll();
+      }
+    } catch (err) { console.error('Invalid JSON:', err); }
+  };
+  rdr.readAsText(f);
+  fileIn.value = '';
+});
+
+togglePh.addEventListener('click', () => {
+  showPhases = !showPhases;
+  phasePanel.classList.toggle('visible', showPhases);
+  togglePh.classList.toggle('open', showPhases);
+});
+toggleSb.addEventListener('click', () => {
+  showScoreboard = !showScoreboard;
+  sbPanel.classList.toggle('visible', showScoreboard);
+  toggleSb.classList.toggle('open', showScoreboard);
+});
+stBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    stBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.station;
+    activeSt = v === 'overview' ? 'overview' : parseInt(v);
+    startCamAnim(camTgt[activeSt]);
+  });
+});
+function startCamAnim(tgt) {
+  camFrom.pos = camera.position.clone();
+  camFrom.target = ctrls.target.clone();
+  camTo.pos = tgt.pos.clone();
+  camTo.target = tgt.target.clone();
+  camStart = performance.now() / 1000;
+  camAnim = true;
+}
+window.addEventListener('keydown', e => {
+  if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+  if (e.code === 'Space') { e.preventDefault(); btnPlay.click(); }
+  else if (e.key === 'r' || e.key === 'R') resetAll();
+  else if (e.key >= '0' && e.key <= '4') {
+    const idx = e.key === '0' ? 'overview' : String(parseInt(e.key) - 1);
+    const btn = [...stBtns].find(b => b.dataset.station === idx);
+    if (btn) btn.click();
+  }
+});
+
+/* Double-click / double-tap anywhere -> glide camera to that exact point */
+const raycaster = new THREE.Raycaster();
+function focusAt(clientX, clientY) {
+  const ndc = new THREE.Vector2(
+    (clientX / window.innerWidth) * 2 - 1,
+    -(clientY / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObjects(scene.children, true)
+    .filter(h => h.object.visible && !(h.object instanceof THREE.Sprite));
+  if (!hits.length) return;
+  const p = hits[0].point;
+  const newPos = camera.position.clone().lerp(p, 0.55);
+  if (newPos.distanceTo(p) < 0.35) newPos.copy(p).add(
+    camera.position.clone().sub(p).setLength(0.35));
+  startCamAnim({ pos:newPos, target:p });
+}
+canvas.addEventListener('dblclick', e => focusAt(e.clientX, e.clientY));
+let lastTap = 0, lastTapXY = [0, 0];
+canvas.addEventListener('touchend', e => {
+  if (e.changedTouches.length !== 1) return;
+  const t = e.changedTouches[0];
+  const now = performance.now();
+  if (now - lastTap < 320 && Math.hypot(t.clientX - lastTapXY[0], t.clientY - lastTapXY[1]) < 40) {
+    focusAt(t.clientX, t.clientY);
+    lastTap = 0;
+  } else { lastTap = now; lastTapXY = [t.clientX, t.clientY]; }
+});
+setTimeout(() => { const h = document.getElementById('hint'); if (h) h.style.opacity = '0'; }, 9000);
+
+/* ================= POSE KEYFRAME SYSTEM ================= */
+/* a pose: root x/z, yaw mode, waist pitch (deg), per-arm shoulder pitch/adduct, elbow,
+   supination, wrist flex (deg), finger curl 0..1. yaw: 'P'=face patient, 'C'=face cart. */
+const DOC_IDLE = { x:DOC_HOME.x, z:DOC_HOME.z, yaw:'P', wp:0,
+  rsx:8, rsz:-4, rel:14, rsup:0, rwx:0, rcurl:0.3,
+  lsx:8, lsz:4, lel:14, lsup:0, lwx:0, lcurl:0.3 };
+const DOC_POSES = {
+  identity: { ...DOC_IDLE },
+  consent:  { ...DOC_IDLE },
+  vitals:   { ...DOC_IDLE, rsx:12, lsx:12 },
+  hygiene:  { ...DOC_IDLE, wp:5, rsx:52, rsz:-20, rel:98, rcurl:0.45, lsx:52, lsz:20, lel:98, lcurl:0.45 },
+  drugprep: { x:0.86, z:-0.16, yaw:'C', wp:9,
+    rsx:58, rsz:-6, rel:52, rsup:38, rwx:8, rcurl:0.85,
+    lsx:54, lsz:8, lel:60, lsup:0, lwx:5, lcurl:0.8 },
+  siteprep: { x:0.62, z:-0.32, yaw:'P', wp:7,
+    rsx:34, rsz:-32, rel:96, rsup:0, rwx:5, rcurl:0.9,
+    lsx:60, lsz:10, lel:26, lsup:0, lwx:8, lcurl:0.55 },
+  position: { x:0.60, z:-0.30, yaw:'P', wp:8,
+    rsx:56, rsz:-9, rel:30, rsup:0, rwx:6, rcurl:0.92,
+    lsx:14, lsz:6, lel:20, lsup:0, lwx:0, lcurl:0.35 },
+  inject:   { x:0.58, z:-0.28, yaw:'P', wp:11,
+    rsx:62, rsz:-11, rel:22, rsup:0, rwx:8, rcurl:0.94,
+    lsx:12, lsz:6, lel:18, lsup:0, lwx:0, lcurl:0.35 },
+  dose:     { x:0.58, z:-0.28, yaw:'P', wp:11,
+    rsx:62, rsz:-11, rel:22, rsup:0, rwx:8, rcurl:0.96,
+    lsx:12, lsz:6, lel:18, lsup:0, lwx:0, lcurl:0.35 },
+  withdraw: { x:0.65, z:-0.35, yaw:'P', wp:5,
+    rsx:44, rsz:-14, rel:52, rsup:0, rwx:4, rcurl:0.92,
+    lsx:10, lsz:5, lel:16, lsup:0, lwx:0, lcurl:0.3 },
+  sharps:   { x:0.86, z:-0.18, yaw:'C', wp:8,
+    rsx:54, rsz:-4, rel:36, rsup:0, rwx:5, rcurl:0.9,
+    lsx:10, lsz:5, lel:14, lsup:0, lwx:0, lcurl:0.3 },
+  monitor:  { ...DOC_IDLE, rsx:10, lsx:10 },
+};
+const NUR_IDLE = { x:NUR_HOME.x, z:NUR_HOME.z, yaw:'P', wp:0,
+  rsx:10, rsz:-5, rel:20, rsup:0, rwx:0, rcurl:0.35,
+  lsx:38, lsz:8, lel:78, lsup:0, lwx:-12, lcurl:0.6 };   /* left always cradles tablet */
+const NUR_POSES = {
+  identity: { x:-0.56, z:-0.34, yaw:'W', wp:14,
+    rsx:52, rsz:-8, rel:34, rsup:0, rwx:10, rcurl:0.75,
+    lsx:34, lsz:8, lel:74, lsup:0, lwx:-12, lcurl:0.6 },
+  consent:  { x:-0.62, z:-0.42, yaw:'P', wp:6,
+    rsx:16, rsz:-6, rel:26, rsup:0, rwx:0, rcurl:0.4,
+    lsx:62, lsz:4, lel:52, lsup:0, lwx:-20, lcurl:0.6 },   /* tablet raised to patient */
+  vitals:   { x:-0.88, z:-0.22, yaw:'M', wp:8,
+    rsx:55, rsz:-10, rel:30, rsup:0, rwx:8, rcurl:0.5,
+    lsx:36, lsz:8, lel:76, lsup:0, lwx:-12, lcurl:0.6 },
+  hygiene:  { ...NUR_IDLE },
+  drugprep: { ...NUR_IDLE, rsx:14 },
+  siteprep: { ...NUR_IDLE, wp:4 },
+  position: { ...NUR_IDLE, wp:5 },
+  inject:   { ...NUR_IDLE, wp:7, rsx:16 },
+  dose:     { ...NUR_IDLE, wp:7, rsx:16 },
+  withdraw: { ...NUR_IDLE, wp:4 },
+  sharps:   { ...NUR_IDLE },
+  monitor:  { x:-0.60, z:-0.38, yaw:'P', wp:9,
+    rsx:46, rsz:-10, rel:62, rsup:0, rwx:6, rcurl:0.55,
+    lsx:50, lsz:6, lel:62, lsup:0, lwx:-18, lcurl:0.6 },
+};
+function resolveYaw(mode, x, z) {
+  if (mode === 'P') return yawToFace(x, z, 0.18, 0.10);            /* patient */
+  if (mode === 'C') return yawToFace(x, z, CART.x, CART.z);        /* supply cart */
+  if (mode === 'W') return yawToFace(x, z, -0.30, -0.05);          /* patient left wrist */
+  if (mode === 'M') return yawToFace(x, z, -1.02, 0.12);           /* vitals monitor */
+  return mode;
+}
+function posedYaw(p) { return resolveYaw(p.yaw, p.x, p.z); }
+function lerpPose(a, b, t) {
+  const out = {};
+  for (const k of ['x','z','wp','rsx','rsz','rel','rsup','rwx','rcurl','lsx','lsz','lel','lsup','lwx','lcurl'])
+    out[k] = lerp(a[k] ?? 0, b[k] ?? 0, t);
+  out.yawV = lerpAngle(posedYaw(a), posedYaw(b), t);
+  return out;
+}
+function applyRobotPose(robot, J, p, baseY, gait, t) {
+  robot.position.x = p.x;
+  robot.position.z = p.z;
+  robot.rotation.y = p.yawV;
+  J.waist.rotation.x = -p.wp * DEG;   /* positive wp leans forward (-Z) */
+  J.rSh.rotation.x = p.rsx * DEG;  J.rSh.rotation.z = p.rsz * DEG;
+  J.rElbow.rotation.x = p.rel * DEG;
+  J.rFore.rotation.y = p.rsup * DEG;
+  J.rWrist.rotation.x = p.rwx * DEG;
+  setCurl(J.rFingers, p.rcurl);
+  J.lSh.rotation.x = p.lsx * DEG;  J.lSh.rotation.z = p.lsz * DEG;
+  J.lElbow.rotation.x = p.lel * DEG;
+  J.lFore.rotation.y = p.lsup * DEG;
+  J.lWrist.rotation.x = p.lwx * DEG;
+  setCurl(J.lFingers, p.lcurl);
+  /* gait: legs articulate while the root translates (high-DOF showcase) */
+  const sw = Math.sin(t * 9.0);
+  J.rHip.rotation.x = gait * 0.42 * sw;
+  J.lHip.rotation.x = -gait * 0.42 * sw;
+  J.rKnee.rotation.x = gait * Math.max(0, -0.6 * sw);
+  J.lKnee.rotation.x = gait * Math.max(0, 0.6 * sw);
+  J.rAnkle.rotation.x = -gait * 0.25 * sw;
+  J.lAnkle.rotation.x = gait * 0.25 * sw;
+  robot.position.y = baseY + gait * Math.abs(Math.sin(t * 9.0)) * 0.014
+    + (1 - gait) * Math.sin(t * 1.6) * 0.0035;   /* idle breathing bob */
+}
+
+/* IK-lite: translate the hand group so the tool tip lands exactly on the target */
+const _tipW = new THREE.Vector3(), _tgtW = new THREE.Vector3(),
+      _delta = new THREE.Vector3(), _q = new THREE.Quaternion(), _goal = new THREE.Vector3();
+function tipCorrect(st, ikGroup, tipObj, targetObj, strength, dt) {
+  tipObj.getWorldPosition(_tipW);
+  targetObj.getWorldPosition(_tgtW);
+  _delta.subVectors(_tgtW, _tipW);
+  const dist = _delta.length();
+  /* horizontal error slowly steps the whole robot in (persistent root offset),
+     so the hand only ever absorbs a small residual — no detached-wrist artifacts */
+  const g = Math.min(1, dt * 5) * strength;
+  st.docRootIK.x = THREE.MathUtils.clamp(st.docRootIK.x + _delta.x * g, -0.30, 0.30);
+  st.docRootIK.y = THREE.MathUtils.clamp(st.docRootIK.y + _delta.z * g, -0.30, 0.30);
+  if (_delta.length() > 0.14) _delta.setLength(0.14);
+  ikGroup.parent.getWorldQuaternion(_q).invert();
+  _delta.applyQuaternion(_q).multiplyScalar(strength);
+  _goal.copy(ikGroup.userData.base).add(_delta);
+  ikGroup.position.lerp(_goal, 0.5);
+  return dist;
+}
+function tipRelax(ikGroup) {
+  ikGroup.position.lerp(ikGroup.userData.base, 0.25);
+}
+
+/* ================= PER-STATION ANIMATION ================= */
+function animStation(st, dt) {
+  if (!st.completed) {
+    st.elapsed += dt;
+    if (st.elapsed >= st.total) {
+      st.elapsed = st.total;
+      st.completed = true;
+      finishCount++;
+      st.finishOrder = finishCount;
+    }
+  }
+  const t = st.elapsed;
+  let pi = 0;
+  for (let i = 0; i < st.phases.length; i++) {
+    if (t >= st.phases[i].start && t < st.phases[i].end) { pi = i; break; }
+    if (t >= st.phases[i].end) pi = i + 1;
+  }
+  st.phaseIdx = Math.min(pi, st.phases.length - 1);
+  const ph = st.phases[st.phaseIdx];
+  const k = st.completed ? 1 : Math.min(1, (t - ph.start) / (ph.end - ph.start));
+  const sk = ssq(k);
+  const phName = ph.name;
+  const idx = st.phaseIdx;
+
+  /* ---- doctor ---- */
+  const dPrev = idx === 0 ? DOC_IDLE : DOC_POSES[PHASES[idx - 1].name];
+  const dCurr = DOC_POSES[phName];
+  const dp = lerpPose(dPrev, dCurr, sk);
+  /* gait blend from root motion speed */
+  const dvx = dp.x - st.prevDocPos.x, dvz = dp.z - st.prevDocPos.y;
+  const dSpeed = dt > 0 ? Math.hypot(dvx, dvz) / dt : 0;
+  st.prevDocPos.set(dp.x, dp.z);
+  st.docGait += ((dSpeed > 0.05 ? 1 : 0) - st.docGait) * Math.min(1, dt * 7);
+  applyRobotPose(st.doctor, st.dj, dp, ROBOT_ROOT_Y, st.docGait, t);
+
+  /* hygiene hand-rub oscillation */
+  if (phName === 'hygiene') {
+    const rub = Math.sin(t * 14) * 7 * bump(k);
+    st.dj.rSh.rotation.z += (-rub - 2) * DEG;
+    st.dj.lSh.rotation.z += (-rub + 2) * DEG;
+  }
+  /* drug-prep draw: supinate wrist, inspect syringe */
+  if (phName === 'drugprep') {
+    st.dj.rFore.rotation.y += Math.sin(k * Math.PI * 2) * 14 * DEG;
+  }
+
+  /* doctor neck: track the deltoid (or the cart while prepping) */
+  const lookCart = (phName === 'drugprep' || phName === 'sharps');
+  st.dj.neckYaw.rotation.y = lerpAngle(st.dj.neckYaw.rotation.y,
+    (lookCart ? -0.15 : 0.10) + Math.sin(t * 0.5) * 0.03, 0.08);
+  st.dj.neck.rotation.x = lerpAngle(st.dj.neck.rotation.x,
+    (phName === 'inject' || phName === 'dose' || phName === 'siteprep') ? -0.34 : -0.12, 0.06);
+
+  /* ---- tool visibility (stateless from phase) ---- */
+  const picked = idx > PH.drugprep || (phName === 'drugprep' && k >= 0.55);
+  const disposed = idx > PH.sharps || (phName === 'sharps' && k >= 0.65);
+  st.traySyr.visible = !picked;
+  st.syringe.visible = picked && !disposed;
+  st.swab.visible = (phName === 'siteprep');
+  st.vial.visible = (phName === 'drugprep' && k >= 0.2 && k <= 0.85);
+  st.scanner.visible = (phName === 'identity');
+  /* sharps LED confirmation flash */
+  st.sharps.userData.led.material.emissiveIntensity =
+    (phName === 'sharps' && k > 0.62 && k < 0.85) ? 2.2 : 0.25;
+
+  /* ---- IK tip correction: needle / swab exactly on the deltoid ---- */
+  const needleStrength =
+    phName === 'position' ? 0.85 * sk :
+    phName === 'inject'   ? 1.0 :
+    phName === 'dose'     ? 1.0 :
+    phName === 'withdraw' ? Math.max(0, 1 - sk * 1.6) : 0;
+  const swabStrength = phName === 'siteprep' ? bump(k) : 0;
+  if (needleStrength < 0.02 && swabStrength < 0.02)
+    st.docRootIK.multiplyScalar(Math.max(0, 1 - dt * 3));
+  st.doctor.position.x += st.docRootIK.x;
+  st.doctor.position.z += st.docRootIK.y;
+  st.doctor.updateMatrixWorld(true);
+  st.patient.updateMatrixWorld(true);
+  let liveDist = null;
+  if (needleStrength >= 0.02) {
+    let tgt = st.targetSurface;
+    if (phName === 'dose') {
+      /* blend 6 mm deep — needle visibly indwelling, zero clipping elsewhere */
+      st.targetDeep.position.x = 0.044 - 0.028 * Math.min(1, k * 3);
+      tgt = st.targetDeep;
+    }
+    liveDist = tipCorrect(st, st.dj.rHandIK, st.syringe.userData.tip, tgt, needleStrength, dt);
+  } else {
+    tipRelax(st.dj.rHandIK);
+  }
+  if (swabStrength >= 0.02) {
+    tipCorrect(st, st.dj.lHandIK, st.swab.userData.tip, st.targetSurface, swabStrength, dt);
+    /* circular swab motion */
+    st.dj.lWrist.rotation.z = Math.sin(t * 9) * 0.14 * bump(k);
+  } else {
+    tipRelax(st.dj.lHandIK);
+  }
+  st.tipDistMm = liveDist !== null ? liveDist * 1000 : null;
+
+  /* plunger & fluid during dose */
+  const plunger = st.syringe.userData.plunger;
+  const fluid = st.syringe.userData.fluid;
+  if (phName === 'dose') {
+    plunger.position.y = lerp(0.10, 0.035, sk);
+    fluid.scale.y = Math.max(0.05, 1 - sk * 0.95);
+    fluid.position.y = -0.01 - sk * 0.045;
+  } else if (idx < PH.dose) {
+    plunger.position.y = 0.10; fluid.scale.y = 1; fluid.position.y = -0.01;
+  }
+
+  /* ---- nurse ---- */
+  const nPrev = idx === 0 ? NUR_IDLE : NUR_POSES[PHASES[idx - 1].name];
+  const nCurr = NUR_POSES[phName];
+  const np = lerpPose(nPrev, nCurr, sk);
+  const nvx = np.x - st.prevNurPos.x, nvz = np.z - st.prevNurPos.y;
+  const nSpeed = dt > 0 ? Math.hypot(nvx, nvz) / dt : 0;
+  st.prevNurPos.set(np.x, np.z);
+  st.nurGait += ((nSpeed > 0.05 ? 1 : 0) - st.nurGait) * Math.min(1, dt * 7);
+  applyRobotPose(st.nurse, st.nj, np, ROBOT_ROOT_Y, st.nurGait, t + 1.7);
+  /* documentation finger taps */
+  if (phName === 'monitor') {
+    setCurl(st.nj.rFingers, 0.55 + Math.max(0, Math.sin(t * 10)) * 0.3);
+  }
+  st.nj.neckYaw.rotation.y = lerpAngle(st.nj.neckYaw.rotation.y,
+    (phName === 'monitor' ? Math.sin(t * 1.2) * 0.3 : -0.06) + Math.sin(t * 0.4) * 0.03, 0.07);
+  st.nj.neck.rotation.x = lerpAngle(st.nj.neck.rotation.x,
+    (phName === 'identity' || phName === 'monitor') ? -0.30 : -0.10, 0.06);
+  /* scanner LED blink during identity */
+  st.scanner.userData.led.material.emissiveIntensity =
+    phName === 'identity' ? (Math.sin(t * 16) > 0 ? 2.0 : 0.3) : 0.0;
+
+  /* ---- patient ---- */
+  const pj = st.pj;
+  /* breathing */
+  const br = 1 + Math.sin(t * 1.9 + st.cfg.seed) * 0.012;
+  pj.chest.scale.set(br, 1, br);
+  /* blink */
+  const ud = st.patient.userData;
+  ud.blinkAt -= dt;
+  if (ud.blinkAt < 0) ud.blinkAt = 2.2 + Math.random() * 3.2;
+  const blink = ud.blinkAt < 0.13 ? 1 : 0.12;
+  [pj.lidL, pj.lidR].forEach(lid => {
+    lid.scale.y = lerp(lid.scale.y, blink, 0.55);
+    lid.position.y = lid.userData.eyeY + 0.020 * (1 - lid.scale.y);
+  });
+  /* head behavior per phase */
+  let headYaw = Math.sin(t * 0.32 + st.cfg.seed) * 0.06;
+  let headPitch = 0;
+  if (phName === 'consent') headPitch = -Math.abs(Math.sin(k * Math.PI * 2)) * 0.18; /* nod twice */
+  if (phName === 'identity') headYaw = 0.35;                /* look toward nurse (left) */
+  if (phName === 'inject' || phName === 'dose') headYaw = -0.45;   /* look at right arm */
+  if (st.ae && phName === 'monitor' && k < 0.55) headPitch = -0.32 * bump(k / 0.55); /* drowsy dip */
+  pj.neckYaw.rotation.y = lerpAngle(pj.neckYaw.rotation.y, headYaw, 0.05);
+  pj.neck.rotation.x = lerpAngle(pj.neck.rotation.x, headPitch, 0.05);
+  /* left hand grips the armrest during needle phases */
+  const grip = (phName === 'inject' || phName === 'dose') ? 0.9 : 0.15;
+  pj.lFingerBlock.rotation.x = lerp(pj.lFingerBlock.rotation.x, grip * 0.9, 0.1);
+  pj.lThumb.rotation.x = lerp(pj.lThumb.rotation.x, grip * 0.5, 0.1);
+
+  /* ---- target marker pulse ---- */
+  const hot = (phName === 'inject' || phName === 'dose');
+  const pulse = hot ? 1.5 + 0.3 * Math.sin(t * 9) : 1.0 + 0.15 * Math.sin(t * 4);
+  st.marker.userData.ring.scale.setScalar(pulse);
+  st.marker.userData.ring.material.emissiveIntensity = hot ? 1.1 : 0.45;
+
+  /* ---- robot head LED ---- */
+  st.dj.ledStrip.material.emissiveIntensity = 0.8 + 0.7 * (0.5 + 0.5 * Math.sin(t * 4));
+  st.nj.ledStrip.material.emissiveIntensity = 0.8 + 0.7 * (0.5 + 0.5 * Math.sin(t * 4 + 1.5));
+
+  /* ---- physiology for the ECG ---- */
+  let hrTarget = 64 + (st.cfg.seed % 17) + (hot ? 9 : 0);
+  if (st.ae && phName === 'monitor' && k < 0.55) hrTarget = 49;     /* vasovagal dip */
+  st.hr += (hrTarget - st.hr) * Math.min(1, dt * 1.2);
+  st.spo2 = 97.5 + Math.sin(t * 0.4) * 0.6 - (st.ae && phName === 'monitor' && k < 0.55 ? 1.5 : 0);
+}
+
+/* ================= UI: SCOREBOARD / TIMELINE / TELEMETRY ================= */
+function updateScoreboard() {
+  const sorted = rankStations(stations);
+  let html = '';
+  sorted.forEach((s, rank) => {
+    const rc = 'rank' + (rank + 1);
+    const rb = 'r' + (rank + 1);
+    const prog = Math.min(1, s.elapsed / s.total);
+    const status = s.completed
+      ? '<span style="color:#0a8a4a">DONE #' + s.finishOrder + '</span>'
+      : '<span style="color:#b06a10">' + (prog * 100).toFixed(0) + '%</span>';
+    html += '<div class="score-station ' + rc + '">'
+      + '<div class="station-label"><span>Station ' + s.cfg.name
+      + (s.ae ? '<span class="ae-flag">AE Gr.1</span>' : '') + '</span>'
+      + '<span class="rank-badge ' + rb + '">#' + (rank + 1) + '</span></div>'
+      + '<div class="score-row"><span>GCP composite</span><span>' + s.composite.toFixed(1) + '</span></div>'
+      + '<div class="score-row"><span>Total time</span><span>' + s.total.toFixed(2) + 's</span></div>'
+      + '<div class="score-row"><span>Needle deviation</span><span>' + s.metrics.needleMm.toFixed(2) + ' mm</span></div>'
+      + '<div class="score-row"><span>Protocol</span><span>' + s.metrics.protocol.toFixed(1) + '%</span></div>'
+      + '<div class="score-row"><span>Sterility</span><span>' + s.metrics.sterility.toFixed(1) + '%</span></div>'
+      + '<div class="score-row"><span>Dose</span><span>' + s.metrics.doseML.toFixed(3) + ' mL</span></div>'
+      + '<div class="score-row"><span>Status</span><span>' + status + '</span></div>'
+      + '</div>';
+  });
+  document.getElementById('score-entries').innerHTML = html;
+}
+
+function updatePhasePanel() {
+  let st;
+  if (activeSt !== 'overview' && typeof activeSt === 'number') st = stations[activeSt];
+  else {
+    st = stations[0];
+    stations.forEach(s => { if (s.elapsed / s.total > st.elapsed / st.total) st = s; });
+  }
+  const lbl = activeSt !== 'overview' ? 'Station ' + st.cfg.name : 'Leading: Station ' + st.cfg.name;
+  let html = '<div style="font-size:9px;color:#8a99a6;margin-bottom:3px">' + lbl + '</div>';
+  st.phases.forEach((p, i) => {
+    let cls = 'phase-line';
+    if (st.completed || i < st.phaseIdx) cls += ' done';
+    else if (i === st.phaseIdx && !st.completed) cls += ' active';
+    html += '<div class="' + cls + '"><span class="phase-dot"></span>' + p.label
+      + '<span class="phase-actor ' + p.actor + '">' + p.actor + '</span></div>';
+  });
+  document.getElementById('phase-lines').innerHTML = html;
+
+  /* telemetry */
+  const ph = st.phases[st.phaseIdx];
+  const k = st.completed ? 1 : Math.min(1, (st.elapsed - ph.start) / (ph.end - ph.start));
+  let dose = 0;
+  if (st.phaseIdx > PH.dose || st.completed) dose = st.metrics.doseML;
+  else if (st.phaseIdx === PH.dose) dose = st.metrics.doseML * ssq(k);
+  const rows = [
+    ['Robot DOF', '43 × 2 (G1 + Dex3-1)'],
+    ['Phase', (st.phaseIdx + 1) + '/12 ' + ph.name],
+    ['Elapsed', st.elapsed.toFixed(2) + ' s / ' + st.total.toFixed(2) + ' s'],
+    ['Needle→target', st.tipDistMm !== null ? st.tipDistMm.toFixed(1) + ' mm (live)' : '—'],
+    ['Recorded deviation', st.metrics.needleMm.toFixed(2) + ' mm'],
+    ['Dose delivered', dose.toFixed(3) + ' / 0.500 mL'],
+    ['Heart rate', st.hr.toFixed(0) + ' bpm'],
+    ['eSource latency', st.metrics.docLatency.toFixed(1) + ' s'],
+    ['AE status', st.ae ? 'Grade 1 vasovagal (seeded)' : 'none'],
+  ];
+  document.getElementById('tel-rows').innerHTML = rows.map(r =>
+    '<div class="tel-row"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('');
+}
+
+function showFinalResults() {
+  if (resultsShown) return;
+  resultsShown = true;
+  const ranked = rankStations(stations);
+  const classes = ['first', 'second', 'third', 'fourth'];
+  let html = '';
+  ranked.forEach((s, i) => {
+    html += '<div class="result-row ' + classes[i] + '">'
+      + '<span class="result-rank">#' + (i + 1) + '</span>'
+      + '<span class="result-name">Station ' + s.cfg.name + (s.ae ? ' ⚠' : '') + '</span>'
+      + '<span class="result-comp">' + s.composite.toFixed(1) + '</span>'
+      + '<span class="result-time">' + s.total.toFixed(2) + 's</span>'
+      + '<span class="result-acc">' + s.metrics.needleMm.toFixed(2) + 'mm</span>'
+      + '</div>';
+  });
+  document.getElementById('results-rows').innerHTML = html;
+  finalRes.classList.add('show');
+}
+
+/* ================= MAIN LOOP ================= */
+const clock = new THREE.Clock();
+let uiTimer = 0, ecgTimer = 0, towerTimer = 0, craT = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const now = performance.now() / 1000;
+
+  if (camAnim) {
+    let p = (now - camStart) / camDur;
+    if (p >= 1) { p = 1; camAnim = false; }
+    const e = easeIO(p);
+    camera.position.lerpVectors(camFrom.pos, camTo.pos, e);
+    ctrls.target.lerpVectors(camFrom.target, camTo.target, e);
+  }
+  ctrls.update();
+
+  if (playing) stations.forEach(st => animStation(st, dt));
+
+  /* CRA idle: scans the room, types */
+  craT += dt;
+  const cj = craDesk.cra.userData.J;
+  cj.neckYaw.rotation.y = Math.sin(craT * 0.30) * 0.55;
+  cj.neck.rotation.x = -0.10 + Math.sin(craT * 0.9) * 0.03;
+  cj.rFingerBlock.rotation.x = 0.35 + Math.max(0, Math.sin(craT * 9)) * 0.25;
+  cj.lFingerBlock.rotation.x = 0.35 + Math.max(0, Math.sin(craT * 9 + 1.1)) * 0.25;
+  const cud = craDesk.cra.userData;
+  cud.blinkAt -= dt;
+  if (cud.blinkAt < 0) cud.blinkAt = 2.5 + Math.random() * 3;
+  const cb = cud.blinkAt < 0.13 ? 1 : 0.12;
+  [cj.lidL, cj.lidR].forEach(lid => {
+    lid.scale.y = lerp(lid.scale.y, cb, 0.5);
+    lid.position.y = lid.userData.eyeY + 0.020 * (1 - lid.scale.y);
+  });
+  cj.chest.scale.setScalar(1 + Math.sin(craT * 1.7) * 0.01);
+
+  /* ECG screens ~10 Hz, staggered */
+  ecgTimer += dt;
+  if (ecgTimer > 0.1) {
+    ecgTimer = 0;
+    stations.forEach(st => {
+      const phName = st.phases[st.phaseIdx].name;
+      const k = st.completed ? 1 : Math.min(1,
+        (st.elapsed - st.phases[st.phaseIdx].start) /
+        (st.phases[st.phaseIdx].end - st.phases[st.phaseIdx].start));
+      const alert = st.ae && phName === 'monitor' && k < 0.55 && !st.completed;
+      drawECG(st.mon.userData.ecg, st.elapsed, st.hr, st.spo2, alert);
+    });
+  }
+  /* central tower ~2.5 Hz */
+  towerTimer += dt;
+  if (towerTimer > 0.4) { towerTimer = 0; drawTower(stations); }
+
+  uiTimer += dt;
+  if (uiTimer > 0.12) {
+    uiTimer = 0;
+    updateScoreboard();
+    updatePhasePanel();
+  }
+
+  if (playing && stations.every(s => s.completed)) {
+    setPlaying(false);
+    setTimeout(showFinalResults, 450);
+  }
+
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener('resize', onResize);
+
+drawTower(stations);
+updateScoreboard();
+updatePhasePanel();
+animate();
+</script>
+</body>
+</html>
