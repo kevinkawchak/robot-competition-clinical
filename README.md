@@ -59,6 +59,65 @@ panels. When all stations finish, the **Final GCP Results** overlay displays the
 ranking. Scroll/pinch zooms toward the cursor; **double-click (or double-tap) any object** —
 a fingertip, the needle, the ECG trace, a poster — to glide the camera to it.
 
+## Instructions for Claude Code: Adding a New Simulation Version With Zero 404s
+
+> **This section is written for a future Claude Code (or any AI coding agent) session
+> asked to build simulation version vX.Y.Z.** Every past 404 on this site came from one
+> of the mistakes below — not from GitHub Pages being broken. Follow each rule exactly
+> and the new simulation will load on the first try.
+
+1. **Put the page in the one folder that gets served.** GitHub Pages publishes the
+   `/docs` folder of the `main` branch only. The new simulation must be a single
+   self-contained file at `docs/v<N>/index.html`, where `<N> = major×10 + minor`
+   of the release version: v0.5.0 → `v5`, v0.9.0 → `v9`, v1.0.0 → `v10`,
+   v1.1.0 → `v11`, v1.2.0 → `v12`. Never place pages at the repository root, never
+   invent a different folder scheme, and never rename or move existing `docs/v*` folders.
+
+2. **Know the URL mapping before writing any link.** `docs/v<N>/index.html` is served at
+   `https://kevinkawchak.github.io/robot-competition-clinical/v<N>/` — the `docs/`
+   segment is **not** part of the URL, paths are case-sensitive, and the folder name,
+   README link, and nav links must all use the identical `v<N>`. (The original v0.3.0
+   404 happened because content lived in `docs/v2/` while links said `/v3/`.)
+
+3. **All links between pages must be relative.** From the landing page
+   (`docs/index.html`) link as `href="v<N>/"`. From one version page to another, reuse
+   the existing pattern in every `docs/v*/index.html`: derive the base from
+   `window.location.pathname` and append `v<N>/`. Never write root-absolute links like
+   `/v<N>/` — the site lives under `/robot-competition-clinical/`, so root-absolute
+   links 404 on github.io.
+
+4. **No build step exists — keep it that way.** `docs/.nojekyll` is intentional: Pages
+   publishes these files verbatim. Do not delete `.nojekyll`, do not add Jekyll
+   front matter, and do not add assets that require compilation. One HTML file with
+   inline CSS/JS (CDN `<script>` imports are fine) is the required format.
+
+5. **Nothing is live until it is merged to `main`.** Pushing a feature branch deploys
+   nothing, and telling the user a URL works before merge is the second way past
+   sessions caused "404" reports. After the merge, the **"pages build and deployment"**
+   workflow (Actions tab) must complete green for the merge commit — it usually takes
+   under a minute.
+
+6. **Verify in this order before reporting success.**
+   1. The "pages build and deployment" run for the merge commit concluded `success`.
+   2. The run's **build job log** prints the deployed artifact's file listing — confirm
+      `./v<N>/index.html` appears in it.
+   3. Fetch `https://kevinkawchak.github.io/robot-competition-clinical/health.txt`,
+      then the new `…/v<N>/` URL. **If your environment's network policy blocks
+      fetching the live site** (sandboxed Claude Code web sessions usually do — every
+      request returns a proxy 403), say so plainly and cite steps 1–2 as your evidence
+      instead of claiming you tested the URL.
+   4. If the user still reports 404 on every page while step 1–2 pass, the Pages
+      routing is stuck on GitHub's side; no commit can fix it. Ask the user to apply
+      the Settings → Pages source toggle described in the Quick Start callout above.
+
+7. **Update the companion files in the same change**: add the new row (marked
+   "**(new)**") to the README version table and remove "(new)" from the previous row;
+   add the version to the nav banner of `docs/index.html` **and every existing**
+   `docs/v*/index.html`; append the implementation prompt to `prompts.md`; add entries
+   to `changelog.md` and `releases.md` following their existing format; bump the
+   version in `pyproject.toml`. Run `ruff check .` and `ruff format --check .` so CI
+   passes.
+
 ## What This Simulates (v1.0.0)
 
 Four identical stations compete simultaneously to complete a **GCP-aligned 12-phase IM
