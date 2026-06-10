@@ -2,6 +2,67 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] — 2026-06-10
+
+### Added
+- **v1.0.0 GCP Trial Suite viewer** (`docs/v10/index.html`) — ground-up state-of-the-art
+  rebuild of the nurse/doctor/patient competition for clinical trial experts
+- **12-phase GCP visit workflow** per station: identity verification, eConsent, baseline
+  vitals, hand hygiene, drug prep + barcode check, aseptic site prep, landmark/alignment,
+  needle insertion, 0.50 mL dose delivery, withdraw + safety, sharps disposal, observation
+  + eSource documentation — each phase tagged with its acting role (N/D)
+- **High-DOF Unitree G1 robots** (43 DOF incl. Dex3-1 hands): articulated 2-segment fingers
+  that grip tools, 3-DOF waist, 2-DOF neck, wrist supination, 6-DOF legs with a gait cycle
+  whenever the robot root translates
+- **IK-lite tip correction** — needle tip is servo-driven onto the deltoid target every
+  frame (surface at insertion, 6 mm indwelling during dose); horizontal error feeds a
+  natural whole-robot "step-in" so corrections never detach the wrist
+- **Composite GCP scoring** — 0.30×Time + 0.25×Accuracy + 0.20×Protocol + 0.10×Sterility +
+  0.10×Dose + 0.05×Comfort; ranking by composite (raw-time ranking retired)
+- **Seeded Grade 1 vasovagal adverse event** at exactly one station (C): ECG dips to
+  ~49 bpm, patient head droops, nurse responds, observation extends, scoreboard AE flag
+- **Live animated ECG/SpO2/NIBP monitors** per station (canvas-texture P-QRS-T waveform)
+- **Central 4-face live scoreboard tower** with ranks, composite scores, progress, AE flags
+- **Human CRA at a sponsor monitoring desk** with live EDC laptop screen — human-in-the-loop
+  trial oversight (types, scans the room, blinks, breathes)
+- **Diverse realistic patients** — per-station skin tone, hairstyle, gown color; blinking,
+  breathing, consent nods, injection head-turn, armrest grip
+- **Photoreal open-top room** (no ceiling): procedural vinyl-tile floor and wainscot wall
+  textures, observation window + hallway, wooden door, clinical signage posters, privacy
+  screens, freestanding exam-light booms, infusion pumps, supply carts with drawers/vials/
+  gloves/swabs, sharps containers, sanitizer stands, waste bins, station floor decals
+- **Zoom-anywhere camera**: minDistance 0.05 m, zoom-to-cursor, fog removed, double-click /
+  double-tap glide-focus on any object, keyboard shortcuts (Space, R, 0–4)
+- **Live telemetry panel**: DOF count, phase, live needle→target mm, recorded deviation,
+  dose delivered, heart rate, eSource latency, AE status
+- **Seven-version nav banner** with v1.0.0 farthest right (v0.1.0 … v0.9.0 | v1.0.0)
+- v1.0.0 release notes in `releases.md`, build prompt in `prompts.md`
+
+### Changed
+- Nav banners in v0.1.0, v0.5.0, v0.6.0, v0.7.0, v0.8.0, and v0.9.0 viewers updated to
+  link v1.0.0 at the far right ("v0.9.0 (new)" labels demoted to "v0.9.0")
+- `pyproject.toml` version from 0.9.0 to 1.0.0
+- `simulation_v2/run_competition.py` version string from 0.9.0 to 1.0.0
+- `simulation_v2/export_competition.py` version string from 0.9.0 to 1.0.0
+- `tests/test_exports.py` to expect version 1.0.0
+- README rewritten around v1.0.0: version table, GCP workflow, composite scoring,
+  architecture diagrams, project structure
+- Station speed profiles retuned for the 18.5 s-base 12-phase visit
+  (A 1.00 / B 0.93 / C 1.07 / D 0.97)
+- Ranking now by composite GCP score with total-time tiebreak
+
+### Fixed
+- **Physical object overlap (all stations)**: coats are part of the torso shell (z-fighting
+  impossible), all props placed with verified clearances and seated flush on surfaces
+  (tray syringe and sharps container no longer float), patient pelvis rests on the cushion
+  with thighs at 3 mm compression and soles exactly on the floor (shin segments corrected),
+  robot soles exactly on the floor
+- **Needle contact**: IK tip correction guarantees frame-accurate needle-to-deltoid contact
+  at every station regardless of pose interpolation — no interpenetration, no air gap
+- **Monitor orientation**: vitals screens face the nurse (previous releases faced away)
+- **Equipment lighting**: per-station exam lights are freestanding booms (consistent with
+  the no-ceiling room) instead of ceiling fixtures
+
 ## [0.9.0] — 2026-05-01
 
 ### Added

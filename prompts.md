@@ -1,5 +1,9 @@
 # Prompts
 
+## v1.0.0 Implementation Prompt
+
+Your goal is to create in kevinkawchak.github.io/robot-competition-clinical/ a new nurse, doctor, and patient simulation (v1.0.0 is farthest to the right on the top bar) that now includes high DOF robots, fixes physical object overlap, and upgrades all aspects of the competition to state of the art to be interesting to clinical trial experts. Do not have a ceiling on the room, make the room, humans, and humanoids look real life. Make sure the user can zoom up close to any part of the room.
+
 ## v0.9.0 Implementation Prompt
 
 Your goal is to generate a fully functional simulation based on the best performing v0.6.0 Competition from kevinkawchak/robot-competition-clinical. Create a new v0.9.0 link at the top of the current GitHub version table. Keep version labeling based on the current ascending versioning method. There are many issues to fix from v0.6.0 including:
