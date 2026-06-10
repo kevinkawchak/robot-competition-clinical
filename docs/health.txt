@@ -1,0 +1,6 @@
+ok
+robot-competition-clinical GitHub Pages serving check
+source: main branch, /docs folder
+If this file loads, the Pages site is being served. If a version page 404s
+while this file loads, the requested path is wrong - see /404.html for the
+list of valid pages.

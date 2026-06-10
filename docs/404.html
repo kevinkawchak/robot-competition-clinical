@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>404 &mdash; Clinical Robot Competition</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+       background:#0d1117;color:#e6edf3;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .card{max-width:640px;margin:24px;padding:32px 36px;background:#161b22;border:1px solid #30363d;
+        border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+  h1{margin:0 0 6px;font-size:42px;letter-spacing:1px}
+  p{line-height:1.55;color:#9da7b3}
+  .ok{color:#3fb950;font-weight:600}
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  td{padding:7px 4px;border-bottom:1px solid #21262d;font-size:14.5px}
+  td:first-child{color:#9da7b3;white-space:nowrap;padding-right:18px}
+  a{color:#58a6ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{background:#21262d;padding:2px 6px;border-radius:5px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>404</h1>
+  <p><span class="ok">The site itself is serving correctly</span> &mdash; you are seeing this
+     project&rsquo;s own 404 page, so GitHub Pages routing works. The address you requested
+     just doesn&rsquo;t exist. Every available simulation is listed below.</p>
+  <table id="versions">
+    <tr><td>v1.0.0 GCP Trial Suite</td><td><a data-path="v10/" href="/robot-competition-clinical/v10/">v10/</a></td></tr>
+    <tr><td>v0.9.0 Competition</td><td><a data-path="v9/" href="/robot-competition-clinical/v9/">v9/</a></td></tr>
+    <tr><td>v0.8.0 Competition</td><td><a data-path="v8/" href="/robot-competition-clinical/v8/">v8/</a></td></tr>
+    <tr><td>v0.7.0 Competition</td><td><a data-path="v7/" href="/robot-competition-clinical/v7/">v7/</a></td></tr>
+    <tr><td>v0.6.0 Competition</td><td><a data-path="v6/" href="/robot-competition-clinical/v6/">v6/</a></td></tr>
+    <tr><td>v0.5.0 Competition</td><td><a data-path="v5/" href="/robot-competition-clinical/v5/">v5/</a></td></tr>
+    <tr><td>v0.4.0 Competition</td><td><a data-path="v4/" href="/robot-competition-clinical/v4/">v4/</a></td></tr>
+    <tr><td>v0.2.0&ndash;v0.3.0 Viewer</td><td><a data-path="v2/" href="/robot-competition-clinical/v2/">v2/</a></td></tr>
+    <tr><td>v0.1.0 Single Station</td><td><a data-path="" href="/robot-competition-clinical/">site root</a></td></tr>
+  </table>
+  <p style="margin-bottom:0">Serving self-test: <a data-path="health.txt"
+     href="/robot-competition-clinical/health.txt"><code>health.txt</code></a></p>
+</div>
+<script>
+/* Rewrite hardcoded hrefs so the page also works on forks with a different
+   repo name: on *.github.io project sites the first path segment is the repo. */
+(function(){
+  var seg = location.pathname.split('/').filter(Boolean);
+  if (!/\.github\.io$/.test(location.hostname) || seg.length === 0) return;
+  var base = '/' + seg[0] + '/';
+  var links = document.querySelectorAll('a[data-path]');
+  for (var i = 0; i < links.length; i++) {
+    links[i].href = base + links[i].getAttribute('data-path');
+  }
+})();
+</script>
+</body>
+</html>
