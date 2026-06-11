@@ -1760,7 +1760,7 @@ const DOC_HOME = { x:0.95, z:-0.58 };
 const NUR_HOME = { x:-0.80, z:-0.55 };
 const CART = { x:1.10, z:0.10 };
 
-function buildStation(cfg) {
+function buildStation(cfg, idx) {
   const center = stationPos(cfg);
   const g = new THREE.Group();
   g.position.copy(center);
@@ -1840,7 +1840,8 @@ function buildStation(cfg) {
     docPoses: personalizePoses(DOC_POSES, cfg.seed),
     nurPoses: personalizePoses(NUR_POSES, cfg.seed ^ 0x9177),
     docIdle: null, nurIdle: null,
-    flavor: { hygiene: cfg.seed % 4, swab: cfg.seed % 3, tap: (cfg.seed >> 2) % 3 },
+    /* fixed permutations so every station's technique set is distinct */
+    flavor: { hygiene: [2, 1, 0, 3][idx % 4], swab: [0, 2, 1, 2][idx % 4], tap: [0, 1, 2, 1][idx % 4] },
     elapsed:0, started:false, completed:false, finishOrder:0, phaseIdx:0,
     ae:false, hr:64 + (cfg.seed % 17), spo2:97.5,
     prevDocPos:new THREE.Vector2(DOC_HOME.x, DOC_HOME.z),
@@ -1906,7 +1907,7 @@ const DOC_POSES = {
   identity: { ...DOC_IDLE },
   consent:  { ...DOC_IDLE },
   vitals:   { ...DOC_IDLE, rfwd:10, lfwd:10 },
-  hygiene:  { ...DOC_IDLE, x:0.78, z:0.40, yaw:'S', wp:8, hp:18,
+  hygiene:  { ...DOC_IDLE, x:0.64, z:0.50, yaw:'S', wp:8, hp:18,
     rfwd:38, rabd:-4, relb:96, rcurl:0.5, lfwd:38, labd:-4, lelb:96, lcurl:0.5 },
   drugprep: { x:1.00, z:-0.44, yaw:'C', wp:11, hp:22,
     rfwd:44, rabd:2, relb:66, rwro:36, rcurl:0.9,
@@ -1918,10 +1919,10 @@ const DOC_POSES = {
     rfwd:50, rabd:9, relb:42, rwpi:14, rcurl:0.93,
     lfwd:10, labd:4, lelb:35, lcurl:0.4 },
   inject:   { x:0.61, z:-0.29, yaw:'P', wp:17, hp:21,
-    rfwd:54, rabd:10, relb:34, rwpi:16, rcurl:0.95,
+    rfwd:58, rabd:10, relb:30, rwpi:20, rcurl:0.95,
     lfwd:9, labd:4, lelb:32, lcurl:0.4 },
   dose:     { x:0.61, z:-0.29, yaw:'P', wp:17, hp:21,
-    rfwd:54, rabd:10, relb:34, rwpi:16, rcurl:0.97,
+    rfwd:58, rabd:10, relb:30, rwpi:20, rcurl:0.97,
     lfwd:9, labd:4, lelb:32, lcurl:0.4 },
   withdraw: { x:0.68, z:-0.37, yaw:'P', wp:10, hp:22,
     rfwd:38, rabd:8, relb:62, rcurl:0.93,
@@ -1941,8 +1942,8 @@ const NUR_POSES = {
   consent:  { x:-0.64, z:-0.44, yaw:'P', wp:7, hp:14,
     rfwd:12, rabd:4, relb:32, rcurl:0.4,
     lfwd:58, labd:6, lelb:64, lwro:60, lwpi:-16, lcurl:0.55 },
-  vitals:   { x:-0.84, z:-0.26, yaw:'M', wp:9, hp:16,
-    rfwd:40, rabd:6, relb:62, rwpi:8, rcurl:0.5,
+  vitals:   { x:-0.88, z:-0.22, yaw:'M', wp:10, hp:16,
+    rfwd:46, rabd:6, relb:56, rwpi:8, rcurl:0.5,
     lfwd:30, labd:2, lelb:90, lwro:72, lwpi:-8, lcurl:0.55 },
   hygiene:  { ...NUR_IDLE },
   drugprep: { ...NUR_IDLE, rfwd:12 },
@@ -1962,7 +1963,7 @@ const NUR_POSES = {
    path or move their hands the same way. */
 function personalizePoses(tables, seed) {
   const rng = mulberry32(seed ^ 0x2c1b3c6d);
-  const tight = { drugprep:0.04, sharps:0.04, inject:0.05, dose:0.05, position:0.06, vitals:0.05 };
+  const tight = { drugprep:0.04, sharps:0.04, inject:0.05, dose:0.05, position:0.06, vitals:0.05, hygiene:0.05 };
   const out = {};
   for (const ph of Object.keys(tables)) {
     const pose = { ...tables[ph] };
@@ -2071,12 +2072,12 @@ function armIK(st, rig, side, tipObj, targetObj, strength, dt) {
   _delta.subVectors(_tgtW, _tipW);
   /* gross horizontal positioning: the whole robot steps in (small, capped) */
   const g = Math.min(1, dt * 5) * strength;
-  if (_delta.length() > 0.05) {
+  if (_delta.length() > 0.012) {
     st.docRootIK.x = THREE.MathUtils.clamp(st.docRootIK.x + _delta.x * g, -0.18, 0.18);
     st.docRootIK.y = THREE.MathUtils.clamp(st.docRootIK.y + _delta.z * g, -0.18, 0.18);
   }
   /* CCD passes: rotate each joint about its own axis toward the target */
-  for (let it = 0; it < 3; it++) {
+  for (let it = 0; it < 4; it++) {
     for (const j of chain) {
       const o = rig.J[j];
       if (!o) continue;
@@ -2091,8 +2092,8 @@ function armIK(st, rig, side, tipObj, targetObj, strength, dt) {
       if (_v1.lengthSq() < 1e-6 || _v2.lengthSq() < 1e-6) continue;
       _cr.crossVectors(_v1, _v2);
       let ang = Math.atan2(_cr.dot(_aW), _v1.dot(_v2)) / DEG;
-      ang = THREE.MathUtils.clamp(ang * 0.7 * strength, -7, 7);
-      del[j] = THREE.MathUtils.clamp((del[j] || 0) + ang, -30, 30);
+      ang = THREE.MathUtils.clamp(ang * 0.75 * strength, -9, 9);
+      del[j] = THREE.MathUtils.clamp((del[j] || 0) + ang, -44, 44);
       rig.setJ(j, (o.userData.poseDeg ?? 0) + del[j]);
       o.updateWorldMatrix(false, true);
     }
@@ -2107,7 +2108,7 @@ function armIK(st, rig, side, tipObj, targetObj, strength, dt) {
   _delta.applyQuaternion(_q).multiplyScalar(strength);
   _goal.copy(ikG.userData.off).add(_delta);
   _goal.sub(ikG.userData.base);
-  if (_goal.length() > 0.012) _goal.setLength(0.012);
+  if (_goal.length() > 0.022) _goal.setLength(0.022);
   _goal.add(ikG.userData.base);
   ikG.userData.off.lerp(_goal, 0.6);
   ikG.position.copy(ikG.userData.off);
@@ -2150,6 +2151,8 @@ function animStation(st, dt, wallT) {
   const dp = st.started ? lerpPose(dPrev, dCurr, sk) : lerpPose(st.docIdle, st.docIdle, 0);
   const [bx, bz] = st.started ? pathBowOffset(dPrev, dCurr, sk, style.pathBow) : [0, 0];
   dp.x += bx; dp.z += bz;
+  /* doctor arcs always bow west, away from the supply cart */
+  if (bx > 0) { dp.x -= 2 * bx; }
   const dvx = dp.x - st.prevDocPos.x, dvz = dp.z - st.prevDocPos.y;
   const dSpeed = dt > 0 ? Math.hypot(dvx, dvz) / dt : 0;
   st.prevDocPos.set(dp.x, dp.z);
@@ -2671,7 +2674,7 @@ function buildWorld() {
   buildRoom();
   buildTower();
   craDesk = buildCRADesk();
-  stations = STATION_CONFIGS.map(buildStation);
+  stations = STATION_CONFIGS.map((cfg, idx) => buildStation(cfg, idx));
   finalizeMetrics(stations);
   camTgt = {
     overview: { pos:new THREE.Vector3(0, 14.5, 19.0), target:new THREE.Vector3(0, 0.9, 0) },
@@ -2712,9 +2715,13 @@ function buildWorld() {
       tip:w(st.syringe.userData.tip), target:w(st.targetSurface),
       tablet:w(st.tablet), scanner:w(st.scanner),
       docRoot:w(st.doctor.root), ik:st.docRootIK.toArray().map(v => +v.toFixed(3)),
+      ikDelR:Object.fromEntries(Object.entries(st.doctor.ikDel.right).map(([k, v]) => [k.replace('right_', '').replace('_joint', ''), +v.toFixed(1)])),
+      ikOffR:+st.doctor.ik.right.position.distanceTo(st.doctor.ik.right.userData.base).toFixed(4),
       syrVis:st.syringe.visible, tabVis:st.tablet.visible,
     };
   };
+  window.__poses = i => ({ doc: stations[i].docPoses, nur: stations[i].nurPoses,
+    flavor: stations[i].flavor, style: stations[i].style });
   window.__handFrame = (i, actor, side) => {
     const st = stations[i];
     const rig = actor === 'doc' ? st.doctor : st.nurse;
