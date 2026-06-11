@@ -10,7 +10,7 @@ v1.2.0 is the recommended viewer — everything made real life: the robots are t
 Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
 converted offline from `H2_Plus/H2_with_sharpa.usdz` in
 [kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus). Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
-(mujocolab/mjlab), extending GPU-accelerated robot.
+(mujocolab/mjlab).
 
 ## Quick Start (1-2 Steps from GitHub)
 
