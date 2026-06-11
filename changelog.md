@@ -2,6 +2,66 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] — 2026-06-11
+
+### Added
+- **v1.1.0 Real-Life GCP Suite viewer** (`docs/v11/index.html`) — everything made real
+  life on top of the v1.0.0 GCP Trial Suite, still open-top (no ceiling)
+- **Real Unitree H2 robot files**: doctor and nurse are the actual **Unitree H2 Plus**
+  (H2 + dual SHARPA dexterous hands) — visual meshes and the full physics joint tree
+  (75 revolute joints with axes and limits) converted from
+  `kevinkawchak/fork_unitree_model` `H2_Plus/H2_with_sharpa.usdz` (binary USD crate) into
+  `docs/v11/h2_plus.glb` (3.7 MB, 151k triangles, joint metadata in node extras), loaded
+  same-origin with GLTFLoader and articulated live; simplified procedural fallback
+  humanoids if the GLB cannot be fetched (e.g. `file://`)
+- **`tools/convert_h2_usd_to_glb.py`** — offline converter (usd-core +
+  fast-simplification): welds the unindexed USD triangle soup, decimates 744k → 151k
+  triangles (fingers harder than shells), recomputes normals, preserves the joint tree
+  with per-node `{joint, axis, lo, hi}` extras, and verifies forward kinematics against
+  the authored USD link poses (max error 0.0001 mm)
+- **Realistic patients v2**: layered torsos, five-finger articulated hands, expressive
+  faces (eyelids, brows, lips, ears, cheeks, jaw), ECG chest leads with sagging cable,
+  per-station personas — calm / talkative (chats with the nurse, lips move) / anxious
+  (faster blink, finger fidget, watches the needle, early armrest grip) / elderly
+  (reading glasses, grey bun, slower head, light hand tremor)
+- **Naturally dissimilar stations**: each seed draws a motion style (stride, cadence,
+  waist lean, arm reach, head energy, walk-path bow, pose tempo, walk bounce) and a
+  staggered visit start (0.66–1.75 s); metric draws are profile-correlated (speed station
+  faster + sloppier needle, precision station tighter + steadier), so movements and
+  scores differ naturally — deterministic results: D 96.6 (0.33 mm), A 89.0, C 85.6
+  (AE Gr.1), B 82.2 (fastest wall finish, ranks last)
+- **Infinite zoom from any point**: custom fly-through dolly replaces OrbitControls
+  zoom — no minimum or maximum distance, wheel and pinch both supported, zoom-to-cursor,
+  the orbit pivot glides through geometry so travel never stalls, adaptive near/far clip
+  planes (razor-sharp at millimeter range, no clipping at building range)
+- **Real-life open-air suite**: physically-modeled daylight sky (three.js Sky) over the
+  open-top room, 20 m × 20 m floorplan, wall bumper rails, live wall clock (real local
+  time), scrub sink with towel dispenser, red crash cart with defib, supply shelving,
+  per-station medical-gas outlet panels, EXIT sign over the door, potted plants, outdoor
+  apron so fly-out zoom never shows a void
+- **Signage v2 (fixes low-res clipped headings)**: every poster/label/board re-rendered
+  at 4x resolution (2048-px posters) with measure-and-fit headline sizing and word-wrapped
+  body text; posters get aluminium frames; max-anisotropy sampling
+
+### Changed
+- Nav banners in v0.1.0, v0.5.0–v0.9.0, and v1.0.0 viewers updated to link v1.1.0 at the
+  far right ("v1.0.0 (new)" labels demoted to "v1.0.0"); `docs/404.html` lists v11/
+- `pyproject.toml` version from 1.0.0 to 1.1.0
+- README rewritten around v1.1.0: version table, real-robot-file pipeline, persona/motion
+  style documentation, deterministic results, architecture diagrams, project structure,
+  Unitree H2 attribution
+- ECG monitor screens at 512×288 (sharper traces), scoreboard tower at 1024×768
+- Hand-IK tip correction is incremental (accumulates from the current offset) so the
+  needle/swab tip converges exactly onto the deltoid instead of halving the error
+
+### Fixed
+- **Low-resolution signage with clipped headings** (e.g. "ONCOLOGY CLINICAL TRIALS UNIT"
+  overflowing the poster band in v1.0.0): headings now measure-and-fit, bodies word-wrap
+- **Zoom stops** (v1.0.0 clamped 0.05–48 m): zoom is now infinite in both directions from
+  any point, through geometry
+- **Identical station choreography**: stations no longer share one keyframe timing — style
+  parameters, staggered starts and per-phase tempo make every station visibly different
+
 ## [1.0.0] — 2026-06-10
 
 ### Added

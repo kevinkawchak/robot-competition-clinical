@@ -1,5 +1,60 @@
 # Releases
 
+## Clinical Robot Competition — v1.1.0 Real-Life GCP Suite
+
+v1.1.0 — 2026-06-11
+
+### Summary
+
+Everything made real life. The doctor and nurse at every station are now the **actual
+Unitree H2 Plus humanoid** — the real visual meshes and the complete 75-joint physics tree
+(including both SHARPA five-finger dexterous hands) converted offline from the binary-USD
+robot description `H2_Plus/H2_with_sharpa.usdz` in `kevinkawchak/fork_unitree_model` into a
+compact same-origin GLB (`docs/v11/h2_plus.glb`, 3.7 MB, 151k triangles) with every joint's
+axis and limits preserved, then articulated live in the browser through a semantic pose API
+with runtime IK needle correction (tip exactly on the deltoid at insertion, indwelling during
+the slow-push dose). Patients are rebuilt as realistic humans: five-finger hands, expressive
+faces with eyelids/brows/lips/ears, ECG chest leads, and per-station personas — calm,
+talkative (chats with the nurse), anxious (fidgets, watches the needle), and elderly
+(reading glasses, light tremor). The suite remains **open-top (no ceiling)** and now sits
+under a physically-modeled daylight sky with a 20 m floorplan, bumper-railed walls, a live
+wall clock, scrub sink, crash cart, supply shelving, medical-gas outlets, EXIT signage and
+plants. **No two stations move or score alike**: each PPO seed additionally draws a visible
+motion style (stride, cadence, waist lean, reach, head energy, walk-path bow, pose tempo)
+plus a staggered start, and metric draws are profile-correlated — deterministic outcome:
+Station D wins (96.6 composite, 0.33 mm), while Station B finishes first on the wall clock
+yet ranks last (3.30 mm). All signage is re-rendered at 4x resolution with measure-and-fit
+headings (fixing v1.0.0's clipped poster titles), and the camera now offers **infinite
+zoom from any point** — a fly-through dolly with no minimum or maximum distance, wheel and
+pinch, zoom-to-cursor, pivot glide-through, and adaptive clip planes.
+
+### Features
+
+- Real Unitree H2 Plus robots (75 revolute DOF + dual SHARPA hands) from the official
+  robot files in `fork_unitree_model/H2_Plus`, with an offline USD→GLB converter
+  (`tools/convert_h2_usd_to_glb.py`) that verifies forward kinematics to 0.0001 mm
+- Role styling on the real robots: factory-white doctor with red-cross chest plate,
+  scrub-blue nurse shells with gold badge; procedural fallback humanoids offline
+- Realistic patients v2 with personas, five-finger hands, ECG leads, expressive faces
+- Seeded per-station motion styles + staggered starts + profile-correlated metrics —
+  naturally dissimilar movements and scores
+- Infinite fly-through zoom (no min/max distance) with zoom-to-cursor and pinch support
+- 4x-resolution auto-fit signage (no clipped headings), framed posters
+- Daylight-sky open-air suite: bumper rails, live clock, sink, crash cart, shelving,
+  gas outlets, EXIT sign, plants, outdoor apron
+- 12-phase GCP visit, composite GCP scoring, seeded Grade 1 AE, live ECG/SpO2/NIBP,
+  central scoreboard tower, human CRA desk — all carried forward from v1.0.0
+- Eight-version nav banner; `docs/404.html` updated; zero-404 relative links throughout
+
+### Deterministic Results (from seeds)
+
+| Rank | Station | Composite | Time | Needle | Style |
+|------|---------|-----------|------|--------|-------|
+| #1 | D | 96.6 | 18.61 s | 0.33 mm | precision |
+| #2 | A | 89.0 | 18.77 s | 1.99 mm | balanced |
+| #3 | C | 85.6 | 21.08 s | 1.80 mm | careful (AE Gr.1, resolved) |
+| #4 | B | 82.2 | 18.09 s | 3.30 mm | speed (fastest wall finish) |
+
 ## Clinical Robot Competition — v1.0.0 GCP Trial Suite
 
 v1.0.0 — 2026-06-10

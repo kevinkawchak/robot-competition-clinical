@@ -1,23 +1,25 @@
 # Clinical Robot Competition
 
-MuJoCo-based clinical trial simulation with **Unitree G1 humanoid robots**
-(from [unitreerobotics](https://www.unitree.com/g1/)) competing across **four simultaneous
-stations** in a 2x2 grid. At each station a **doctor G1 robot** (white coat, 43 DOF incl.
-Dex3-1 dexterous hands) and a **nurse G1 robot** (scrub-blue coat) execute a complete
-**GCP-aligned 12-phase intramuscular injection visit** on a **realistic human trial
-participant**, while a **human Clinical Research Associate (CRA)** observes from a sponsor
-monitoring desk. All stations are driven by **PPO reinforcement learning** policies with
-distinct behavior profiles from different random seeds, and are ranked by a **composite
-GCP score** spanning time, needle accuracy, protocol adherence, sterility, dose precision,
-and participant comfort.
+MuJoCo-based clinical trial simulation with **real Unitree H2 humanoid robots**
+(from [unitreerobotics](https://www.unitree.com/)) competing across **four simultaneous
+stations** in a 2x2 grid. At each station a **doctor H2** (factory white, red cross) and a
+**nurse H2** (scrub-blue shells) execute a complete **GCP-aligned 12-phase intramuscular
+injection visit** on a **realistic human trial participant**, while a **human Clinical
+Research Associate (CRA)** observes from a sponsor monitoring desk. All stations are driven
+by **PPO reinforcement learning** policies with distinct behavior profiles from different
+random seeds, and are ranked by a **composite GCP score** spanning time, needle accuracy,
+protocol adherence, sterility, dose precision, and participant comfort.
 
-v1.0.0 is the recommended viewer — a ground-up, state-of-the-art rebuild for clinical trial
-experts: high-DOF robots with articulated fingers and gait, an IK tip-correction system that
-guarantees frame-accurate needle-to-deltoid contact (eliminating the historical object-overlap
-and needle-gap bugs by construction), a photoreal **open-top room (no ceiling)**, live animated
-ECG monitors, a central live scoreboard tower, a seeded Grade 1 adverse event with autonomous
-response, and a zoom-anywhere camera (0.05 m minimum distance, zoom-to-cursor, double-click
-focus on any object in the room).
+v1.1.0 is the recommended viewer — everything made real life: the robots are the **actual
+Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
+converted offline from `H2_Plus/H2_with_sharpa.usdz` in
+[kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus);
+patients are rebuilt realistic humans with five-finger hands, expressive faces, ECG chest
+leads and personas; the suite stays **open-air (no ceiling)** under a physical daylight sky;
+every station **moves and scores naturally dissimilarly** (seeded motion styles + staggered
+starts + profile-correlated metrics); all signage is re-rendered at 4x resolution with
+auto-fit headings (nothing clips); and the camera offers **infinite zoom from any point** —
+fly through a needle bore or out past the building with no minimum or maximum distance.
 
 The objective is to illustrate that having competitions across multiple autonomous robots is
 advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
@@ -45,7 +47,8 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 | Version | URL | Description |
 |---|---|---|
-| **v1.0.0 GCP Trial Suite (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v10/](https://kevinkawchak.github.io/robot-competition-clinical/v10/) | 12-phase GCP visit, 43-DOF robots, IK needle contact, composite scoring, open-top photoreal suite, AE response, human CRA |
+| **v1.1.0 Real-Life GCP Suite (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v11/](https://kevinkawchak.github.io/robot-competition-clinical/v11/) | Real Unitree H2 robot files (75 DOF + SHARPA hands), realistic patients, dissimilar station motion/scoring, infinite zoom, daylight open-air suite |
+| v1.0.0 GCP Trial Suite | [https://kevinkawchak.github.io/robot-competition-clinical/v10/](https://kevinkawchak.github.io/robot-competition-clinical/v10/) | 12-phase GCP visit, 43-DOF robots, IK needle contact, composite scoring, open-top photoreal suite, AE response, human CRA |
 | **v0.9.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v9/](https://kevinkawchak.github.io/robot-competition-clinical/v9/) | v0.6.0 base + patient seating, facial features, close-zoom, no shoulder Z-fight, needle-contact |
 | **v0.8.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
 | **v0.7.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v7/](https://kevinkawchak.github.io/robot-competition-clinical/v7/) | Enhanced visuals: ceiling lights, patient faces, active nurse |
@@ -118,22 +121,40 @@ a fingertip, the needle, the ECG trace, a poster — to glide the camera to it.
    version in `pyproject.toml`. Run `ruff check .` and `ruff format --check .` so CI
    passes.
 
-## What This Simulates (v1.0.0)
+## What This Simulates (v1.1.0)
 
-Four identical stations compete simultaneously to complete a **GCP-aligned 12-phase IM
-injection visit** on diverse, realistic human participants (per-station skin tone, hairstyle,
-gown color; blinking, breathing, consent nods, armrest grip during injection). The doctor and
-nurse are **43-DOF Unitree G1 humanoids** whose articulated fingers actually grip the syringe,
-swab, vial, scanner, and tablet; their legs run a gait cycle whenever they walk between the
-patient and the supply cart. A runtime **IK tip-correction** servo drives the needle tip onto
-the deltoid target every frame — touching the surface at insertion and sitting 6 mm indwelling
-during the slow-push dose — with zero interpenetration. One seeded station experiences a
-**Grade 1 vasovagal adverse event** during observation (ECG dips to ~49 bpm, patient's head
-droops, nurse leans in, observation extends), demonstrating autonomous AE surveillance. A
-**human CRA** monitors everything from a sponsor desk with a live EDC laptop, and a central
-**4-face scoreboard tower** broadcasts live ranks. The room is open-top (no ceiling) with
-daylight + per-station freestanding exam-light booms, procedural floor/wall textures, an
-observation window, signage posters, and full per-station equipment.
+Four stations compete simultaneously to complete a **GCP-aligned 12-phase IM injection
+visit** on diverse, realistic human participants (per-station skin tone, hairstyle, gown
+color and persona — calm / talkative / anxious / elderly — with blinking, breathing, consent
+nods, chatting, fidgeting, tremor, and armrest grip during injection). The doctor and nurse
+are the **real Unitree H2 Plus humanoids**: the actual robot geometry and all **75 revolute
+joints (incl. dual SHARPA five-finger dexterous hands)** are converted offline from the
+binary-USD robot description in `fork_unitree_model/H2_Plus` into `docs/v11/h2_plus.glb`
+(151k triangles, joint axes/limits preserved in node extras), then articulated live in the
+browser. A runtime **IK tip-correction** servo drives the needle tip onto the deltoid target
+every frame — touching the surface at insertion and sitting indwelling during the slow-push
+dose — with zero interpenetration. **No two stations move alike**: each seed draws a motion
+style (stride, cadence, lean, reach, head energy, walk-path bow, pose tempo) plus a staggered
+visit start, and each profile shapes its metrics (the speed station really is faster and
+sloppier; the precision station tighter and more deliberate). One seeded station experiences
+a **Grade 1 vasovagal adverse event** during observation (ECG dips to ~49 bpm, patient's head
+droops, nurse responds, observation extends). A **human CRA** monitors everything from a
+sponsor desk with a live EDC laptop, and a central **4-face scoreboard tower** broadcasts
+live ranks. The suite is open-air (no ceiling) under a physically-modeled daylight sky, with
+bumper-railed walls, a live wall clock, scrub sink, crash cart, supply shelving, medical-gas
+outlets, EXIT signage, plants, an observation window, 4x-resolution auto-fit signage, and
+full per-station equipment.
+
+### v1.1.0 Headline Upgrades
+
+| # | Area | v1.1.0 Upgrade |
+|---|------|----------------|
+| 1 | Real robot files | Actual Unitree H2 Plus geometry + joint tree (75 revolute DOF, dual SHARPA hands) converted from `fork_unitree_model/H2_Plus/H2_with_sharpa.usdz` (binary USD crate) to a 3.7 MB GLB with axes/limits in node extras |
+| 2 | Realistic patient | Rebuilt humans: five-finger articulated hands, expressive faces (lids, brows, lips, ears, cheeks), ECG chest leads, reading glasses for the elderly persona, persona-driven idle behavior |
+| 3 | Dissimilar stations | Seeded per-station motion style (stride, cadence, lean, reach, head energy, path bow, tempo) + staggered starts + profile-correlated metric draws — movements AND scores differ naturally |
+| 4 | Infinite zoom | Fly-through dolly with no min/max distance, zoom-to-cursor, pivot glide-through, adaptive near/far clip planes; works from any point, in and out, through geometry |
+| 5 | Signage | All posters/labels/boards re-rendered at 4x resolution with measure-and-fit headings and word-wrapped body text — no clipped headings at any zoom |
+| 6 | Real-life suite | Physical daylight sky over the open-top room, wall bumper rails, live wall clock, scrub sink, crash cart, supply shelving, per-station gas outlets, EXIT sign, plants |
 
 ### v1.0.0 Headline Upgrades
 
@@ -145,7 +166,7 @@ observation window, signage posters, and full per-station equipment.
 | 4 | Room | Open-top (no ceiling), photoreal textures, observation window + hallway, posters, privacy screens, exam-light booms, supply carts, sharps containers, scoreboard tower |
 | 5 | Zoom | minDistance 0.05 m, zoom-to-cursor, fog removed, double-click/double-tap glide-focus on any object, per-station camera presets, keyboard shortcuts |
 
-### 12-Phase GCP Visit Per Station (v1.0.0)
+### 12-Phase GCP Visit Per Station (v1.1.0)
 
 | # | Phase | Actor | Base | What Happens |
 |---|-------|-------|------|--------------|
@@ -162,28 +183,28 @@ observation window, signage posters, and full per-station equipment.
 | 11 | Sharps disposal | Doctor | 1.4s | Syringe dropped into sharps container, LED confirms |
 | 12 | Observation & eSource | Nurse | 2.3s | Documentation taps; AE surveillance (extended +2.5s/speed on AE) |
 
-**Total base duration:** 18.5 seconds. PPO jitter and speed profiles produce actual visit
-times of ~18.8–19.9 s.
+**Total base duration:** 18.5 seconds. PPO jitter, profile tempo and speed profiles produce
+actual visit times of ~18.1–21.1 s, plus a seeded 0.7–1.8 s staggered start per station.
 
 ### Station Layout (2x2 Grid)
 
-| Station | Position | Seed | Speed | Patient | Profile |
-|---------|----------|------|-------|---------|---------|
-| **A** | Front-left | 42 | 1.00x | Light skin, short brown hair, mint gown | Balanced |
-| **B** | Front-right | 137 | 0.93x | Deep brown skin, black curly hair, light-blue gown | Speed-focused |
-| **C** | Back-left | 256 | 1.07x | Tan skin, long dark hair, lavender gown | Careful (draws the Grade 1 AE) |
-| **D** | Back-right | 512 | 0.97x | Pale skin, grey hair, peach gown | Precision-focused |
+| Station | Position | Seed | Speed | Patient (persona) | Profile | Start stagger |
+|---------|----------|------|-------|-------------------|---------|---------------|
+| **A** | Front-left | 42 | 1.00x | Light skin, short brown hair, mint gown (calm) | Balanced | 1.75 s |
+| **B** | Front-right | 137 | 0.93x | Deep brown skin, black curly hair, light-blue gown (talkative) | Speed-focused | 0.66 s |
+| **C** | Back-left | 256 | 1.07x | Tan skin, long dark hair, lavender gown (anxious) | Careful (draws the Grade 1 AE) | 0.77 s |
+| **D** | Back-right | 512 | 0.97x | Pale skin, grey bun, peach gown (elderly, glasses) | Precision-focused | 1.16 s |
 
-### Role Assignments (v1.0.0)
+### Role Assignments (v1.1.0)
 
 | Role | Position | Appearance | Equipment | Action |
 |------|----------|------------|-----------|--------|
-| Doctor (G1) | Right of patient, walks to cart | Charcoal G1, white coat shell, red cross, glossy visor | Syringe (IK-corrected needle), swab, vial | Hygiene, drug prep, site prep, injection, dose, sharps disposal |
-| Nurse (G1) | Left of patient | Charcoal G1, scrub-blue coat shell, gold badge | Tablet (always), wristband scanner | Identity check, eConsent, vitals, observation, eSource documentation |
-| Patient (Human) | Infusion recliner, feet on floor | Diverse per station; blinks, breathes, nods, grips armrest | Wristband, live ECG leads | Receives the 0.50 mL IM dose (right deltoid) |
+| Doctor (H2) | Right of patient, walks to cart | Real Unitree H2 Plus, factory white shells, red cross chest plate | Syringe (IK-corrected needle), swab, vial | Hygiene, drug prep, site prep, injection, dose, sharps disposal |
+| Nurse (H2) | Left of patient | Real Unitree H2 Plus, scrub-blue shells, gold badge | Tablet (always), wristband scanner | Identity check, eConsent, vitals, observation, eSource documentation |
+| Patient (Human) | Infusion recliner, feet on floor | Diverse per station with personas; blinks, breathes, nods, chats, fidgets, grips armrest | Wristband, live ECG chest leads | Receives the 0.50 mL IM dose (right deltoid) |
 | CRA (Human) | Sponsor monitoring desk | Business casual, ID badge | EDC laptop, monitoring banner | Human-in-the-loop oversight; types, scans the room |
 
-### Composite GCP Scoring (v1.0.0)
+### Composite GCP Scoring (v1.1.0)
 
 `Composite = 0.30×Time + 0.25×Accuracy + 0.20×Protocol + 0.10×Sterility + 0.10×Dose + 0.05×Comfort`
 
@@ -213,21 +234,41 @@ hyperparameters. The only difference between stations is the random seed used du
 initialization (42, 137, 256, 512). This produces genuinely distinct learned parameters —
 different speed/accuracy/protocol trade-offs — from the same reward function.
 
-### Simulation Results (v1.0.0, deterministic from seeds)
+**v1.1.0 — seeds you can see**: the same seeds additionally drive a per-station motion style
+(stride, cadence, waist lean, arm reach, head energy, walk-path bow, pose tempo, start
+stagger) and profile-correlated metric distributions, so the policy differences are visible
+in how the robots carry themselves, not just in the score table.
 
-| Rank | Station | Composite | Total Time | Needle Dev | Protocol | Sterility | Dose | Notes |
-|------|---------|-----------|-----------|------------|----------|-----------|------|-------|
-| #1 | **D** | **94.8** | 18.84s | 0.76mm | 98.6% | 98.8% | 0.497mL | Precision wins |
-| #2 | A | 89.8 | 18.89s | 2.04mm | 97.2% | 97.6% | 0.500mL | Perfect dose |
-| #3 | B | 86.0 | 19.46s | 2.41mm | 97.1% | 97.8% | 0.503mL | |
-| #4 | C | 84.7 | 19.82s | 2.32mm | 97.2% | 97.3% | 0.495mL | Grade 1 vasovagal AE, resolved |
+### Simulation Results (v1.1.0, deterministic from seeds)
 
-**Winner: Station D** — near-fastest visit with sub-millimeter needle placement,
-demonstrating that the composite GCP score rewards precision + speed together rather than
-raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP scoring).
+| Rank | Station | Composite | Total Time | Needle Dev | Protocol | Sterility | Dose | Motion Style | Notes |
+|------|---------|-----------|-----------|------------|----------|-----------|------|--------------|-------|
+| #1 | **D** | **96.6** | 18.61s | 0.33mm | 98.8% | 99.1% | 0.499mL | precision | Precision wins |
+| #2 | A | 89.0 | 18.77s | 1.99mm | 97.3% | 97.9% | 0.500mL | balanced | Perfect dose |
+| #3 | C | 85.6 | 21.08s | 1.80mm | 98.6% | 98.8% | 0.496mL | careful | Grade 1 vasovagal AE, resolved |
+| #4 | B | 82.2 | 18.09s | 3.30mm | 96.5% | 97.5% | 0.504mL | speed | Fastest wall finish, ranks last |
+
+**Winner: Station D** — sub-millimeter needle placement at near-best time. Station B is the
+first to finish on the wall clock (fastest visit + earliest staggered start) yet places #4:
+its speed-profile motion style trades accuracy for tempo, exactly the kind of natural
+dissimilarity the composite GCP score is designed to expose.
 
 ## Features
 
+- **Real Unitree H2 Robot Files** (v1.1.0): actual H2 Plus geometry + full joint tree (75
+  revolute DOF incl. dual SHARPA five-finger hands) converted from
+  `fork_unitree_model/H2_Plus/H2_with_sharpa.usdz` to `docs/v11/h2_plus.glb` with joint
+  axes/limits in node extras; simplified procedural fallback if the GLB cannot load
+- **Realistic Patients v2** (v1.1.0): five-finger hands, expressive faces, ECG chest leads,
+  personas (calm / talkative / anxious / elderly) with chatting, fidgeting, tremor, glasses
+- **Naturally Dissimilar Stations** (v1.1.0): seeded motion styles (stride, cadence, lean,
+  reach, head energy, path bow, tempo), staggered starts, profile-correlated metric draws
+- **Infinite Zoom** (v1.1.0): fly-through dolly with no min/max distance, zoom-to-cursor,
+  pivot glide-through, adaptive near/far planes — from any point, in and out
+- **4x-Resolution Auto-Fit Signage** (v1.1.0): measure-and-fit headings, word-wrapped body,
+  framed posters — no clipped or blurry text at any zoom
+- **Real-Life Open-Air Suite** (v1.1.0): physical daylight sky (no ceiling), bumper rails,
+  live wall clock, scrub sink, crash cart, shelving, gas outlets, EXIT sign, plants
 - **12-Phase GCP Workflow** (v1.0.0): identity → eConsent → vitals → hygiene → drug prep →
   site prep → alignment → insertion → dose → withdraw → sharps → observation/eSource
 - **43-DOF G1 Robots** (v1.0.0): articulated Dex3-1 fingers that grip, 3-DOF waist, 2-DOF
@@ -257,7 +298,7 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 - **File Upload**: custom JSON configs for station seeds/speeds
 - **Cross-Device 3D Viewer**: desktop, iOS, Android via Three.js — zero installation
 - **MuJoCo Physics Backend**: MJCF scene models with articulated humanoids (optional)
-- **7-Version Nav Banner**: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 | v1.0.0 (new)
+- **8-Version Nav Banner**: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 | v1.0.0 | v1.1.0 (new)
 - **Open & Free**: all dependencies open-source (no wandb)
 
 ## Architecture Diagrams
@@ -266,18 +307,18 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 
 ```
 +----------------------------------------------------------------------+
-|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v1.0.0       |
-|     GCP Trial Suite: 12-phase visit, 43-DOF G1s, composite score     |
+|        CLINICAL ROBOT COMPETITION - SYSTEM ARCHITECTURE v1.1.0       |
+|   Real-Life GCP Suite: 12-phase visit, 75-DOF H2s, composite score  | 
 +----------------------------------------------------------------------+
 |                                                                      |
 |  +----------------------+        +-------------------------------+   |
 |  |  MuJoCo Backend      |        |   Three.js GCP Trial Suite    |   |
-|  |  (Python)            |        |   (HTML/JS - docs/v10/)       |   |
+|  |  (Python)            |        |   (HTML/JS - docs/v11/)       |   |
 |  |                      |        |                               |   |
 |  | +------------------+ |  JSON  | +---------------------------+ |   |
 |  | | competition_scene| | -----> | | Open-Top Photoreal Room   | |   |
-|  | | .xml (4 stations)| | export | | - 18m x 18m, no ceiling   | |   |
-|  | +------------------+ |        | | - 8 G1 robots (43 DOF)    | |   |
+|  | | .xml (4 stations)| | export | | - 20m x 20m, no ceiling   | |   |
+|  | +------------------+ |        | | - 8 real H2 robots, 75 DOF| |   |
 |  |        |             |        | | - 4 diverse patients      | |   |
 |  |        v             |        | | - human CRA + EDC desk    | |   |
 |  | +------------------+ |        | | - live ECG monitors       | |   |
@@ -314,7 +355,7 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 |  +----------------------+        +-------------------------------+   |
 |                                                                      |
 |  Attribution: Inspired by mjlab (mujocolab/mjlab)                   |
-|  G1 Robots: Unitree Robotics (unitreerobotics)                      |
+|  H2 Robots: Unitree Robotics via fork_unitree_model/H2_Plus        | 
 +----------------------------------------------------------------------+
 ```
 
@@ -323,7 +364,7 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 ```
 +----------------------------------------------------------------------+
 |            GCP COMPETITION WORKFLOW - 4-STATION VISIT RACE           |
-|   v1.0.0: 12-phase GCP visit, composite scoring, seeded Grade 1 AE   |
+|   v1.1.0: 12-phase GCP visit, composite scoring, seeded Grade 1 AE   |
 +----------------------------------------------------------------------+
 |                                                                      |
 |  N=nurse  D=doctor                                                   |
@@ -332,11 +373,11 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 |  [inject][dose][withdraw][sharps][monitor+eSource]                   |
 |     D      D       D        D        N                               |
 |                                                                      |
-|  STATION A (seed=42,  1.00x): 18.89s  2.04mm  composite 89.8  #2    |
-|  STATION B (seed=137, 0.93x): 19.46s  2.41mm  composite 86.0  #3    |
-|  STATION C (seed=256, 1.07x): 19.82s  2.32mm  composite 84.7  #4    |
+|  STATION A (seed=42,  1.00x): 18.77s  1.99mm  composite 89.0  #2    |
+|  STATION B (seed=137, 0.93x): 18.09s  3.30mm  composite 82.2  #4    |
+|  STATION C (seed=256, 1.07x): 21.08s  1.80mm  composite 85.6  #3    |
 |             ^ Grade 1 vasovagal AE during monitor (+2.5s/speed)      |
-|  STATION D (seed=512, 0.97x): 18.84s  0.76mm  composite 94.8  #1    |
+|  STATION D (seed=512, 0.97x): 18.61s  0.33mm  composite 96.6  #1    |
 |                                                                      |
 |  +--------------- COMPOSITE GCP SCORE -----------------------------+ |
 |  |                                                                 | |
@@ -348,10 +389,10 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 |  +-----------------------------------------------------------------+ |
 |                                                                      |
 |  +--------------- FINAL GCP RESULTS -------------------------------+ |
-|  |   #1  Station D - 94.8 - 18.84s - 0.76mm  (precision wins)      | |
-|  |   #2  Station A - 89.8 - 18.89s - 2.04mm                        | |
-|  |   #3  Station B - 86.0 - 19.46s - 2.41mm                        | |
-|  |   #4  Station C - 84.7 - 19.82s - 2.32mm  (AE Gr.1, resolved)   | |
+|  |   #1  Station D - 96.6 - 18.61s - 0.33mm  (precision wins)      | |
+|  |   #2  Station A - 89.0 - 18.77s - 1.99mm                        | |
+|  |   #3  Station C - 85.6 - 21.08s - 1.80mm  (AE Gr.1, resolved)   | |
+|  |   #4  Station B - 82.2 - 18.09s - 3.30mm  (fastest, ranks last) | |
 |  |           [ Close Results ]  <- user manually replays           | |
 |  +-----------------------------------------------------------------+ |
 +----------------------------------------------------------------------+
@@ -361,13 +402,13 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 
 ```
 +----------------------------------------------------------------------+
-|     3D LAYOUT & TECHNOLOGY STACK (v1.0.0 - GCP Trial Suite)          |
+|     3D LAYOUT & TECHNOLOGY STACK (v1.1.0 - Real-Life GCP Suite)     | 
 +----------------------------------------------------------------------+
 |                                                                      |
-|  +------- OPEN-TOP SUITE (18m x 18m, NO CEILING) -----------------+  |
+|  +------- OPEN-TOP SUITE (20m x 20m, NO CEILING) -----------------+  |
 |  |   obs window--+                                                |  |
 |  |  +-- Station A ---------+    +-- Station B ---------+          |  |
-|  |  | [G1n] [Pat] [G1d]    |    | [G1n] [Pat] [G1d]    |          |  |
+|  |  | [H2n] [Pat] [H2d]    |    | [H2n] [Pat] [H2d]    |          |  |
 |  |  | scan  ECG   cart+    |    | scan  ECG   cart+    |          |  |
 |  |  | tablet IV   sharps   |    | tablet IV   sharps   |          |  |
 |  |  | exam-light boom      |    | exam-light boom      |          |  |
@@ -380,16 +421,16 @@ raw speed alone (Station B, the raw-time winner of v0.x, places #3 under GCP sco
 |  |              [CRA MONITORING DESK + EDC laptop]      door->    |  |
 |  +----------------------------------------------------------------+  |
 |                                                                      |
-|  Legend: G1d=Doctor(white coat shell, syringe w/ IK needle, R)       |
-|          Pat=Patient(diverse, blinking, soles on floor)              |
-|          G1n=Nurse(scrub-blue coat shell, tablet+scanner, L)         |
+|  Legend: H2d=Doctor(white H2 Plus, red cross, syringe w/ IK, R)     | 
+|          Pat=Patient(diverse personas, ECG leads, soles on floor)   | 
+|          H2n=Nurse(scrub-blue H2 Plus shells, tablet+scanner, L)    | 
 |                                                                      |
 |  LAYER 1: MuJoCo + PPO (Python backend)                              |
-|  LAYER 2: Three.js r169 (docs/v10/index.html) + RoomEnvironment IBL  |
+|  LAYER 2: Three.js r169 (docs/v11/) + Sky daylight + GLB H2 robots  | 
 |  LAYER 3: GitHub Pages (static hosting)                              |
 |                                                                      |
 |  OPEN-SOURCE: MuJoCo(Apache2) Three.js(MIT) Python(PSF) Ruff(MIT)    |
-|  ROBOTS: Unitree G1 (unitreerobotics) - unitree.com/g1/              |
+|  ROBOTS: Unitree H2 Plus (unitreerobotics) via fork_unitree_model   | 
 +----------------------------------------------------------------------+
 ```
 
@@ -417,7 +458,10 @@ robot-competition-clinical/
 │   ├── v9/
 │   │   └── index.html                  # v0.9.0 Competition viewer
 │   ├── v10/
-│   │   └── index.html                  # v1.0.0 GCP Trial Suite (current)
+│   │   └── index.html                  # v1.0.0 GCP Trial Suite
+│   ├── v11/
+│   │   ├── index.html                  # v1.1.0 Real-Life GCP Suite (current)
+│   │   └── h2_plus.glb                 # Real Unitree H2 Plus model (from H2_Plus USD)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams
@@ -425,6 +469,8 @@ robot-competition-clinical/
 │       ├── v3_architecture.md          # Archived v0.3.0 text diagrams
 │       ├── v4_architecture.md          # Archived v0.4.0 text diagrams
 │       └── v5_architecture.md          # Archived v0.5.0 text diagrams
+├── tools/
+│   └── convert_h2_usd_to_glb.py        # Offline H2_Plus USDZ -> docs/v11/h2_plus.glb
 ├── simulation/                         # v0.1.x single-station simulation
 │   ├── __init__.py
 │   ├── constants.py
@@ -490,6 +536,12 @@ ruff format --check .
 ```
 
 ## Attribution
+
+**Unitree H2 robot model**: the v1.1.0 robots are converted from
+[`kevinkawchak/fork_unitree_model`](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus)
+(`H2_Plus/H2_with_sharpa.usdz`, a fork of Unitree Robotics'
+[unitree_model](https://github.com/unitreerobotics/unitree_model) — BSD-3-Clause), using
+`tools/convert_h2_usd_to_glb.py`. Robot design © Unitree Robotics.
 
 Simulation framework inspired by [mjlab](https://github.com/mujocolab/mjlab)
 (mujocolab/mjlab) — a lightweight framework for GPU-accelerated robot learning

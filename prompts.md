@@ -1,5 +1,9 @@
 # Prompts
 
+## v1.1.0 Implementation Prompt
+
+Build from kevinkawchak.github.io/robot-competition-clinical/v10/ in v1.1.0 (no ceiling) by making everything real life, utilizing a realistic patient, and H2 robot files from kevinkawchak/fork_unitree_model/tree/main/H2_Plus. Fix low resolution signage clipped headings, make station movements and scores naturally dissimilar, make zoom controls infinite from any point, and avoid 404 errors by following main/README; you have permission to commit to main.
+
 ## v1.0.0 Implementation Prompt
 
 Your goal is to create in kevinkawchak.github.io/robot-competition-clinical/ a new nurse, doctor, and patient simulation (v1.0.0 is farthest to the right on the top bar) that now includes high DOF robots, fixes physical object overlap, and upgrades all aspects of the competition to state of the art to be interesting to clinical trial experts. Do not have a ceiling on the room, make the room, humans, and humanoids look real life. Make sure the user can zoom up close to any part of the room.
