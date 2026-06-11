@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Clinical Robot Competition v1.1.0 — Real-Life GCP Trial Suite (Unitree H2)</title>
+<title>Clinical Robot Competition v1.2.0 — Real-Life GCP Trial Suite II (Unitree H2)</title>
 <script type="importmap">
 {
   "imports": {
@@ -177,7 +177,7 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
 <body>
 <canvas id="canvas3d"></canvas>
 <div id="loader">
-  <div class="title">Clinical Robot Competition v1.1.0</div>
+  <div class="title">Clinical Robot Competition v1.2.0</div>
   <div class="sub" id="loader-sub">Loading Unitree H2 robot model (H2_Plus USD &rarr; GLB)&hellip;</div>
   <div class="bar"><div class="fill" id="loader-fill"></div></div>
 </div>
@@ -190,13 +190,13 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
     <a id="nav-v8" href="#">v0.8.0</a><span class="sep">|</span>
     <a id="nav-v9" href="#">v0.9.0</a><span class="sep">|</span>
     <a id="nav-v10" href="#">v1.0.0</a><span class="sep">|</span>
-    <span style="color:#0a66c2; font-weight:700;">v1.1.0</span><span class="sep">|</span>
-    <a id="nav-v12" href="#">v1.2.0 (new)</a>
+    <a id="nav-v11" href="#">v1.1.0</a><span class="sep">|</span>
+    <span style="color:#0a66c2; font-weight:700;">v1.2.0 (new)</span>
   </div>
   <div id="header">
     <h1>Clinical Robot Competition</h1>
-    <span class="subtitle">v1.1.0 Real-Life GCP Trial Suite &mdash; real Unitree H2 robots (75 DOF + SHARPA hands)
-      &bull; realistic patients &bull; open-air daylight suite &bull; infinite zoom</span>
+    <span class="subtitle">v1.2.0 Real-Life GCP Trial Suite II &mdash; zero-overlap physical integrity &bull; grasping SHARPA hands
+      &bull; unique per-station choreography &bull; infinite zoom</span>
   </div>
   <div id="station-selector">
     <button class="station-btn active" data-station="overview">Overview</button>
@@ -223,7 +223,7 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
     <button class="ctrl-btn" id="btn-upload" title="Upload Config">&#8682;</button>
   </div>
   <div id="legend">
-    <h3>Legend (v1.1.0)</h3>
+    <h3>Legend (v1.2.0)</h3>
     <div class="legend-item"><div class="legend-dot" style="background:#f4f4f2;border:1px solid #999"></div>Doctor H2 &mdash; 75 DOF, factory white, red cross</div>
     <div class="legend-item"><div class="legend-dot" style="background:#2e7fc2"></div>Nurse H2 &mdash; 75 DOF, scrub-blue shells</div>
     <div class="legend-item"><div class="legend-dot" style="background:#e0a884"></div>Patients &mdash; 4 realistic human participants</div>
@@ -245,7 +245,7 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
 </div>
 <div id="info-modal">
   <div id="info-content">
-    <h2>Clinical Robot Competition v1.1.0 &mdash; Real-Life GCP Trial Suite</h2>
+    <h2>Clinical Robot Competition v1.2.0 &mdash; Real-Life GCP Trial Suite II</h2>
     <p>Four autonomous stations compete to execute a complete <strong>GCP-aligned intramuscular
     injection visit</strong> on realistic human trial participants. Each station is staffed by two
     <strong>real Unitree H2 humanoids</strong> &mdash; the actual robot geometry, all 75 revolute
@@ -255,7 +255,7 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
     observes from the sponsor monitoring desk. The suite is open-air (no ceiling) under a
     physical daylight sky, and the camera zooms <strong>infinitely from any point</strong> &mdash;
     scroll straight through a needle bore or out past the building.</p>
-    <h3>What is new in v1.1.0</h3>
+    <h3>What is new in v1.2.0</h3>
     <ul>
       <li><strong>Real robot files</strong> &mdash; Unitree H2 Plus visual meshes + full joint tree
         (axes and limits from the USD physics joints), not a hand-modeled approximation</li>
@@ -325,7 +325,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
 
 /* ================= NAV BANNER ================= */
 (function() {
-  const base = window.location.pathname.replace(/\/v11\/?$/, '').replace(/\/+$/, '');
+  const base = window.location.pathname.replace(/\/v12\/?$/, '').replace(/\/+$/, '');
   document.getElementById('nav-v1').href = base + '/';
   document.getElementById('nav-v5').href = base + '/v5/';
   document.getElementById('nav-v6').href = base + '/v6/';
@@ -333,7 +333,7 @@ import { Sky } from 'three/addons/objects/Sky.js';
   document.getElementById('nav-v8').href = base + '/v8/';
   document.getElementById('nav-v9').href = base + '/v9/';
   document.getElementById('nav-v10').href = base + '/v10/';
-  document.getElementById('nav-v12').href = base + '/v12/';
+  document.getElementById('nav-v11').href = base + '/v11/';
 })();
 
 /* ================= CONSTANTS ================= */
