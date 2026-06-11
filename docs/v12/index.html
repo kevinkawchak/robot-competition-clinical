@@ -341,7 +341,7 @@ const ROOM_W = 20, ROOM_D = 20, WALL_H = 3.4;       /* open-air: no ceiling */
 const GRID = 6.4;                                    /* station pitch (2x2 grid) */
 const DEG = Math.PI / 180;
 const H2_SOLE = 1.0408;                              /* pelvis->sole from the USD model */
-const ROBOT_ROOT_Y = H2_SOLE - 0.012;                /* light knee-soften stance */
+const ROBOT_ROOT_Y = H2_SOLE;                        /* soles exactly on the floor */
 const PATIENT_SEAT_Y = 0.575;
 
 /* Per-station configs. speed/profile feed both the PPO metric draws AND a
@@ -1280,9 +1280,11 @@ function makeH2(role) {
     if (!o) return;
     const u = o.userData;
     const clamped = THREE.MathUtils.clamp(deg, u.lo ?? -360, u.hi ?? 360);
+    u.curDeg = clamped;
     _setQ.setFromAxisAngle(u.axisV, clamped * DEG);
     o.quaternion.copy(u.qRest).multiply(_setQ);
   };
+  rig.ikDel = { right:{}, left:{} };
   /* ---- semantic pose API (all angles in degrees, human conventions) ----
      armPose: fwd = raise arm forward, abd = lift sideways out, yawIn = rotate
      upper arm so the forearm sweeps inward, elb = flex up from the H2 rest
@@ -1324,17 +1326,17 @@ function makeH2(role) {
     const sw = Math.sin(t * cadence) * gait * stride;
     const lift = Math.max(0, Math.sin(t * cadence)) * gait * stride;
     const liftR = Math.max(0, -Math.sin(t * cadence)) * gait * stride;
-    rig.setJ('left_hip_pitch_joint', -(14 * sw + 4));
-    rig.setJ('right_hip_pitch_joint', -(-14 * sw + 4));
-    rig.setJ('left_knee_joint', 8 + 30 * liftR * gait);
-    rig.setJ('right_knee_joint', 8 + 30 * lift * gait);
-    rig.setJ('left_ankle_pitch_joint', -(8 + 30 * liftR * gait) + (14 * sw + 4) - 0);
-    rig.setJ('right_ankle_pitch_joint', -(8 + 30 * lift * gait) + (-14 * sw + 4) - 0);
+    rig.setJ('left_hip_pitch_joint', -(10 * sw + 2));
+    rig.setJ('right_hip_pitch_joint', -(-10 * sw + 2));
+    rig.setJ('left_knee_joint', 4 + 24 * liftR * gait);
+    rig.setJ('right_knee_joint', 4 + 24 * lift * gait);
+    rig.setJ('left_ankle_pitch_joint', -(4 + 24 * liftR * gait) + (10 * sw + 2));
+    rig.setJ('right_ankle_pitch_joint', -(4 + 24 * lift * gait) + (-10 * sw + 2));
   };
   rig.standLegs = () => {
-    rig.setJ('left_hip_pitch_joint', -4); rig.setJ('right_hip_pitch_joint', -4);
-    rig.setJ('left_knee_joint', 8); rig.setJ('right_knee_joint', 8);
-    rig.setJ('left_ankle_pitch_joint', -4); rig.setJ('right_ankle_pitch_joint', -4);
+    rig.setJ('left_hip_pitch_joint', -2); rig.setJ('right_hip_pitch_joint', -2);
+    rig.setJ('left_knee_joint', 4); rig.setJ('right_knee_joint', 4);
+    rig.setJ('left_ankle_pitch_joint', -2); rig.setJ('right_ankle_pitch_joint', -2);
   };
   rig.standLegs();
   return rig;
@@ -1451,6 +1453,7 @@ function buildHuman(opt) {
   J.chest = chest; J.torso = torso;
 
   /* ECG chest leads -> sagging cable dropping beside the left hip */
+  if (opt.leads !== false) {
   const leadPts = [new THREE.Vector3(-0.04, 0.30, -0.135), new THREE.Vector3(-0.15, 0.12, -0.155),
     new THREE.Vector3(-0.235, -0.10, -0.115)];
   const leadCurve = new THREE.CatmullRomCurve3(leadPts);
@@ -1460,6 +1463,7 @@ function buildHuman(opt) {
   torso.add(lead);
   [-1, 0, 1].forEach(i => mk(gCyl(0.013, 0.013, 0.006, 10), M.plasticWhite,
     [-0.05 + i * 0.055, 0.30 - Math.abs(i) * 0.04, -0.135], torso).rotation.x = Math.PI / 2);
+  }
 
   /* neck + head */
   const neckYaw = grp(torso, 0, 0.455, 0.005);
@@ -1644,14 +1648,20 @@ function buildCRADesk() {
   }
   mk(gBox(0.46, 0.07, 0.45), new THREE.MeshStandardMaterial({ color:0x35424e, roughness:0.7 }), [0, 0.48, 0], ch);
   mk(gBox(0.46, 0.55, 0.08), new THREE.MeshStandardMaterial({ color:0x35424e, roughness:0.7 }), [0, 0.82, 0.22], ch);
-  const cra = buildHuman({ skin:0xc89878, hair:0x33261a, gown:0x4a6584, hairStyle:'short', persona:'calm' });
-  cra.position.set(0, 0.565, 0.60);
+  const cra = buildHuman({ skin:0xc89878, hair:0x33261a, gown:0x4a6584, hairStyle:'short', persona:'calm', leads:false });
+  cra.position.set(0, 0.615, 0.56);
   g.add(cra);
   poseSeated(cra);
   const cj = cra.userData.J;
-  cj.rSh.rotation.x = 0.55; cj.lSh.rotation.x = 0.55;
-  cj.rElbow.rotation.x = 0.85; cj.lElbow.rotation.x = 0.85;
-  cj.torso.rotation.x = -0.06;
+  /* typing posture: forearms level just above the desk, palms rolled down
+     over the keyboard — hands rest above the surface, never through it */
+  cj.rSh.rotation.x = 0.42; cj.lSh.rotation.x = 0.42;
+  cj.rSh.rotation.z = 0.05; cj.lSh.rotation.z = -0.05;
+  cj.rElbow.rotation.x = 1.12; cj.lElbow.rotation.x = 1.12;
+  cj.rWrist.rotation.x = 0.42; cj.lWrist.rotation.x = 0.42;
+  cj.rWrist.rotation.y = 1.45; cj.lWrist.rotation.y = -1.45;
+  cj.rFingerBlock.rotation.x = 0.35; cj.lFingerBlock.rotation.x = 0.35;
+  cj.torso.rotation.x = -0.03;
   mk(gBox(0.055, 0.075, 0.006), M.plasticWhite, [0.0, 0.22, -0.135], cj.torso);
   const ban = grp(g, 1.35, 0, -0.3);
   mk(gBox(0.55, 0.02, 0.30), M.steelDark, [0, 0.01, 0], ban);
@@ -1764,8 +1774,8 @@ function buildStation(cfg) {
   const screen = buildPrivacyScreen(g); screen.position.set(-0.25, 0, 1.12);
   buildExamLight(g, [0.52, 0, 1.02], [0.25, 0.95, 0.10]);
   const bin = buildWasteBin(g);     bin.position.set(1.16, 0, 0.55);
-  const mon = buildVitalsMonitor(g); mon.position.set(-1.06, 0, 0.14);
-  mon.rotation.y = yawToFace(-1.06, 0.14, NUR_HOME.x, NUR_HOME.z);
+  const mon = buildVitalsMonitor(g); mon.position.set(-1.12, 0, 0.18);
+  mon.rotation.y = yawToFace(-1.12, 0.18, NUR_HOME.x, NUR_HOME.z);
   const gas = buildGasPanel(g);     gas.position.set(-1.45, 0, 0.95);
   gas.rotation.y = yawToFace(-1.45, 0.95, 0, 0.1);
 
@@ -1788,11 +1798,12 @@ function buildStation(cfg) {
   const doctor = makeH2('doctor');
   doctor.root.position.set(DOC_HOME.x, ROBOT_ROOT_Y, DOC_HOME.z);
   g.add(doctor.root);
-  /* grips solved against the live hand frames at the relevant phases */
+  /* grips re-solved against the v1.2.0 hand frames at the relevant phases:
+     tools sit IN the closed SHARPA hand, not beside it */
   const syringe = buildSyringe(null);
-  mountTool(doctor, 'right', syringe, [0.095, -0.040, 0.018], [1.22, -0.50, 1.57]);
+  mountTool(doctor, 'right', syringe, [0.085, -0.030, 0.015], [-0.22, -0.13, 1.08]);
   const swab = buildSwab(null);
-  mountTool(doctor, 'left', swab, [0.052, 0.052, -0.004], [-1.65, -0.83, 1.57]);
+  mountTool(doctor, 'left', swab, [0.055, 0.045, 0.000], [-1.30, -1.06, 1.32]);
   const vial = buildVial(null);
   mountTool(doctor, 'left', vial, [0.070, 0.018, 0.024], [1.35, 0, 0]);
   const traySyr = buildSyringe(cart); traySyr.position.set(-0.12, 0.873, 0.07);
@@ -1803,9 +1814,9 @@ function buildStation(cfg) {
   nurse.root.position.set(NUR_HOME.x, ROBOT_ROOT_Y, NUR_HOME.z);
   g.add(nurse.root);
   const tablet = buildTablet(null);
-  mountTool(nurse, 'left', tablet, [0.085, 0.055, 0.0], [1.35, 0, 0]);
+  mountTool(nurse, 'left', tablet, [0.060, 0.000, 0.012], [-2.92, 1.01, 2.74]);
   const scanner = buildScanner(null);
-  mountTool(nurse, 'right', scanner, [0.090, -0.012, 0.030], [-2.68, -0.70, -1.57]);
+  mountTool(nurse, 'right', scanner, [0.075, -0.010, 0.020], [3.02, -0.62, 2.76]);
 
   const label = makeLabelSprite('Station ' + cfg.name, cfg.color);
   label.position.set(0, 2.25, 0);
@@ -1816,12 +1827,18 @@ function buildStation(cfg) {
     syringe, swab, vial, traySyr, tablet, scanner, sharps, mon, marker,
     targetSurface, targetDeep,
     style: drawStyle(cfg),
+    docPoses: personalizePoses(DOC_POSES, cfg.seed),
+    nurPoses: personalizePoses(NUR_POSES, cfg.seed ^ 0x9177),
+    docIdle: null, nurIdle: null,
+    flavor: { hygiene: cfg.seed % 4, swab: cfg.seed % 3, tap: (cfg.seed >> 2) % 3 },
     elapsed:0, started:false, completed:false, finishOrder:0, phaseIdx:0,
     ae:false, hr:64 + (cfg.seed % 17), spo2:97.5,
     prevDocPos:new THREE.Vector2(DOC_HOME.x, DOC_HOME.z),
     prevNurPos:new THREE.Vector2(NUR_HOME.x, NUR_HOME.z),
     docGait:0, nurGait:0, tipDistMm:null, docRootIK:new THREE.Vector2(0, 0),
   };
+  st.docIdle = personalizePoses({ idle: DOC_IDLE }, cfg.seed ^ 0x3e1).idle;
+  st.nurIdle = personalizePoses({ idle: NUR_IDLE }, cfg.seed ^ 0x5a7).idle;
   applyStationMetrics(st);
   return st;
 }
@@ -1879,11 +1896,11 @@ const DOC_POSES = {
   identity: { ...DOC_IDLE },
   consent:  { ...DOC_IDLE },
   vitals:   { ...DOC_IDLE, rfwd:10, lfwd:10 },
-  hygiene:  { ...DOC_IDLE, x:0.84, z:0.30, yaw:'S', wp:8, hp:18,
+  hygiene:  { ...DOC_IDLE, x:0.78, z:0.40, yaw:'S', wp:8, hp:18,
     rfwd:38, rabd:-4, relb:96, rcurl:0.5, lfwd:38, labd:-4, lelb:96, lcurl:0.5 },
-  drugprep: { x:0.94, z:-0.26, yaw:'C', wp:10, hp:22,
-    rfwd:40, rabd:2, relb:84, rwro:36, rcurl:0.9,
-    lfwd:36, labd:4, lelb:90, lcurl:0.85 },
+  drugprep: { x:1.00, z:-0.44, yaw:'C', wp:11, hp:22,
+    rfwd:44, rabd:2, relb:66, rwro:36, rcurl:0.9,
+    lfwd:40, labd:4, lelb:74, lcurl:0.85 },
   siteprep: { x:0.66, z:-0.34, yaw:'P', wp:14, hp:20,
     rfwd:22, rabd:6, relb:95, rcurl:0.92,
     lfwd:46, labd:10, lelb:48, lwpi:18, lcurl:0.8 },
@@ -1899,24 +1916,24 @@ const DOC_POSES = {
   withdraw: { x:0.68, z:-0.37, yaw:'P', wp:10, hp:22,
     rfwd:38, rabd:8, relb:62, rcurl:0.93,
     lfwd:8, labd:3, lelb:28, lcurl:0.35 },
-  sharps:   { x:0.94, z:-0.24, yaw:'C', wp:12, hp:24,
-    rfwd:42, rabd:4, relb:58, rcurl:0.9,
+  sharps:   { x:0.99, z:-0.42, yaw:'C', wp:12, hp:24,
+    rfwd:46, rabd:4, relb:56, rcurl:0.9,
     lfwd:7, labd:3, lelb:24, lcurl:0.3 },
   monitor:  { ...DOC_IDLE, rfwd:8, lfwd:8, hp:10 },
 };
 const NUR_IDLE = { x:NUR_HOME.x, z:NUR_HOME.z, yaw:'P', wp:2, wy:0, hp:8, hy:0,
   rfwd:8, rabd:3, ryin:0, relb:30, rwro:0, rwpi:0, rwya:0, rcurl:0.35,
-  lfwd:30, labd:2, lyin:8, lelb:92, lwro:0, lwpi:-8, lwya:0, lcurl:0.62 };  /* cradles tablet */
+  lfwd:30, labd:2, lyin:8, lelb:92, lwro:72, lwpi:-8, lwya:0, lcurl:0.55 };  /* palm-up tablet cradle */
 const NUR_POSES = {
   identity: { x:-0.58, z:-0.36, yaw:'W', wp:16, hp:26,
-    rfwd:46, rabd:6, relb:58, rwpi:10, rcurl:0.8,
-    lfwd:28, labd:2, lelb:90, lwpi:-8, lcurl:0.62 },
+    rfwd:46, rabd:6, relb:58, rwpi:10, rcurl:0.85,
+    lfwd:28, labd:2, lelb:90, lwro:72, lwpi:-8, lcurl:0.55 },
   consent:  { x:-0.64, z:-0.44, yaw:'P', wp:7, hp:14,
     rfwd:12, rabd:4, relb:32, rcurl:0.4,
-    lfwd:58, labd:6, lelb:64, lwpi:-16, lcurl:0.62 },
-  vitals:   { x:-0.92, z:-0.20, yaw:'M', wp:9, hp:16,
-    rfwd:48, rabd:6, relb:52, rwpi:8, rcurl:0.5,
-    lfwd:30, labd:2, lelb:90, lwpi:-8, lcurl:0.62 },
+    lfwd:58, labd:6, lelb:64, lwro:60, lwpi:-16, lcurl:0.55 },
+  vitals:   { x:-0.84, z:-0.26, yaw:'M', wp:9, hp:16,
+    rfwd:40, rabd:6, relb:62, rwpi:8, rcurl:0.5,
+    lfwd:30, labd:2, lelb:90, lwro:72, lwpi:-8, lcurl:0.55 },
   hygiene:  { ...NUR_IDLE },
   drugprep: { ...NUR_IDLE, rfwd:12 },
   siteprep: { ...NUR_IDLE, wp:5 },
@@ -1927,8 +1944,32 @@ const NUR_POSES = {
   sharps:   { ...NUR_IDLE },
   monitor:  { x:-0.62, z:-0.40, yaw:'P', wp:11, hp:20,
     rfwd:42, rabd:6, relb:68, rcurl:0.58,
-    lfwd:46, labd:6, lelb:70, lwpi:-14, lcurl:0.62 },
+    lfwd:46, labd:6, lelb:70, lwro:66, lwpi:-14, lcurl:0.55 },
 };
+/* Per-station personalization: every station gets its OWN copy of the pose
+   tables with seeded stance/arm/head offsets (tight near the cart and the
+   needle), plus discrete motion flavors — so no two stations walk the same
+   path or move their hands the same way. */
+function personalizePoses(tables, seed) {
+  const rng = mulberry32(seed ^ 0x2c1b3c6d);
+  const tight = { drugprep:0.04, sharps:0.04, inject:0.05, dose:0.05, position:0.06, vitals:0.05 };
+  const out = {};
+  for (const ph of Object.keys(tables)) {
+    const pose = { ...tables[ph] };
+    const lim = tight[ph] ?? 0.10;
+    pose.x = (pose.x ?? 0) + (rng() - 0.5) * 2 * lim;
+    pose.z = (pose.z ?? 0) + (rng() - 0.5) * 2 * lim;
+    pose.wp = (pose.wp ?? 0) * (0.85 + rng() * 0.35);
+    for (const k of ['rfwd', 'relb', 'lfwd', 'lelb'])
+      if (pose[k] !== undefined) pose[k] += (rng() - 0.5) * 12;
+    for (const k of ['rabd', 'labd', 'rwpi', 'lwpi'])
+      if (pose[k] !== undefined) pose[k] += (rng() - 0.5) * 7;
+    pose.hy = (pose.hy ?? 0) + (rng() - 0.5) * 10;
+    out[ph] = pose;
+  }
+  return out;
+}
+
 const POSE_KEYS = ['x','z','wp','wy','hp','hy',
   'rfwd','rabd','ryin','relb','rwro','rwpi','rwya','rcurl',
   'lfwd','labd','lyin','lelb','lwro','lwpi','lwya','lcurl'];
@@ -1951,8 +1992,9 @@ function lerpPose(a, b, t) {
 function pathBowOffset(a, b, t, bow) {
   const dx = (b.x ?? 0) - (a.x ?? 0), dz = (b.z ?? 0) - (a.z ?? 0);
   const len = Math.hypot(dx, dz);
-  if (len < 0.05) return [0, 0];
-  const s = Math.sin(Math.PI * t) * bow * Math.min(1, len);
+  if (len < 0.45) return [0, 0];               /* short shuffles go straight */
+  const bowC = THREE.MathUtils.clamp(bow, -0.11, 0.11);
+  const s = Math.sin(Math.PI * t) * bowC * Math.min(1, len);
   return [-dz / len * s, dx / len * s];
 }
 
@@ -1962,46 +2004,104 @@ function applyH2Pose(rig, p, style, t, gait) {
   rig.setWaist(p.wp * lean + Math.sin(t * 0.9) * 0.6 * style.sway,
     p.wy + Math.sin(t * 0.5) * 1.4 * style.sway, Math.sin(t * 0.7) * 0.8 * style.sway);
   const reach = style.reach;
+  const fidget = Math.sin(t * 1.45) * 0.035 + Math.sin(t * 3.7) * 0.015;
   rig.setArm('right', { fwd:p.rfwd * reach, abd:p.rabd, yawIn:p.ryin, elb:p.relb,
-    wrRoll:p.rwro, wrPitch:p.rwpi, wrYaw:p.rwya, curl:p.rcurl });
+    wrRoll:p.rwro, wrPitch:p.rwpi, wrYaw:p.rwya, curl:Math.max(0, p.rcurl + fidget) });
   rig.setArm('left', { fwd:p.lfwd * reach, abd:p.labd, yawIn:p.lyin, elb:p.lelb,
-    wrRoll:p.lwro, wrPitch:p.lwpi, wrYaw:p.lwya, curl:p.lcurl });
+    wrRoll:p.lwro, wrPitch:p.lwpi, wrYaw:p.lwya, curl:Math.max(0, p.lcurl - fidget) });
   rig.setHead(p.hp + Math.sin(t * 0.8) * 2.4 * style.headEnergy,
     p.hy + Math.sin(t * 0.5 + 1.3) * 5 * style.headEnergy);
   if (gait > 0.02) rig.setLegs(gait, t, style.cadence, style.stride);
   else rig.standLegs();
   rig.root.position.y = ROBOT_ROOT_Y
-    + gait * Math.abs(Math.sin(t * style.cadence)) * 0.016 * style.bob
+    + gait * (0.004 + Math.abs(Math.sin(t * style.cadence)) * 0.012 * style.bob)
     + (1 - gait) * Math.sin(t * 1.6) * 0.003;
 }
 
-/* IK-lite: translate the hand ik group so the tool tip lands on the target */
+/* Rotational arm IK (cyclic coordinate descent over the real H2 joints).
+   The shoulder/elbow/wrist bend about their actual axes so the tool tip
+   reaches the target with the hand PERMANENTLY attached to the wrist —
+   no translated/detached hand, no pass-through. A final residual hand
+   translation of at most 12 mm guarantees millimeter contact (invisible). */
+const CCD_CHAIN = {
+  right:['right_shoulder_pitch_joint', 'right_shoulder_roll_joint',
+         'right_elbow_joint', 'right_wrist_pitch_joint'],
+  left: ['left_shoulder_pitch_joint', 'left_shoulder_roll_joint',
+         'left_elbow_joint', 'left_wrist_pitch_joint'],
+};
 const _tipW = new THREE.Vector3(), _tgtW = new THREE.Vector3(),
-      _delta = new THREE.Vector3(), _q = new THREE.Quaternion(), _goal = new THREE.Vector3();
-function tipCorrect(st, ikGroup, tipObj, targetObj, strength, dt) {
-  tipObj.getWorldPosition(_tipW);
+      _delta = new THREE.Vector3(), _q = new THREE.Quaternion(), _goal = new THREE.Vector3(),
+      _aW = new THREE.Vector3(), _jP = new THREE.Vector3(), _v1 = new THREE.Vector3(),
+      _v2 = new THREE.Vector3(), _cr = new THREE.Vector3(), _qW = new THREE.Quaternion();
+/* re-apply persisted IK deltas on top of the freshly-set pose */
+function applyPersistedIK(rig) {
+  for (const side of ['right', 'left']) {
+    for (const j of CCD_CHAIN[side]) {
+      const o = rig.J[j];
+      if (!o) continue;
+      o.userData.poseDeg = o.userData.curDeg ?? 0;
+      const d = rig.ikDel[side][j] || 0;
+      if (d) rig.setJ(j, o.userData.poseDeg + d);
+    }
+  }
+}
+function armIK(st, rig, side, tipObj, targetObj, strength, dt) {
+  const chain = CCD_CHAIN[side];
+  const del = rig.ikDel[side];
+  const ikG = rig.ik[side];
+  if (strength < 0.02) {
+    const f = Math.max(0, 1 - dt * 5);
+    for (const j of chain) del[j] = (del[j] || 0) * f;
+    ikG.userData.off.lerp(ikG.userData.base, 0.25);
+    ikG.position.copy(ikG.userData.off);
+    return null;
+  }
   targetObj.getWorldPosition(_tgtW);
+  tipObj.getWorldPosition(_tipW);
+  _delta.subVectors(_tgtW, _tipW);
+  /* gross horizontal positioning: the whole robot steps in (small, capped) */
+  const g = Math.min(1, dt * 5) * strength;
+  if (_delta.length() > 0.05) {
+    st.docRootIK.x = THREE.MathUtils.clamp(st.docRootIK.x + _delta.x * g, -0.18, 0.18);
+    st.docRootIK.y = THREE.MathUtils.clamp(st.docRootIK.y + _delta.z * g, -0.18, 0.18);
+  }
+  /* CCD passes: rotate each joint about its own axis toward the target */
+  for (let it = 0; it < 3; it++) {
+    for (const j of chain) {
+      const o = rig.J[j];
+      if (!o) continue;
+      o.updateWorldMatrix(true, false);
+      o.getWorldPosition(_jP);
+      o.getWorldQuaternion(_qW);
+      _aW.copy(o.userData.axisV).applyQuaternion(_qW);
+      tipObj.updateWorldMatrix(true, false);
+      tipObj.getWorldPosition(_tipW);
+      _v1.subVectors(_tipW, _jP); _v1.addScaledVector(_aW, -_v1.dot(_aW));
+      _v2.subVectors(_tgtW, _jP); _v2.addScaledVector(_aW, -_v2.dot(_aW));
+      if (_v1.lengthSq() < 1e-6 || _v2.lengthSq() < 1e-6) continue;
+      _cr.crossVectors(_v1, _v2);
+      let ang = Math.atan2(_cr.dot(_aW), _v1.dot(_v2)) / DEG;
+      ang = THREE.MathUtils.clamp(ang * 0.7 * strength, -7, 7);
+      del[j] = THREE.MathUtils.clamp((del[j] || 0) + ang, -30, 30);
+      rig.setJ(j, (o.userData.poseDeg ?? 0) + del[j]);
+      o.updateWorldMatrix(false, true);
+    }
+  }
+  /* millimeter-exact residual: tiny capped hand translation (never visible) */
+  tipObj.updateWorldMatrix(true, false);
+  tipObj.getWorldPosition(_tipW);
   _delta.subVectors(_tgtW, _tipW);
   const dist = _delta.length();
-  const g = Math.min(1, dt * 5) * strength;
-  st.docRootIK.x = THREE.MathUtils.clamp(st.docRootIK.x + _delta.x * g, -0.25, 0.25);
-  st.docRootIK.y = THREE.MathUtils.clamp(st.docRootIK.y + _delta.z * g, -0.25, 0.25);
-  if (_delta.length() > 0.18) _delta.setLength(0.18);
-  ikGroup.parent.getWorldQuaternion(_q).invert();
+  if (_delta.length() > 0.05) _delta.setLength(0.05);
+  ikG.parent.getWorldQuaternion(_q).invert();
   _delta.applyQuaternion(_q).multiplyScalar(strength);
-  /* incremental: accumulate from the current offset so the error -> 0,
-     with the total hand excursion capped to stay anatomical */
-  _goal.copy(ikGroup.userData.off).add(_delta);
-  _goal.sub(ikGroup.userData.base);
-  if (_goal.length() > 0.22) _goal.setLength(0.22);
-  _goal.add(ikGroup.userData.base);
-  ikGroup.userData.off.lerp(_goal, 0.6);
-  ikGroup.position.copy(ikGroup.userData.off);
+  _goal.copy(ikG.userData.off).add(_delta);
+  _goal.sub(ikG.userData.base);
+  if (_goal.length() > 0.012) _goal.setLength(0.012);
+  _goal.add(ikG.userData.base);
+  ikG.userData.off.lerp(_goal, 0.6);
+  ikG.position.copy(ikG.userData.off);
   return dist;
-}
-function tipRelax(ikGroup) {
-  ikGroup.userData.off.lerp(ikGroup.userData.base, 0.25);
-  ikGroup.position.copy(ikGroup.userData.off);
 }
 
 /* ================= PER-STATION ANIMATION ================= */
@@ -2034,28 +2134,55 @@ function animStation(st, dt, wallT) {
   const phName = ph.name;
   const idx = st.phaseIdx;
 
-  /* ---- doctor ---- */
-  const dPrev = idx === 0 ? DOC_IDLE : DOC_POSES[PHASES[idx - 1].name];
-  const dCurr = DOC_POSES[phName];
-  const dp = st.started ? lerpPose(dPrev, dCurr, sk) : lerpPose(DOC_IDLE, DOC_IDLE, 0);
+  /* ---- doctor (station-personalized pose tables) ---- */
+  const dPrev = idx === 0 ? st.docIdle : st.docPoses[PHASES[idx - 1].name];
+  const dCurr = st.docPoses[phName];
+  const dp = st.started ? lerpPose(dPrev, dCurr, sk) : lerpPose(st.docIdle, st.docIdle, 0);
   const [bx, bz] = st.started ? pathBowOffset(dPrev, dCurr, sk, style.pathBow) : [0, 0];
   dp.x += bx; dp.z += bz;
   const dvx = dp.x - st.prevDocPos.x, dvz = dp.z - st.prevDocPos.y;
   const dSpeed = dt > 0 ? Math.hypot(dvx, dvz) / dt : 0;
   st.prevDocPos.set(dp.x, dp.z);
   st.docGait += ((dSpeed > 0.05 ? 1 : 0) - st.docGait) * Math.min(1, dt * 7);
-  /* hygiene hand-rub oscillation */
+  /* hygiene hand-rub: four distinct per-station techniques */
   if (phName === 'hygiene' && st.started) {
     const rub = Math.sin(t * 13) * 9 * bump(k);
-    dp.rabd += rub; dp.labd -= rub;
+    if (st.flavor.hygiene === 0) { dp.rabd += rub; dp.labd -= rub; }            /* lateral rub */
+    else if (st.flavor.hygiene === 1) { dp.rfwd += rub * 0.8; dp.lfwd -= rub * 0.8; } /* piston rub */
+    else if (st.flavor.hygiene === 2) { dp.rwro += rub * 1.7; dp.lwro -= rub * 1.7; } /* wrist scrub */
+    else { const gate = Math.sin(t * 1.2) > -0.2 ? 1 : 0.15;                    /* rub-pause-rub */
+      dp.rabd += rub * gate; dp.labd -= rub * gate; }
     dp.rcurl = 0.5 + Math.sin(t * 13) * 0.12;
   }
   if (phName === 'drugprep' && st.started) {
     dp.rwro += Math.sin(k * Math.PI * 2) * 16;     /* draw + inspect supination */
+    /* reach down to the tray, close the fingers around the syringe, lift */
+    if (k >= 0.2 && k < 0.55) {
+      const dip = bump((k - 0.2) / 0.35);
+      dp.rfwd += dip * 9; dp.rwpi += dip * 10;
+    }
+  }
+  /* arm swing while actually walking */
+  if (st.docGait > 0.3) {
+    const swing = Math.sin(t * style.cadence) * 8 * style.stride * st.docGait;
+    dp.rfwd += swing; dp.lfwd -= swing;
   }
   st.doctor.root.position.x = dp.x;
   st.doctor.root.position.z = dp.z;
   applyH2Pose(st.doctor, dp, style, t, st.docGait);
+  /* explicit grasp state for the syringe hand */
+  let rGrip = null;
+  if (st.started) {
+    if (phName === 'drugprep') {
+      rGrip = k < 0.35 ? 0.22 : k < 0.55 ? 0.22 + (k - 0.35) / 0.2 * 0.73 : 0.95;
+    } else if (phName === 'sharps' && k >= 0.6) {
+      rGrip = lerp(0.95, 0.25, (k - 0.6) / 0.4);            /* release over the chute */
+    } else if (idx > PH.drugprep && idx <= PH.sharps) {
+      rGrip = 0.95;                                          /* carrying the syringe */
+    }
+  }
+  if (rGrip !== null) st.doctor.setCurl('right', rGrip, Math.min(1, rGrip * 1.1));
+  applyPersistedIK(st.doctor);
   /* doctor gaze: cart while prepping, deltoid during needle work */
   const lookCart = (phName === 'drugprep' || phName === 'sharps');
   st.doctor.setHead(dp.hp + (lookCart ? 4 : 8),
@@ -2085,22 +2212,25 @@ function animStation(st, dt, wallT) {
   st.doctor.root.position.z += st.docRootIK.y;
   st.doctor.root.updateMatrixWorld(true);
   st.patient.updateMatrixWorld(true);
-  let liveDist = null;
-  if (needleStrength >= 0.02) {
-    let tgt = st.targetSurface;
-    if (phName === 'dose') {
-      st.targetDeep.position.x = 0.046 - 0.028 * Math.min(1, k * 3);
-      tgt = st.targetDeep;
-    }
-    liveDist = tipCorrect(st, st.doctor.ik.right, st.syringe.userData.tip, tgt, needleStrength, dt);
-  } else {
-    tipRelax(st.doctor.ik.right);
+  let tgt = st.targetSurface;
+  if (phName === 'dose') {
+    st.targetDeep.position.x = 0.046 - 0.028 * Math.min(1, k * 3);
+    tgt = st.targetDeep;
   }
+  const liveDist = armIK(st, st.doctor, 'right', st.syringe.userData.tip, tgt,
+    needleStrength, dt);
+  armIK(st, st.doctor, 'left', st.swab.userData.tip, st.targetSurface, swabStrength, dt);
   if (swabStrength >= 0.02) {
-    tipCorrect(st, st.doctor.ik.left, st.swab.userData.tip, st.targetSurface, swabStrength, dt);
-    st.doctor.setJ('left_wrist_yaw_joint', Math.sin(t * 9) * 9 * bump(k));   /* circular swab */
-  } else {
-    tipRelax(st.doctor.ik.left);
+    /* three distinct swab techniques: circle, zigzag, growing spiral */
+    const f = st.flavor.swab;
+    if (f === 0) {
+      st.doctor.setJ('left_wrist_yaw_joint', Math.sin(t * 9) * 9 * bump(k));
+    } else if (f === 1) {
+      st.doctor.setJ('left_wrist_yaw_joint', (2 * Math.abs(((t * 3) % 2) - 1) - 1) * 11 * bump(k));
+    } else {
+      const r = 4 + 7 * k;
+      st.doctor.setJ('left_wrist_yaw_joint', Math.sin(t * 9) * r * bump(k));
+    }
   }
   st.tipDistMm = liveDist !== null ? liveDist * 1000 : null;
 
@@ -2115,21 +2245,29 @@ function animStation(st, dt, wallT) {
     plunger.position.y = 0.10; fluid.scale.y = 1; fluid.position.y = -0.01;
   }
 
-  /* ---- nurse ---- */
-  const nPrev = idx === 0 ? NUR_IDLE : NUR_POSES[PHASES[idx - 1].name];
-  const nCurr = NUR_POSES[phName];
-  const np = st.started ? lerpPose(nPrev, nCurr, sk) : lerpPose(NUR_IDLE, NUR_IDLE, 0);
+  /* ---- nurse (station-personalized pose tables) ---- */
+  const nPrev = idx === 0 ? st.nurIdle : st.nurPoses[PHASES[idx - 1].name];
+  const nCurr = st.nurPoses[phName];
+  const np = st.started ? lerpPose(nPrev, nCurr, sk) : lerpPose(st.nurIdle, st.nurIdle, 0);
   const [nbx, nbz] = st.started ? pathBowOffset(nPrev, nCurr, sk, -style.pathBow) : [0, 0];
   np.x += nbx; np.z += nbz;
   const nvx = np.x - st.prevNurPos.x, nvz = np.z - st.prevNurPos.y;
   const nSpeed = dt > 0 ? Math.hypot(nvx, nvz) / dt : 0;
   st.prevNurPos.set(np.x, np.z);
   st.nurGait += ((nSpeed > 0.05 ? 1 : 0) - st.nurGait) * Math.min(1, dt * 7);
+  if (st.nurGait > 0.3) {
+    const nswing = Math.sin((t + 1.7) * style.cadence) * 8 * style.stride * st.nurGait;
+    np.rfwd += nswing; np.lfwd -= nswing;
+  }
   st.nurse.root.position.x = np.x;
   st.nurse.root.position.z = np.z;
   applyH2Pose(st.nurse, np, style, t + 1.7, st.nurGait);
-  if (phName === 'monitor' && st.started) {           /* documentation taps */
-    st.nurse.setCurl('right', 0.55 + Math.max(0, Math.sin(t * 10)) * 0.3);
+  if (phName === 'monitor' && st.started) {           /* per-station tap rhythm */
+    const tapHz = [8, 10.5, 12.5][st.flavor.tap];
+    st.nurse.setCurl('right', 0.5 + Math.max(0, Math.sin(t * tapHz)) * 0.34);
+  }
+  if (phName === 'identity' && st.started) {          /* trigger squeezes */
+    st.nurse.setCurl('right', 0.8 + (Math.sin(t * 6) > 0.4 ? 0.12 : 0), 1.0);
   }
   st.nurse.setHead(np.hp + 6,
     np.hy + (phName === 'monitor' ? Math.sin(t * 1.2) * 16 : 0) + Math.sin(t * 0.4) * 3 * style.headEnergy);
@@ -2454,10 +2592,10 @@ function animate() {
   if (craDesk) {
     craT += dt;
     const cj = craDesk.cra.userData.J;
-    cj.neckYaw.rotation.y = Math.sin(craT * 0.30) * 0.55;
-    cj.neck.rotation.x = -0.10 + Math.sin(craT * 0.9) * 0.03;
-    cj.rFingerBlock.rotation.x = 0.35 + Math.max(0, Math.sin(craT * 9)) * 0.25;
-    cj.lFingerBlock.rotation.x = 0.35 + Math.max(0, Math.sin(craT * 9 + 1.1)) * 0.25;
+    cj.neckYaw.rotation.y = Math.sin(craT * 0.22) * 0.16;          /* screen focus */
+    cj.neck.rotation.x = -0.14 + Math.sin(craT * 0.9) * 0.02;
+    cj.rFingerBlock.rotation.x = 0.30 + Math.max(0, Math.sin(craT * 7.5)) * 0.20;
+    cj.lFingerBlock.rotation.x = 0.30 + Math.max(0, Math.sin(craT * 7.5 + 1.4)) * 0.20;
     const cud = craDesk.cra.userData;
     cud.blinkAt -= dt;
     if (cud.blinkAt < 0) cud.blinkAt = 2.5 + Math.random() * 3;
