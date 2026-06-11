@@ -4,32 +4,14 @@ MuJoCo-based clinical trial simulation with **real Unitree H2 humanoid robots**
 (from [unitreerobotics](https://www.unitree.com/)) competing across **four simultaneous
 stations** in a 2x2 grid. At each station a **doctor H2** (factory white, red cross) and a
 **nurse H2** (scrub-blue shells) execute a complete **GCP-aligned 12-phase intramuscular
-injection visit** on a **realistic human trial participant**, while a **human Clinical
-Research Associate (CRA)** observes from a sponsor monitoring desk. All stations are driven
-by **PPO reinforcement learning** policies with distinct behavior profiles from different
-random seeds, and are ranked by a **composite GCP score** spanning time, needle accuracy,
-protocol adherence, sterility, dose precision, and participant comfort.
+injection visit** on a **realistic human trial participant**.
 
 v1.2.0 is the recommended viewer — everything made real life: the robots are the **actual
 Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
 converted offline from `H2_Plus/H2_with_sharpa.usdz` in
 [kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus);
 patients are rebuilt realistic humans with five-finger hands, expressive faces, ECG chest
-leads and personas; the suite stays **open-air (no ceiling)** under a physical daylight sky;
-every station **moves and scores naturally dissimilarly** (seeded motion styles + staggered
-starts + profile-correlated metrics); all signage is re-rendered at 4x resolution with
-auto-fit headings (nothing clips); and the camera offers **infinite zoom from any point** —
-fly through a needle bore or out past the building with no minimum or maximum distance.
-v1.2.0 hardens physical truth on top: rotational arm IK over the real H2 joint axes (the
-injecting hand can never detach or pass through the patient), soles exactly on the floor,
-verified cart/monitor clearances, hands that actually grasp (tray pickup, carry, release
-over the sharps chute, palm-up tablet cradle), per-station personalized pose tables and
-motion flavors, a believable typing CRA, and the removal of every z-fighting/shadow-acne
-"pixel distortion" surface.
-
-The objective is to illustrate that having competitions across multiple autonomous robots is
-advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
-human trials.
+leads and personas; the suite stays **open-air (no ceiling)** under a physical daylight sky.
 
 Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
 (mujocolab/mjlab), extending GPU-accelerated robot simulation into clinical
