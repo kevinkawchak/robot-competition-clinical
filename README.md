@@ -17,15 +17,6 @@ converted offline from `H2_Plus/H2_with_sharpa.usdz` in
 **Step 1:** Enable GitHub Pages in your fork:
 Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder: `/docs` → Save
 
-> **If every page returns 404:** first check the serving self-test at
-> [`/health.txt`](https://kevinkawchak.github.io/robot-competition-clinical/health.txt).
-> If `health.txt` also 404s even though the latest **"pages build and deployment"** run
-> under the Actions tab is green, the Pages site routing is stuck and must be re-created
-> from the browser: Settings → Pages → set Source to **None** → Save → wait one minute →
-> set Source back to **Deploy from a branch** (`main`, `/docs`) → Save. If instead
-> `health.txt` loads, the site is fine — a missing path now shows this project's own
-> [404 page](docs/404.html) with links to every version.
-
 **Step 2:** Open the simulation on any device (desktop, iOS, Android):
 
 | Version | URL | Description |
@@ -45,6 +36,15 @@ toggle buttons to open the **GCP Phase Timeline + Live Telemetry** and **GCP Sco
 panels. When all stations finish, the **Final GCP Results** overlay displays the composite
 ranking. Scroll/pinch zooms toward the cursor; **double-click (or double-tap) any object** —
 a fingertip, the needle, the ECG trace, a poster — to glide the camera to it.
+
+> **If every page returns 404:** first check the serving self-test at
+> [`/health.txt`](https://kevinkawchak.github.io/robot-competition-clinical/health.txt).
+> If `health.txt` also 404s even though the latest **"pages build and deployment"** run
+> under the Actions tab is green, the Pages site routing is stuck and must be re-created
+> from the browser: Settings → Pages → set Source to **None** → Save → wait one minute →
+> set Source back to **Deploy from a branch** (`main`, `/docs`) → Save. If instead
+> `health.txt` loads, the site is fine — a missing path now shows this project's own
+> [404 page](docs/404.html) with links to every version.
 
 ## Instructions for Claude Code: Adding a New Simulation Version With Zero 404s
 
