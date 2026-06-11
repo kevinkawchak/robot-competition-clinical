@@ -10,7 +10,7 @@ by **PPO reinforcement learning** policies with distinct behavior profiles from 
 random seeds, and are ranked by a **composite GCP score** spanning time, needle accuracy,
 protocol adherence, sterility, dose precision, and participant comfort.
 
-v1.1.0 is the recommended viewer — everything made real life: the robots are the **actual
+v1.2.0 is the recommended viewer — everything made real life: the robots are the **actual
 Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
 converted offline from `H2_Plus/H2_with_sharpa.usdz` in
 [kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus);
@@ -20,6 +20,12 @@ every station **moves and scores naturally dissimilarly** (seeded motion styles 
 starts + profile-correlated metrics); all signage is re-rendered at 4x resolution with
 auto-fit headings (nothing clips); and the camera offers **infinite zoom from any point** —
 fly through a needle bore or out past the building with no minimum or maximum distance.
+v1.2.0 hardens physical truth on top: rotational arm IK over the real H2 joint axes (the
+injecting hand can never detach or pass through the patient), soles exactly on the floor,
+verified cart/monitor clearances, hands that actually grasp (tray pickup, carry, release
+over the sharps chute, palm-up tablet cradle), per-station personalized pose tables and
+motion flavors, a believable typing CRA, and the removal of every z-fighting/shadow-acne
+"pixel distortion" surface.
 
 The objective is to illustrate that having competitions across multiple autonomous robots is
 advantageous for making upcoming fully autonomous physical AI oncology trials faster than current
@@ -47,7 +53,8 @@ Settings → Pages → Source: "Deploy from a branch" → Branch: `main`, Folder
 
 | Version | URL | Description |
 |---|---|---|
-| **v1.1.0 Real-Life GCP Suite (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v11/](https://kevinkawchak.github.io/robot-competition-clinical/v11/) | Real Unitree H2 robot files (75 DOF + SHARPA hands), realistic patients, dissimilar station motion/scoring, infinite zoom, daylight open-air suite |
+| **v1.2.0 Real-Life GCP Suite II (new)** | [https://kevinkawchak.github.io/robot-competition-clinical/v12/](https://kevinkawchak.github.io/robot-competition-clinical/v12/) | Zero object overlaps (rotational arm IK), grasping SHARPA hands, unique per-station choreography, typing CRA, distortion-free signage |
+| v1.1.0 Real-Life GCP Suite | [https://kevinkawchak.github.io/robot-competition-clinical/v11/](https://kevinkawchak.github.io/robot-competition-clinical/v11/) | Real Unitree H2 robot files (75 DOF + SHARPA hands), realistic patients, dissimilar station motion/scoring, infinite zoom, daylight open-air suite |
 | v1.0.0 GCP Trial Suite | [https://kevinkawchak.github.io/robot-competition-clinical/v10/](https://kevinkawchak.github.io/robot-competition-clinical/v10/) | 12-phase GCP visit, 43-DOF robots, IK needle contact, composite scoring, open-top photoreal suite, AE response, human CRA |
 | **v0.9.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v9/](https://kevinkawchak.github.io/robot-competition-clinical/v9/) | v0.6.0 base + patient seating, facial features, close-zoom, no shoulder Z-fight, needle-contact |
 | **v0.8.0 Competition** | [https://kevinkawchak.github.io/robot-competition-clinical/v8/](https://kevinkawchak.github.io/robot-competition-clinical/v8/) | SOTA G1 robots, realistic patients, premium dark theme, PBR visuals |
@@ -121,7 +128,11 @@ a fingertip, the needle, the ECG trace, a poster — to glide the camera to it.
    version in `pyproject.toml`. Run `ruff check .` and `ruff format --check .` so CI
    passes.
 
-## What This Simulates (v1.1.0)
+## Simulation Evolution (v0.1.0 → v1.2.0)
+
+Across twelve releases the simulation grew from a demo into a living autonomous clinic. v0.1.0–v0.4.0 (Claude Opus) built a single ~6 m exam bay with one scripted injection visit, then scaled to a 12×12 m, four-station PPO-seeded race scored on time and accuracy. v0.5.0–v0.9.0 (Opus) added light-mode viewing, recognizable Unitree G1 robots, seated patients with faces, close zoom, and needle-contact fixes — roughly 20 animated DOF per robot across four stations in a 16 m hall. v1.0.0 (first Fable 5 build) was a ground-up rebuild for clinical-trial realism: an 18×18 m open-top suite, 43-DOF G1s with dexterous fingers, a 12-phase GCP visit, composite scoring, live ECG, a seeded adverse event, and a human CRA. v1.1.0 swapped in the real 75-DOF Unitree H2 Plus robot files (USD→GLB, dual SHARPA hands), realistic patient personas, infinite zoom, and a 20×20 m daylight suite. v1.2.0 hardens physical truth: rotational arm IK, zero object overlaps, grasping hands, and unique per-station choreography.
+
+## What This Simulates (v1.1.0–v1.2.0)
 
 Four stations compete simultaneously to complete a **GCP-aligned 12-phase IM injection
 visit** on diverse, realistic human participants (per-station skin tone, hairstyle, gown
@@ -144,6 +155,16 @@ live ranks. The suite is open-air (no ceiling) under a physically-modeled daylig
 bumper-railed walls, a live wall clock, scrub sink, crash cart, supply shelving, medical-gas
 outlets, EXIT signage, plants, an observation window, 4x-resolution auto-fit signage, and
 full per-station equipment.
+
+### v1.2.0 Headline Upgrades
+
+| # | Area | v1.2.0 Upgrade |
+|---|------|----------------|
+| 1 | Physical integrity | Rotational arm IK (CCD over the real H2 shoulder/elbow/wrist axes): the injecting hand stays attached to the wrist and stops at the deltoid surface — no detached hand, no pass-through; soles exactly on the floor; verified cart and monitor work distances |
+| 2 | Grasping hands | Open-reach-close pickup of the syringe from the tray, carry grip, release over the sharps chute; palm-up tablet cradle with fingers around the edge; scanner trigger squeezes; idle finger micro-motion |
+| 3 | Unique choreography | Per-station personalized pose tables (seeded stance/arm/head offsets) + discrete flavors: 4 hand-hygiene techniques, 3 swab patterns, 3 tap rhythms, arm swing while walking, clamped per-station walk bows |
+| 4 | Display integrity | Signage fully inside the wall band (below the cap, above the bumper rail), z-fighting and shadow acne eliminated (no dark/multicolor pixel distortion), tower pole joined to its board |
+| 5 | Scene integrity | Plants rooted in their pots, one-piece connected scrub sink, paper-towel dispenser flush on the wall, typing CRA whose hands stay above the desk |
 
 ### v1.1.0 Headline Upgrades
 
@@ -239,7 +260,7 @@ different speed/accuracy/protocol trade-offs — from the same reward function.
 stagger) and profile-correlated metric distributions, so the policy differences are visible
 in how the robots carry themselves, not just in the score table.
 
-### Simulation Results (v1.1.0, deterministic from seeds)
+### Simulation Results (v1.1.0–v1.2.0, deterministic from seeds)
 
 | Rank | Station | Composite | Total Time | Needle Dev | Protocol | Sterility | Dose | Motion Style | Notes |
 |------|---------|-----------|-----------|------------|----------|-----------|------|--------------|-------|
@@ -255,6 +276,14 @@ dissimilarity the composite GCP score is designed to expose.
 
 ## Features
 
+- **Zero Object Overlaps** (v1.2.0): rotational arm IK on the real joint axes (no detached
+  or pass-through hands), soles on the floor, verified prop clearances, signage inside the
+  wall band, rooted plants, connected sink, z-fight/shadow-acne-free surfaces
+- **Grasping SHARPA Hands** (v1.2.0): tray pickup, carry, sharps release, palm-up tablet
+  cradle, scanner trigger squeezes, idle finger micro-motion
+- **Unique Station Choreography** (v1.2.0): per-station personalized pose tables + discrete
+  hygiene/swab/tap flavors and walk styles — no two stations move alike
+- **Typing CRA** (v1.2.0): hands above the desk, palms over the keyboard, believable taps
 - **Real Unitree H2 Robot Files** (v1.1.0): actual H2 Plus geometry + full joint tree (75
   revolute DOF incl. dual SHARPA five-finger hands) converted from
   `fork_unitree_model/H2_Plus/H2_with_sharpa.usdz` to `docs/v11/h2_plus.glb` with joint
@@ -298,7 +327,7 @@ dissimilarity the composite GCP score is designed to expose.
 - **File Upload**: custom JSON configs for station seeds/speeds
 - **Cross-Device 3D Viewer**: desktop, iOS, Android via Three.js — zero installation
 - **MuJoCo Physics Backend**: MJCF scene models with articulated humanoids (optional)
-- **8-Version Nav Banner**: v0.1.0 | v0.5.0 | v0.6.0 | v0.7.0 | v0.8.0 | v0.9.0 | v1.0.0 | v1.1.0 (new)
+- **9-Version Nav Banner**: v0.1.0 | v0.5.0 | … | v1.0.0 | v1.1.0 | v1.2.0 (new)
 - **Open & Free**: all dependencies open-source (no wandb)
 
 ## Architecture Diagrams
@@ -460,8 +489,11 @@ robot-competition-clinical/
 │   ├── v10/
 │   │   └── index.html                  # v1.0.0 GCP Trial Suite
 │   ├── v11/
-│   │   ├── index.html                  # v1.1.0 Real-Life GCP Suite (current)
+│   │   ├── index.html                  # v1.1.0 Real-Life GCP Suite
 │   │   └── h2_plus.glb                 # Real Unitree H2 Plus model (from H2_Plus USD)
+│   ├── v12/
+│   │   ├── index.html                  # v1.2.0 Real-Life GCP Suite II (current)
+│   │   └── h2_plus.glb                 # Same H2 Plus model (self-contained folder)
 │   └── diagrams/
 │       ├── v1_architecture.md          # Archived v0.1.x text diagrams
 │       ├── v2_architecture.md          # Archived v0.2.0 text diagrams

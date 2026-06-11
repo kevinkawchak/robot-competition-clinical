@@ -1,6 +1,6 @@
 [project]
 name = "robot-competition-clinical"
-version = "1.1.0"
+version = "1.2.0"
 description = "Clinical trial robot competition simulation with real Unitree H2 Plus humanoid robots (75 DOF + SHARPA hands, from fork_unitree_model/H2_Plus USD files) — 4-station PPO-driven GCP injection visit race with realistic human patients, naturally dissimilar station motion/scoring, infinite zoom, built on MuJoCo physics"
 readme = "README.md"
 license = {text = "Apache-2.0"}

@@ -257,21 +257,30 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
     scroll straight through a needle bore or out past the building.</p>
     <h3>What is new in v1.2.0</h3>
     <ul>
-      <li><strong>Real robot files</strong> &mdash; Unitree H2 Plus visual meshes + full joint tree
-        (axes and limits from the USD physics joints), not a hand-modeled approximation</li>
-      <li><strong>Naturally dissimilar stations</strong> &mdash; per-seed motion styles (stride,
-        cadence, lean, reach, head energy, staggered starts) and profile-correlated scores;
-        no two stations move or score alike</li>
-      <li><strong>Realistic patients</strong> &mdash; rebuilt human participants with articulated
-        five-finger hands, expressive faces, ECG chest leads, personas (calm / talkative /
-        anxious / elderly) and idle body language</li>
-      <li><strong>Infinite zoom</strong> &mdash; fly-through dolly with no minimum or maximum
-        distance, zoom-to-cursor, adaptive near/far planes</li>
-      <li><strong>Sharper signage</strong> &mdash; all posters, labels and boards re-rendered at
-        4&times; resolution with auto-fit headings (nothing clips)</li>
-      <li><strong>Real-life suite</strong> &mdash; daylight sky, wall bumper rails, wall clock,
-        crash cart, scrub sink, supply shelving, gas outlets, EXIT signage, plants</li>
+      <li><strong>Zero object overlaps</strong> &mdash; rotational arm IK over the real H2 joint
+        axes (the injecting hand can never detach from the wrist or pass through the
+        patient), soles exactly on the floor, cart/monitor work distances with verified
+        clearances, signage fully inside the wall band, plants rooted in their pots, a
+        one-piece scrub sink, and z-fight/shadow-acne elimination (no more dark or
+        multicolor pixel distortion on signage and the scoreboard tower)</li>
+      <li><strong>Grasping hands</strong> &mdash; the SHARPA fingers open, reach, close around
+        the syringe on the tray, carry it, and release it over the sharps chute; the
+        tablet lies in a palm-up cradle and the scanner squeezes its trigger; fingers
+        idle with micro-motion so the hands always look alive</li>
+      <li><strong>Unique station choreography</strong> &mdash; every station personalizes its
+        entire pose table (seeded stances, arm and head offsets) and draws discrete
+        flavors: four hand-hygiene techniques, three swab patterns (circle / zigzag /
+        spiral), three documentation tap rhythms, arm swing while walking, distinct
+        walking paths &mdash; on top of v1.1.0's stride/cadence/lean styles and staggered
+        starts</li>
+      <li><strong>Typing CRA</strong> &mdash; the human monitor's forearms sit level above the
+        desk with palms rolled down over the keyboard, tapping keys believably</li>
+      <li>All v1.1.0 capabilities carry forward: real H2 Plus robot files (75 DOF + dual
+        SHARPA hands), realistic patient personas, infinite zoom, 4&times;-resolution
+        auto-fit signage, daylight open-air suite</li>
     </ul>
+    <h3>Simulation Evolution (v0.1.0 &rarr; v1.2.0)</h3>
+    <p>Across twelve releases the simulation grew from a demo into a living autonomous clinic. v0.1.0–v0.4.0 (Claude Opus) built a single ~6 m exam bay with one scripted injection visit, then scaled to a 12×12 m, four-station PPO-seeded race scored on time and accuracy. v0.5.0–v0.9.0 (Opus) added light-mode viewing, recognizable Unitree G1 robots, seated patients with faces, close zoom, and needle-contact fixes — roughly 20 animated DOF per robot across four stations in a 16 m hall. v1.0.0 (first Fable 5 build) was a ground-up rebuild for clinical-trial realism: an 18×18 m open-top suite, 43-DOF G1s with dexterous fingers, a 12-phase GCP visit, composite scoring, live ECG, a seeded adverse event, and a human CRA. v1.1.0 swapped in the real 75-DOF Unitree H2 Plus robot files (USD→GLB, dual SHARPA hands), realistic patient personas, infinite zoom, and a 20×20 m daylight suite. v1.2.0 hardens physical truth: rotational arm IK, zero object overlaps, grasping hands, and unique per-station choreography.</p>
     <h3>12-Phase GCP Workflow (per station)</h3>
     <ol>
       <li><strong>Identity verification</strong> &mdash; nurse scans wristband (two identifiers)</li>
@@ -302,8 +311,9 @@ body { background:#dfe7ee; color:#15202b; font-family:'Segoe UI',system-ui,-appl
     <h3>PPO Policies</h3>
     <p>All stations run the same PPO architecture (MLP 64&times;64, tanh) with unique seeds
     (42, 137, 256, 512). Reward R = &minus;0.3&times;time + 0.5/(1+dist) + 0.2/(1+jerk).
-    Same policy, different state &rarr; distinct speed/accuracy/protocol trade-offs, and in
-    v1.1.0 the seeds also drive visibly different motion styles.</p>
+    Same policy, different state &rarr; distinct speed/accuracy/protocol trade-offs; since
+    v1.1.0 the seeds drive visibly different motion styles, and in v1.2.0 they personalize
+    every station's full pose table and motion flavors.</p>
     <h3>Why This Matters for Clinical Trials</h3>
     <p>Parallel autonomous stations executing the full GCP visit &mdash; identity, consent,
     vitals, dosing, AE surveillance, and eSource documentation &mdash; show how physical-AI

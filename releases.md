@@ -1,5 +1,44 @@
 # Releases
 
+## Clinical Robot Competition — v1.2.0 Real-Life GCP Suite II
+
+v1.2.0 — 2026-06-11
+
+### Summary
+
+Physical-integrity release. Every reported overlap and artifact in v1.1.0 is engineered
+out: the doctor's injecting hand is now driven by **rotational arm IK** (cyclic coordinate
+descent over the real H2 shoulder/elbow/wrist axes), so the hand can never detach from the
+wrist or pass through the patient while the needle still lands millimeter-exact on the
+deltoid; robot **soles sit exactly on the floor**; the doctor works the supply cart from a
+verified 0.44 m stance instead of stepping through it; the nurse's fingertips stop at the
+vitals screen; signage sits fully inside the wall band (below the open-top cap, above the
+bumper rail); **z-fighting and shadow acne are eliminated** so posters and the four-face
+competition board no longer dissolve into dark or multicolor pixels; plant blades grow out
+of the pot mouth; the scrub sink is one connected unit; and the CRA types with level
+forearms and palms-down hands that never enter the desk. The hands came alive too: SHARPA
+fingers **open, reach, close around the tray syringe, carry it, and release it over the
+sharps chute**; the tablet rests in a palm-up cradle with fingers around its edge; the
+scanner squeezes its trigger. And **no two stations move alike** — each station
+personalizes its entire pose table (seeded stances, arm/head offsets) and draws discrete
+flavors: four hand-hygiene techniques, three swab patterns, three documentation tap
+rhythms, distinct walking paths and arm swing, on top of v1.1.0's stride/cadence/lean
+styles, staggered starts and profile-correlated scoring. A ~1,000-character simulation
+evolution summary (v0.1.0 → v1.2.0, Claude Opus era through Fable 5 era) now lives in the
+README and the in-app info panel.
+
+### Features
+
+- Rotational arm IK on real joint axes; ≤12 mm residual; needle contact preserved
+- Grasp choreography (pickup / carry / release), in-hand tool grips re-solved
+- Per-station personalized pose tables + discrete hygiene/swab/tap/walk flavors
+- Soles-on-floor stance and gait; verified cart, monitor, chair clearances
+- Distortion-free rendering: no z-fighting, no shadow acne on signage/boards
+- Signage fully inside the wall band; rooted plants; one-piece sink; typing CRA
+- Everything from v1.1.0: real H2 Plus robot files (75 DOF + dual SHARPA hands),
+  realistic patient personas, infinite zoom, daylight open-air suite, GCP workflow,
+  composite scoring, seeded AE, human-in-the-loop CRA
+
 ## Clinical Robot Competition — v1.1.0 Real-Life GCP Suite
 
 v1.1.0 — 2026-06-11

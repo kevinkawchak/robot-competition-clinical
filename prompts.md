@@ -1,5 +1,19 @@
 # Prompts
 
+## v1.2.0 Implementation Prompt
+
+You have my permission to fully commit files to main as they are generated for real time viewing. Do not hold any commits to the end. Create a new v1.2.0 version based on the corrections below (also include a 1000 character simulation evolution summary (complexity, number of stations, room size, etc.) from v0.1.0-v0.9.0 (Opus) to v1.0.0- v1.2.0 (Fable 5):
+- Fix all object overlaps including the white robot hand injecting medicine becomes detached and goes through the patient
+- Both of the robots extend through objects with their feet, the white robot passes through the white cart, and the blue robot's hand extends through the vitals monitor
+- Parts of the room, including the signage and center competition board distort into dark and multi-color pixels
+- The green plants extend through their respective pots
+- The robots need to have their own unique movements for each station (different walking paths, different hand motions, etc.)
+- The robot hands don't move or grasp objects, and the black tablet and gold badge next to the blue robot float in the air
+- The oncology clinical trials unit signage extends through the top of the room, and the bottom part of the wall paint overlaps the signage
+- The person sitting at the desk has their hands upside down and passing through the desk. The hands move unproductively
+- The sink has 3 detached objects
+- Please verify twice that all of these fixes are incorporated, prior to returning any final code
+
 ## v1.1.0 Implementation Prompt
 
 Build from kevinkawchak.github.io/robot-competition-clinical/v10/ in v1.1.0 (no ceiling) by making everything real life, utilizing a realistic patient, and H2 robot files from kevinkawchak/fork_unitree_model/tree/main/H2_Plus. Fix low resolution signage clipped headings, make station movements and scores naturally dissimilar, make zoom controls infinite from any point, and avoid 404 errors by following main/README; you have permission to commit to main.

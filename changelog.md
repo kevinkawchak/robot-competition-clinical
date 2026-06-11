@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] — 2026-06-11
+
+### Added
+- **v1.2.0 Real-Life GCP Suite II viewer** (`docs/v12/index.html`, self-contained folder
+  with its own `h2_plus.glb`) — physical-integrity release built from v1.1.0
+- **Rotational arm IK**: cyclic-coordinate-descent over the real H2 shoulder/elbow/wrist
+  joint axes with a ≤12 mm residual — the injecting hand stays permanently attached to
+  the wrist and stops exactly at the deltoid; replaces v1.1.0's translation IK that could
+  visibly detach the hand and push it through the patient
+- **Grasping hands**: open-reach-close choreography picking the syringe off the cart tray,
+  full carry grip, finger release over the sharps chute, scanner trigger squeezes,
+  per-station documentation tap rhythms, idle finger micro-motion on all four robots
+- **In-hand tools**: grips re-solved against the v1.2.0 hand frames — the tablet lies in a
+  supinated palm-up cradle with fingers around its edge (it no longer floats beside the
+  nurse), the scanner aims from the closed fist, syringe/swab/vial sit in the fingers
+- **Unique per-station choreography**: every station personalizes its entire doctor and
+  nurse pose tables (seeded stance/arm/head offsets, tightly clamped near the cart and
+  the needle) and draws discrete motion flavors — four hand-hygiene techniques, three
+  deltoid-swab patterns (circle / zigzag / spiral), three tap rhythms, arm swing while
+  walking — in addition to the v1.1.0 stride/cadence/lean styles and staggered starts
+- **Simulation evolution summary** (~1,000 characters, v0.1.0 → v1.2.0) in the README and
+  the in-app info panel
+
+### Fixed
+- **Object overlaps**: white robot's injecting hand no longer detaches or passes through
+  the patient (rotational IK); robot soles sit exactly on the floor (root height = model
+  sole height, gentler stance and gait that lifts instead of dips); doctor works the
+  supply cart from 0.44 m with arms over the top instead of walking through it; vitals
+  monitor moved outward and the nurse's reach shortened so her fingertips stop at the
+  screen; walk-path bows clamped (±0.11 m) and applied only on real walks
+- **Pixel distortion on signage and the competition board**: z-fighting and shadow acne
+  eliminated — bumper rails stand proud of the wall instead of flush, posters mount 35 mm
+  off the wall, emissive prints/screens/tower faces no longer receive shadows, sun shadow
+  normalBias raised to 0.028, tower screens offset from their housing
+- **Signage placement**: the ONCOLOGY CLINICAL TRIALS UNIT poster (and all side posters)
+  now sits fully inside the wall band — below the open-top cap rail, above the bumper
+  rail (nothing pokes above the room, no wall trim overlaps a poster)
+- **Plants**: leaf blades pivot at the soil surface and grow up out of the pot mouth
+  instead of piercing the pot walls
+- **Sink**: rebuilt as one connected unit — recessed basin, gooseneck faucet joined by
+  shared elbow spheres to a counter flange, soap pump standing on the counter, paper-towel
+  dispenser flush against the wall (three previously detached/floating objects)
+- **CRA at the monitoring desk**: hands no longer upside-down or through the desktop —
+  forearms level just above the desk, palms rolled down over the keyboard, alternating
+  small key taps; ECG chest leads are no longer added to non-patient humans
+- **Scoreboard tower**: support pole now reaches the board housing
+
+### Changed
+- Nav banners across v0.1.0, v0.5.0–v1.1.0, the landing page and `docs/404.html` link
+  v1.2.0; `pyproject.toml` and simulation version strings bumped to 1.2.0
+
 ## [1.1.0] — 2026-06-11
 
 ### Added
