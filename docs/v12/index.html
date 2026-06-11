@@ -535,8 +535,8 @@ sun.shadow.mapSize.set(4096, 4096);
 sun.shadow.camera.left = -14; sun.shadow.camera.right = 14;
 sun.shadow.camera.top = 14; sun.shadow.camera.bottom = -14;
 sun.shadow.camera.near = 2; sun.shadow.camera.far = 90;
-sun.shadow.bias = -0.0006;
-sun.shadow.normalBias = 0.012;
+sun.shadow.bias = -0.00025;
+sun.shadow.normalBias = 0.028;
 scene.add(sun);
 
 /* ================= CANVAS TEXTURE HELPERS ================= */
@@ -609,9 +609,9 @@ function poster(parent, tex, w, h, x, y, z, ry) {
   const g = new THREE.Group();
   g.position.set(x, y, z); g.rotation.y = ry || 0;
   const frame = new THREE.Mesh(gBox(w + 0.05, h + 0.05, 0.022), M.steelDark);
-  frame.castShadow = false; g.add(frame);
+  frame.castShadow = false; frame.receiveShadow = false; g.add(frame);
   const p = new THREE.Mesh(gPlane(w, h), new THREE.MeshStandardMaterial({ map:tex, roughness:0.72 }));
-  p.position.z = 0.013; p.castShadow = false;
+  p.position.z = 0.013; p.castShadow = false; p.receiveShadow = false;
   g.add(p);
   (parent || scene).add(g);
   return g;
@@ -800,8 +800,8 @@ function buildRoom() {
     /* protruding bumper rail (real clinical corridors have these) */
     const rail = mk(gBox(w - 0.4, 0.12, 0.05), M.wallCap, [x, 1.18, z]);
     rail.rotation.y = ry;
-    rail.translateZ(0.105);
-    rail.castShadow = false;
+    rail.translateZ(0.118);
+    rail.castShadow = false; rail.receiveShadow = false;
     return m;
   }
   wall(ROOM_W, 0, -hd, 0);
@@ -838,17 +838,19 @@ function buildRoom() {
   exitSign.castShadow = false;
 
   /* Wall signage — auto-fit, framed, 4x resolution (no clipped headings) */
+  /* poster band sits fully between the bumper rail (top 1.24) and the wall
+     cap (3.40) and 35 mm proud of the wall face — no clipping, no overlap */
   poster(scene, posterTex(['ONCOLOGY CLINICAL TRIALS UNIT', 'Autonomous Robotics Wing',
     'Protocol ONC-2026-IM-001', 'GCP / ICH E6(R3) Compliant'], '#0a66c2'),
-    4.4, 3.3, 4.4, 1.95, -hd + 0.10, 0);
+    3.6, 2.0, 4.4, 2.28, -hd + 0.115, 0);
   poster(scene, posterTex(['5 MOMENTS OF HAND HYGIENE', 'Before aseptic procedures', 'After body fluid exposure',
-    'WHO Guideline'], '#0a8a4a'), 2.2, 1.65, -hw + 0.10, 2.0, -3.4, Math.PI / 2);
+    'WHO Guideline'], '#0a8a4a'), 2.1, 1.45, -hw + 0.115, 2.32, -3.4, Math.PI / 2);
   poster(scene, posterTex(['ADVERSE EVENT REPORTING', 'Grade 1-2: observe & document', 'Grade 3+: escalate to PI',
-    '24h sponsor notification'], '#c2452d'), 2.2, 1.65, -hw + 0.10, 2.0, 1.2, Math.PI / 2);
+    '24h sponsor notification'], '#c2452d'), 2.1, 1.45, -hw + 0.115, 2.32, 1.2, Math.PI / 2);
   poster(scene, posterTex(['IM INJECTION PROTOCOL', 'Right deltoid • 90° insertion', '0.50 mL study drug',
-    'Slow push ≥ 10 s/mL'], '#6d4fc2'), 2.2, 1.65, hw - 0.10, 2.0, -2.6, -Math.PI / 2);
+    'Slow push ≥ 10 s/mL'], '#6d4fc2'), 2.1, 1.45, hw - 0.115, 2.32, -2.6, -Math.PI / 2);
   poster(scene, posterTex(['UNITREE H2 DEPLOYMENT', '75-DOF humanoid + SHARPA hands', 'Robot files: H2_Plus USD',
-    'Daily joint-calibration verified'], '#37536b'), 2.2, 1.65, hw - 0.10, 2.0, 2.4, -Math.PI / 2);
+    'Daily joint-calibration verified'], '#37536b'), 2.1, 1.45, hw - 0.115, 2.32, 2.4, -Math.PI / 2);
 
   /* live wall clock (real time) */
   const clock = grp(scene, 0.8, 2.62, -hd + 0.12);
@@ -872,12 +874,28 @@ function buildRoom() {
   sinkG.rotation.y = Math.PI;
   mk(gBox(0.9, 0.86, 0.55), M.plasticWhite, [0, 0.43, 0], sinkG);
   mk(gBox(0.92, 0.05, 0.57), M.cartTop, [0, 0.88, 0], sinkG);
-  const basin = mk(gBox(0.52, 0.10, 0.36), M.steel, [0, 0.875, -0.02], sinkG);
-  basin.scale.y = 0.8;
-  mk(gCyl(0.02, 0.02, 0.26, 10), M.steel, [0, 1.02, 0.16], sinkG).rotation.x = 0.3;
-  mk(gCyl(0.016, 0.016, 0.14, 10), M.steel, [0, 1.10, 0.03], sinkG).rotation.x = Math.PI / 2;
-  mk(gBox(0.16, 0.30, 0.10), M.plasticGrey, [-0.62, 1.45, 0.04], sinkG);   /* towel dispenser */
-  mk(gBox(0.10, 0.16, 0.08), M.plasticWhite, [0.5, 1.32, 0.04], sinkG);    /* soap */
+  /* (sink group is rotated π: the wall behind it is at NEGATIVE local z) */
+  /* recessed basin set into the counter, toward the room side */
+  mk(gBox(0.50, 0.07, 0.34), new THREE.MeshStandardMaterial({
+    color:0x9fa8ae, roughness:0.25, metalness:0.85 }), [0, 0.872, 0.02], sinkG);
+  mk(gBox(0.42, 0.02, 0.26), new THREE.MeshStandardMaterial({ color:0x7c858c,
+    roughness:0.3, metalness:0.8 }), [0, 0.887, 0.02], sinkG);
+  /* gooseneck faucet at the rear edge: riser, elbow and spout share joint
+     spheres so every piece is connected */
+  mk(gCyl(0.014, 0.022, 0.015, 10), M.steel, [0, 0.905, -0.13], sinkG);   /* base flange */
+  mk(gCyl(0.016, 0.016, 0.20, 10), M.steel, [0, 1.00, -0.13], sinkG);
+  mk(gSph(0.020, 10, 8), M.steel, [0, 1.10, -0.13], sinkG);
+  const spout = mk(gCyl(0.014, 0.014, 0.17, 10), M.steel, [0, 1.10, -0.045], sinkG);
+  spout.rotation.x = Math.PI / 2;
+  mk(gSph(0.017, 10, 8), M.steel, [0, 1.10, 0.035], sinkG);
+  mk(gCyl(0.012, 0.012, 0.05, 10), M.steel, [0, 1.075, 0.035], sinkG);
+  /* soap pump standing on the counter corner */
+  mk(gCyl(0.030, 0.034, 0.11, 12), M.plasticWhite, [0.34, 0.960, -0.08], sinkG);
+  mk(gCyl(0.008, 0.008, 0.05, 8), M.plasticGrey, [0.34, 1.035, -0.08], sinkG);
+  mk(gBox(0.045, 0.014, 0.05), M.plasticGrey, [0.34, 1.052, -0.045], sinkG);
+  /* paper-towel dispenser flush on the wall behind the sink */
+  mk(gBox(0.26, 0.34, 0.105), M.plasticGrey, [0, 1.52, -0.283], sinkG);
+  mk(gBox(0.20, 0.02, 0.02), M.paper, [0, 1.37, -0.278], sinkG);
 
   /* crash cart (red) near the door */
   const crash = grp(scene, hw - 0.66, 0, 2.9);
@@ -915,10 +933,13 @@ function buildRoom() {
     mk(gCyl(0.14 * s, 0.14 * s, 0.03, 12), M.soil, [0, 0.295 * s, 0], p);
     const rng = mulberry32(Math.round(x * 31 + z * 17));
     for (let i = 0; i < 9; i++) {
-      const a = rng() * Math.PI * 2, tilt = 0.35 + rng() * 0.5;
-      const leaf = mk(gCap(0.022 * s, 0.5 * s * (0.7 + rng() * 0.5), 3, 6), M.leaf,
-        [Math.cos(a) * 0.05, 0.3 * s, Math.sin(a) * 0.05], p);
-      leaf.rotation.set(Math.cos(a) * tilt, 0, Math.sin(a) * -tilt);
+      const a = rng() * Math.PI * 2, tilt = 0.30 + rng() * 0.34;
+      const len = 0.5 * s * (0.7 + rng() * 0.5);
+      /* pivot each blade at the soil surface so it grows up-and-out of the
+         pot mouth instead of piercing the pot wall */
+      const blade = grp(p, Math.cos(a) * 0.035 * s, 0.30 * s, Math.sin(a) * 0.035 * s);
+      blade.rotation.set(Math.sin(a) * tilt, 0, -Math.cos(a) * tilt);
+      const leaf = mk(gCap(0.020 * s, len, 3, 6), M.leaf, [0, len / 2, 0], blade);
       leaf.scale.z = 0.4;
     }
     return p;
@@ -962,7 +983,7 @@ function buildVitalsMonitor(parent) {
   mk(gBox(0.46, 0.32, 0.06), M.monitorBody, [0, 1.22, 0], g);
   const scr = mk(gPlane(0.42, 0.28), new THREE.MeshStandardMaterial({
     map:tex, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.85, roughness:0.3 }), [0, 1.22, -0.034], g);
-  scr.rotation.y = Math.PI; scr.castShadow = false;
+  scr.rotation.y = Math.PI; scr.castShadow = false; scr.receiveShadow = false;
   mk(gBox(0.10, 0.05, 0.05), M.plasticGrey, [0.16, 1.02, 0], g);
   g.userData.ecg = { canvas:c, ctx:c.getContext('2d'), tex, t:0 };
   return g;
@@ -1651,16 +1672,16 @@ towerTex.anisotropy = 8;
 function buildTower() {
   const g = grp(scene, 0, 0, 0);
   mk(gCyl(0.16, 0.22, 0.06, 16), M.steelDark, [0, 0.03, 0], g);
-  mk(gCyl(0.05, 0.05, 2.0, 12), M.steel, [0, 1.06, 0], g);
+  mk(gCyl(0.05, 0.05, 2.14, 12), M.steel, [0, 1.07, 0], g);
   const mat = new THREE.MeshStandardMaterial({ map:towerTex, emissive:0xffffff,
     emissiveMap:towerTex, emissiveIntensity:0.55, roughness:0.4 });
   const boardG = grp(g, 0, 2.45, 0);
   mk(gBox(0.94, 0.74, 0.94), M.screenFrame, [0, 0, 0], boardG);
   for (let i = 0; i < 4; i++) {
     const p = mk(gPlane(0.88, 0.68), mat, [0, 0, 0], boardG);
-    p.castShadow = false;
+    p.castShadow = false; p.receiveShadow = false;
     p.rotation.y = i * Math.PI / 2;
-    const off = 0.476;
+    const off = 0.486;
     if (i === 0) p.position.z = off; else if (i === 1) p.position.x = off;
     else if (i === 2) p.position.z = -off; else p.position.x = -off;
   }
