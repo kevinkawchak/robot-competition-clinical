@@ -6,10 +6,10 @@ stations** in a 2x2 grid. At each station a **doctor H2** (factory white, red cr
 **nurse H2** (scrub-blue shells) execute a complete **GCP-aligned 12-phase intramuscular
 injection visit** on a **realistic human trial participant**.
 
-v1.2.0 is the recommended viewer — everything made real life: the robots are the **actual
+v1.2.0 is the recommended viewer - everything made real life: the robots are the **actual
 Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
 converted offline from `H2_Plus/H2_with_sharpa.usdz` in
-[kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus). Built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
+[kevinkawchak/fork_unitree_model](https://github.com/kevinkawchak/fork_unitree_model/tree/main/H2_Plus). The simulation was built as the next step beyond [mjlab](https://github.com/mujocolab/mjlab)
 (mujocolab/mjlab).
 
 ## Quick Start (1-2 Steps from GitHub)
