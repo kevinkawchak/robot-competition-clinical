@@ -4,7 +4,7 @@ MuJoCo-based clinical trial simulation with **real Unitree H2 humanoid robots**
 (from [unitreerobotics](https://www.unitree.com/)) competing across **four simultaneous
 stations** in a 2x2 grid. At each station a **doctor H2** (factory white, red cross) and a
 **nurse H2** (scrub-blue shells) execute a complete **GCP-aligned 12-phase intramuscular
-injection visit** on a **realistic human trial participant**.
+injection visit** on a **realistic human trial participant**. Claude Code Opus was utilized for earlier simulation versions. Claude Code Fable was utilized for more recent versions.
 
 v1.2.0 is the recommended viewer - everything made real life: the robots are the **actual
 Unitree H2 Plus model** (visual meshes, all 75 revolute joints, dual SHARPA dexterous hands)
